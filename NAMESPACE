@@ -1,0 +1,4 @@
+useDynLib(ex)
+import("mvtnorm")
+importFrom(Rcpp, evalCpp)
+exportPattern("^[[:alpha:]]+")
