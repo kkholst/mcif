@@ -20,3 +20,6 @@ vignettes/*.pdf
 
 *.o
 *.so
+
+\#*
+*~
