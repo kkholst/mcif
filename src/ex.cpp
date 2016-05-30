@@ -22,6 +22,7 @@ struct vecmat
 };
 
 const double twopi = 2*datum::pi;
+const double h = 1e-8;
 
 /*
 Funtion that calculates cumulative distribution function for
@@ -1786,6 +1787,38 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
   return(res);
 }
 
+/*------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------------------------------------*/
+/* Hes */
+// [[Rcpp::export]]
+mat Hes(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
+  /* y: 1x2 matrix with event type (0, 1 or 2) of family member 1 and 2
+     b: 1x4 matrix with XB for event type 1 and 2 (b1 and b2) for family member 1 and 2
+        the order is b1_1, b1_2, b2_1 and b2_2
+     u: 1x2 matrix with the random effects u1 and u2 affecting pi1 and pi2 (cluster-specific risk levels)
+        the random effects are shared by family member 1 and 2
+     sigma: 6x6 matrix. variance-covariance matrix, order: event1_1, event1_2, event2_1, event2_2, u1, u2
+     alph: 1x4 matrix, inside the Probit link, order a1_1, a1_2, a2_1, a2_2
+     dalph: 1x4 matrix, derivative of alph wrt. t, order da1_1, da1_2, da2_1, da2_2
+  */
+
+  /* Initialising Hessian matrix */
+  mat res(2,2);
+
+  mat u1_p(1,2); u1_p(0,0) = u(0,0)+h; u1_p(0,1) = u(0,1);
+  mat u1_m(1,2); u1_m(0,0) = u(0,0)-h; u1_m(0,1) = u(0,1);
+  mat u2_p(1,2); u2_p(0,0) = u(0,0); u2_p(0,1) = u(0,1)+h;
+  mat u2_m(1,2); u2_m(0,0) = u(0,0); u2_m(0,1) = u(0,1)-h;
+
+  res.row(0) = (Dloglik(y, b, u1_p, sigma, alph, dalph)-Dloglik(y, b, u1_m, sigma, alph, dalph))/(2*h);
+  res.row(1) = (Dloglik(y, b, u2_p, sigma, alph, dalph)-Dloglik(y, b, u2_m, sigma, alph, dalph))/(2*h);
+
+  return(res);
+}
 
 //Rcpp::Rcout << "a12" << std::endl << alph_c12 ;
 //Rcpp::Rcout << "everywhere";
