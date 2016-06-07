@@ -233,7 +233,7 @@ vecmat conMuSig(mat sigma, vec x, uvec rc1, uvec rc2) {
 
 /* logfy */
 // [[Rcpp::export]]
-vec loglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
+vec loglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
   /* y: nx2 matrix with event type (0, 1 or 2) of family member 1 and 2
      b: nx4 matrix with XB for event type 1 and 2 (b1 and b2) for family member 1 and 2
         the order is b1_1, b1_2, b2_1 and b2_2
@@ -255,13 +255,6 @@ vec loglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
 
   /* Initialising loglik vector */
   vec res(n);
-
-  /* For the pdf of u */
-  uvec rc(2); rc(0) = 4; rc(1) = 5;
-  mat sigu = sigma.submat(rc,rc);
-  mat isigu = sigu.i();
-  double dsigu = det(sigu);
-  double sq_dsigu = sqrt(dsigu);
 
   for (int i=0; i<n; i++) {
     /* Both family members experience event 1, estimating ddF11 */
@@ -302,13 +295,8 @@ vec loglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
       mat inner = alph_c.t()*ic_sig*alph_c;
       double pdf11 = 1/twopi*1/sqrt(dc_sig)*exp(-0.5*inner(0));
 
-      /* Calculating the pdf of u1 and u2 */
-      mat pu = u.row(i);
-      mat inu = pu*isigu*pu.t();
-      double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
-
       /* Loglikelihood contribution */
-      double ddF11 = pi1_1(i)*pi1_2(i)*pdfu*dalph(i,0)*dalph(i,1)*pdf11; // pi1_1, pi1_2, dalph1_1, dalph1_2
+      double ddF11 = pi1_1(i)*pi1_2(i)*dalph(i,0)*dalph(i,1)*pdf11; // pi1_1, pi1_2, dalph1_1, dalph1_2
       res(i) = log(ddF11);
     }
     /* Family member 1 experience event 1, family member 2 experience event 2, estimating ddF12 */
@@ -349,13 +337,8 @@ vec loglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
       mat inner = alph_c.t()*ic_sig*alph_c;
       double pdf12 = 1/twopi*1/sqrt(dc_sig)*exp(-0.5*inner(0));
 
-      /* Calculating the pdf of u1 and u2 */
-      mat pu = u.row(i);
-      mat inu = pu*isigu*pu.t();
-      double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
-
       /* Loglikelihood contribution */
-      double ddF12 = pi1_1(i)*pi2_2(i)*pdfu*dalph(i,0)*dalph(i,3)*pdf12; // pi1_1, pi2_2, dalph1_1, dalph2_2
+      double ddF12 = pi1_1(i)*pi2_2(i)*dalph(i,0)*dalph(i,3)*pdf12; // pi1_1, pi2_2, dalph1_1, dalph2_2
       res(i) = log(ddF12);
     }
     /* Family member 1 experience event 2, family member 2 experience event 1, estimating ddF21 */
@@ -396,13 +379,8 @@ vec loglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
       mat inner = alph_c.t()*ic_sig*alph_c;
       double pdf21 = 1/twopi*1/sqrt(dc_sig)*exp(-0.5*inner(0));
 
-      /* Calculating the pdf of u1 and u2 */
-      mat pu = u.row(i);
-      mat inu = pu*isigu*pu.t();
-      double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
-
       /* Loglikelihood contribution */
-      double ddF21 = pi2_1(i)*pi1_2(i)*pdfu*dalph(i,2)*dalph(i,1)*pdf21; // pi2_1, pi1_2, dalph2_1, dalph1_2
+      double ddF21 = pi2_1(i)*pi1_2(i)*dalph(i,2)*dalph(i,1)*pdf21; // pi2_1, pi1_2, dalph2_1, dalph1_2
       res(i) = log(ddF21);
     }
     /* Both family members experience event 2, estimating ddF22 */
@@ -443,13 +421,8 @@ vec loglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
       mat inner = alph_c.t()*ic_sig*alph_c;
       double pdf22 = 1/twopi*1/sqrt(dc_sig)*exp(-0.5*inner(0));
 
-      /* Calculating the pdf of u1 and u2 */
-      mat pu = u.row(i);
-      mat inu = pu*isigu*pu.t();
-      double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
-
       /* Loglikelihood contribution */
-      double ddF22 = pi2_1(i)*pi2_2(i)*pdfu*dalph(i,2)*dalph(i,3)*pdf22; // pi2_1, pi2_2, dalph2_1, dalph2_2
+      double ddF22 = pi2_1(i)*pi2_2(i)*dalph(i,2)*dalph(i,3)*pdf22; // pi2_1, pi2_2, dalph2_1, dalph2_2
       res(i) = log(ddF22);
     }
     /* Family member 1 experience event 0, family member 2 experience event 1, estimating dF01 */
@@ -501,7 +474,6 @@ vec loglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
       vecmat out2 = conMuSig(sigma, mu, rc1, rc5);
       vec c_mu2 = out2.V;
       mat c_sig2 = out2.M1;
-
       mat c_sigX2 = out2.M2;
 
       /* Pulling out the appropriate alpha from alph */
@@ -536,13 +508,8 @@ vec loglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
       /* Estimation of F2c1_1 */
       double F2c1_1 = pi2_1(i)*pn(alph_c3,sqrt(c_sig3[0]));
 
-      /* Calculating the pdf of u1 and u2 */
-      mat pu = u.row(i);
-      mat inu = pu*isigu*pu.t();
-      double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
-
       /* Loglikelihood contribution */
-      double dF01 = pdfu*dF1_2*(1-F1c1_1-F2c1_1);
+      double dF01 = dF1_2*(1-F1c1_1-F2c1_1);
       res(i) = log(dF01);
     }
     /* Family member 1 experience event 1, family member 2 experience event 0, estimating dF10 */
@@ -627,13 +594,8 @@ vec loglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
       /* Estimation of F2c1_2 */
       double F2c1_2 = pi2_2(i)*pn(alph_c3,sqrt(c_sig3[0]));
 
-      /* Calculating the pdf of u1 and u2 */
-      mat pu = u.row(i);
-      mat inu = pu*isigu*pu.t();
-      double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
-
       /* Loglikelihood contribution */
-      double dF10 = pdfu*dF1_1*(1-F1c1_2-F2c1_2);
+      double dF10 = dF1_1*(1-F1c1_2-F2c1_2);
       res(i) = log(dF10);
     }
     /* Family member 1 experience event 0, family member 2 experience event 2, estimating dF02 */
@@ -718,13 +680,8 @@ vec loglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
       /* Estimation of F2c2_1 */
       double F2c2_1 = pi2_1(i)*pn(alph_c3,sqrt(c_sig3[0]));
 
-      /* Calculating the pdf of u1 and u2 */
-      mat pu = u.row(i);
-      mat inu = pu*isigu*pu.t();
-      double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
-
       /* Loglikelihood contribution */
-      double dF02 = pdfu*dF2_2*(1-F1c2_1-F2c2_1);
+      double dF02 = dF2_2*(1-F1c2_1-F2c2_1);
       res(i) = log(dF02);
     }
     /* Family member 1 experience event 2, family member 2 experience event 0, estimating dF20 */
@@ -809,13 +766,8 @@ vec loglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
       /* Estimation of F2c2_2 */
       double F2c2_2 = pi2_2(i)*pn(alph_c3,sqrt(c_sig3[0]));
 
-      /* Calculating the pdf of u1 and u2 */
-      mat pu = u.row(i);
-      mat inu = pu*isigu*pu.t();
-      double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
-
       /* Loglikelihood contribution */
-      double dF20 = pdfu*dF2_1*(1-F1c2_2-F2c2_2);
+      double dF20 = dF2_1*(1-F1c2_2-F2c2_2);
       res(i) = log(dF20);
     }
     /* Family member 1 experience event 0, family member 2 experience event 0, estimating F00 */
@@ -881,11 +833,6 @@ vec loglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
       mat alph_c2_1 = alph_f2_1.col(i)-c_mu3;
       mat alph_c2_2 = alph_f2_2.col(i)-c_mu4;
 
-      /* Calculating the pdf of u1 and u2 */
-      mat pu = u.row(i);
-      mat inu = pu*isigu*pu.t();
-      double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
-
       /* Estimation of F1_1, F1_2, F2_1 and F2_2 */
       double F1_1 = pi1_1(i)*pn(alph_c1_1,sqrt(c_sig1[0]));
       double F1_2 = pi1_2(i)*pn(alph_c1_2,sqrt(c_sig2[0]));
@@ -940,13 +887,27 @@ vec loglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
       double F22 = pi2_1(i)*pi2_2(i)*pn2(alph_f22.col(i),c_mu8,c_sig8);
 
       /* Loglikelihood contribution */
-      double F00 = pdfu*(1-F1_1-F1_2-F2_1-F2_2+F11+F12+F21+F22);
-
+      double F00 = (1-F1_1-F1_2-F2_1-F2_2+F11+F12+F21+F22);
       res(i) = log(F00);
+    }
+    if (cond) {
+      /* For the pdf of u */
+      uvec rc(2); rc(0) = 4; rc(1) = 5;
+      mat sigu = sigma.submat(rc,rc);
+      mat isigu = sigu.i();
+      double dsigu = det(sigu);
+      double sq_dsigu = sqrt(dsigu);
+      mat pu = u.row(i);
+      mat inu = pu*isigu*pu.t();
+
+      /* The pdf of u */
+      double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
+
+      /* Adding to loglik */
+      res(i) += log(pdfu);
     }
   }
   return(res);
-
 }
 
 
@@ -961,7 +922,7 @@ vec loglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
 /*------------------------------------------------------------------------------------------------------------*/
 /* Dlogfy */
 // [[Rcpp::export]]
-mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
+mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
   /* y: nx2 matrix with event type (0, 1 or 2) of family member 1 and 2
      b: nx4 matrix with XB for event type 1 and 2 (b1 and b2) for family member 1 and 2
         the order is b1_1, b1_2, b2_1 and b2_2
@@ -1006,14 +967,6 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
   vec dpi12_u2 = dpi1_1_u2%pi2_2 + pi1_1%dpi2_2_u2;
   vec dpi21_u2 = dpi2_1_u2%pi1_2 + pi2_1%dpi1_2_u2;
   vec dpi22_u2 = dpi2_1_u2%pi2_2 + pi2_1%dpi2_2_u2;
-
-  /* For the pdf of u */
-  uvec rc(2); rc(0) = 4; rc(1) = 5;
-  mat sigu = sigma.submat(rc,rc);
-  mat isigu = sigu.i();
-  double dsigu = det(sigu);
-  double sq_dsigu = sqrt(dsigu);
-  double denom = sigu(0,0)*sigu(1,1)-sigu(0,1)*sigu(1,0);
 
   /* Initialising Dloglik matrix */
   mat res(n,2);
@@ -1067,24 +1020,14 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
 
       /* Derivative of the pdf of the alphas wrt. u1 and u2 */
       double dpdf11_u1 = pdf11*(alph_c(0)*c_sigX(0,0)/pow(sd1,2)+alph_c(1)*c_sigX(1,0)/pow(sd2,2)-r*c_sigX(0,0)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*c_sigX(1,0)/(sd1*sd2))/(1-pow(r,2));
-
       double dpdf11_u2 = pdf11*(alph_c(0)*c_sigX(0,1)/pow(sd1,2)+alph_c(1)*c_sigX(1,1)/pow(sd2,2)-r*c_sigX(0,1)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*c_sigX(1,1)/(sd1*sd2))/(1-pow(r,2));
 
-      /* Calculating the pdf of u1 and u2 */
-      mat pu = u.row(i);
-      mat inu = pu*isigu*pu.t();
-      double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
-
-      /* Derivative of the pdf of the u's wrt u1 and u2 */
-      double dpdfu_u1 = pdfu*-0.5*-(sigu(0,1)*pu(1)+sigu(1,0)*pu(1)-2*sigu(1,1)*pu(0))/denom;
-      double dpdfu_u2 = pdfu*-0.5*(2*sigu(0,0)*pu(1)-sigu(0,1)*pu(0)-sigu(1,0)*pu(0))/denom;
-
       /* Likelihood contribution */
-      double ddF11 = pi1_1(i)*pi1_2(i)*pdfu*dalph(i,0)*dalph(i,1)*pdf11; // pi1_1, pi1_2, dalph1_1, dalph1_2
+      double ddF11 = pi1_1(i)*pi1_2(i)*dalph(i,0)*dalph(i,1)*pdf11; // pi1_1, pi1_2, dalph1_1, dalph1_2
 
       /* Score contributions from ddF11 wrt. u1 and u2 */
-      double sc_u1 = (1/ddF11)*dalph(i,0)*dalph(i,1)*(dpi11_u1(i)*pdfu*pdf11+pi1_1(i)*pi1_2(i)*dpdfu_u1*pdf11+pi1_1(i)*pi1_2(i)*pdfu*dpdf11_u1);
-      double sc_u2 = (1/ddF11)*dalph(i,0)*dalph(i,1)*(dpi11_u2(i)*pdfu*pdf11+pi1_1(i)*pi1_2(i)*dpdfu_u2*pdf11+pi1_1(i)*pi1_2(i)*pdfu*dpdf11_u2);
+      double sc_u1 = (1/ddF11)*dalph(i,0)*dalph(i,1)*(dpi11_u1(i)*pdf11+pi1_1(i)*pi1_2(i)*dpdf11_u1);
+      double sc_u2 = (1/ddF11)*dalph(i,0)*dalph(i,1)*(dpi11_u2(i)*pdf11+pi1_1(i)*pi1_2(i)*dpdf11_u2);
 
       /* Adding to return vector */
       res(i,0) = sc_u1;
@@ -1139,24 +1082,14 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
 
       /* Derivative of the pdf of the alphas wrt. u1 and u2 */
       double dpdf12_u1 = pdf12*(alph_c(0)*c_sigX(0,0)/pow(sd1,2)+alph_c(1)*c_sigX(1,0)/pow(sd2,2)-r*c_sigX(0,0)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*c_sigX(1,0)/(sd1*sd2))/(1-pow(r,2));
-
       double dpdf12_u2 = pdf12*(alph_c(0)*c_sigX(0,1)/pow(sd1,2)+alph_c(1)*c_sigX(1,1)/pow(sd2,2)-r*c_sigX(0,1)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*c_sigX(1,1)/(sd1*sd2))/(1-pow(r,2));
 
-      /* Calculating the pdf of u1 and u2 */
-      mat pu = u.row(i);
-      mat inu = pu*isigu*pu.t();
-      double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
-
-      /* Derivative of the pdf of the u's wrt u1 and u2 */
-      double dpdfu_u1 = pdfu*-0.5*-(sigu(0,1)*pu(1)+sigu(1,0)*pu(1)-2*sigu(1,1)*pu(0))/denom;
-      double dpdfu_u2 = pdfu*-0.5*(2*sigu(0,0)*pu(1)-sigu(0,1)*pu(0)-sigu(1,0)*pu(0))/denom;
-
       /* Likelihood contribution */
-      double ddF12 = pi1_1(i)*pi2_2(i)*pdfu*dalph(i,0)*dalph(i,3)*pdf12; // pi1_1, pi2_2, dalph1_1, dalph2_2
+      double ddF12 = pi1_1(i)*pi2_2(i)*dalph(i,0)*dalph(i,3)*pdf12; // pi1_1, pi2_2, dalph1_1, dalph2_2
 
       /* Score contributions from ddF12 wrt. u1 and u2 */
-      double sc_u1 = (1/ddF12)*dalph(i,0)*dalph(i,3)*(dpi12_u1(i)*pdfu*pdf12+pi1_1(i)*pi2_2(i)*dpdfu_u1*pdf12+pi1_1(i)*pi2_2(i)*pdfu*dpdf12_u1);
-      double sc_u2 = (1/ddF12)*dalph(i,0)*dalph(i,3)*(dpi12_u2(i)*pdfu*pdf12+pi1_1(i)*pi2_2(i)*dpdfu_u2*pdf12+pi1_1(i)*pi2_2(i)*pdfu*dpdf12_u2);
+      double sc_u1 = (1/ddF12)*dalph(i,0)*dalph(i,3)*(dpi12_u1(i)*pdf12+pi1_1(i)*pi2_2(i)*dpdf12_u1);
+      double sc_u2 = (1/ddF12)*dalph(i,0)*dalph(i,3)*(dpi12_u2(i)*pdf12+pi1_1(i)*pi2_2(i)*dpdf12_u2);
 
       /* Adding to return vector */
       res(i,0) = sc_u1;
@@ -1211,24 +1144,14 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
 
       /* Derivative of the pdf of the alphas wrt. u1 and u2 */
       double dpdf21_u1 = pdf21*(alph_c(0)*c_sigX(0,0)/pow(sd1,2)+alph_c(1)*c_sigX(1,0)/pow(sd2,2)-r*c_sigX(0,0)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*c_sigX(1,0)/(sd1*sd2))/(1-pow(r,2));
-
       double dpdf21_u2 = pdf21*(alph_c(0)*c_sigX(0,1)/pow(sd1,2)+alph_c(1)*c_sigX(1,1)/pow(sd2,2)-r*c_sigX(0,1)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*c_sigX(1,1)/(sd1*sd2))/(1-pow(r,2));
 
-      /* Calculating the pdf of u1 and u2 */
-      mat pu = u.row(i);
-      mat inu = pu*isigu*pu.t();
-      double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
-
-      /* Derivative of the pdf of the u's wrt u1 and u2 */
-      double dpdfu_u1 = pdfu*-0.5*-(sigu(0,1)*pu(1)+sigu(1,0)*pu(1)-2*sigu(1,1)*pu(0))/denom;
-      double dpdfu_u2 = pdfu*-0.5*(2*sigu(0,0)*pu(1)-sigu(0,1)*pu(0)-sigu(1,0)*pu(0))/denom;
-
       /* Likelihood contribution */
-      double ddF21 = pi2_1(i)*pi1_2(i)*pdfu*dalph(i,2)*dalph(i,1)*pdf21; // pi2_1, pi1_2, dalph2_1, dalph1_2
+      double ddF21 = pi2_1(i)*pi1_2(i)*dalph(i,2)*dalph(i,1)*pdf21; // pi2_1, pi1_2, dalph2_1, dalph1_2
 
       /* Score contributions from ddF21 wrt. u1 and u2 */
-      double sc_u1 = (1/ddF21)*dalph(i,2)*dalph(i,1)*(dpi21_u1(i)*pdfu*pdf21+pi2_1(i)*pi1_2(i)*dpdfu_u1*pdf21+pi2_1(i)*pi1_2(i)*pdfu*dpdf21_u1);
-      double sc_u2 = (1/ddF21)*dalph(i,2)*dalph(i,1)*(dpi21_u2(i)*pdfu*pdf21+pi2_1(i)*pi1_2(i)*dpdfu_u2*pdf21+pi2_1(i)*pi1_2(i)*pdfu*dpdf21_u2);
+      double sc_u1 = (1/ddF21)*dalph(i,2)*dalph(i,1)*(dpi21_u1(i)*pdf21+pi2_1(i)*pi1_2(i)*dpdf21_u1);
+      double sc_u2 = (1/ddF21)*dalph(i,2)*dalph(i,1)*(dpi21_u2(i)*pdf21+pi2_1(i)*pi1_2(i)*dpdf21_u2);
 
       /* Adding to return vector */
       res(i,0) = sc_u1;
@@ -1285,21 +1208,12 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
       double dpdf22_u1 = pdf22*(alph_c(0)*c_sigX(0,0)/pow(sd1,2)+alph_c(1)*c_sigX(1,0)/pow(sd2,2)-r*c_sigX(0,0)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*c_sigX(1,0)/(sd1*sd2))/(1-pow(r,2));
       double dpdf22_u2 = pdf22*(alph_c(0)*c_sigX(0,1)/pow(sd1,2)+alph_c(1)*c_sigX(1,1)/pow(sd2,2)-r*c_sigX(0,1)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*c_sigX(1,1)/(sd1*sd2))/(1-pow(r,2));
 
-    /* Calculating the pdf of u1 and u2 */
-      mat pu = u.row(i);
-      mat inu = pu*isigu*pu.t();
-      double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
-
-      /* Derivative of the pdf of the u's wrt u1 and u2 */
-      double dpdfu_u1 = pdfu*-0.5*-(sigu(0,1)*pu(1)+sigu(1,0)*pu(1)-2*sigu(1,1)*pu(0))/denom;
-      double dpdfu_u2 = pdfu*-0.5*(2*sigu(0,0)*pu(1)-sigu(0,1)*pu(0)-sigu(1,0)*pu(0))/denom;
-
       /* Likelihood contribution */
-      double ddF22 = pi2_1(i)*pi2_2(i)*pdfu*dalph(i,2)*dalph(i,3)*pdf22; // pi2_1, pi2_2, dalph2_1, dalph2_2
+      double ddF22 = pi2_1(i)*pi2_2(i)*dalph(i,2)*dalph(i,3)*pdf22; // pi2_1, pi2_2, dalph2_1, dalph2_2
 
       /* Score contributions from ddF22 wrt. u1 and u2 */
-      double sc_u1 = (1/ddF22)*dalph(i,2)*dalph(i,3)*(dpi22_u1(i)*pdfu*pdf22+pi2_1(i)*pi2_2(i)*dpdfu_u1*pdf22+pi2_1(i)*pi2_2(i)*pdfu*dpdf22_u1);
-      double sc_u2 = (1/ddF22)*dalph(i,2)*dalph(i,3)*(dpi22_u2(i)*pdfu*pdf22+pi2_1(i)*pi2_2(i)*dpdfu_u2*pdf22+pi2_1(i)*pi2_2(i)*pdfu*dpdf22_u2);
+      double sc_u1 = (1/ddF22)*dalph(i,2)*dalph(i,3)*(dpi22_u1(i)*pdf22+pi2_1(i)*pi2_2(i)*dpdf22_u1);
+      double sc_u2 = (1/ddF22)*dalph(i,2)*dalph(i,3)*(dpi22_u2(i)*pdf22+pi2_1(i)*pi2_2(i)*dpdf22_u2);
 
       /* Adding to return vector */
       res(i,0) = sc_u1;
@@ -1407,25 +1321,16 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
       double inner3 = pow(alph_c3[0],2)/c_sig3[0];
       double pdf2c1_1 = 1/sq_twopi*1/sd3*exp(-0.5*inner3);
 
-      /* Calculating the pdf of u1 and u2 */
-      mat pu = u.row(i);
-      mat inu = pu*isigu*pu.t();
-      double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
-
-      /* Derivative of the pdf of the u's wrt u1 and u2 */
-      double dpdfu_u1 = pdfu*-0.5*-(sigu(0,1)*pu(1)+sigu(1,0)*pu(1)-2*sigu(1,1)*pu(0))/denom;
-      double dpdfu_u2 = pdfu*-0.5*(2*sigu(0,0)*pu(1)-sigu(0,1)*pu(0)-sigu(1,0)*pu(0))/denom;
-
       /* Score contribution from F2c1_1 */
       double dF2c1_1_u1 = dpi2_1_u1(i)*pn(alph_c3,sd3)+pi2_1(i)*pdf2c1_1*(-c_sigX3(1));
       double dF2c1_1_u2 = dpi2_1_u2(i)*pn(alph_c3,sd3)+pi2_1(i)*pdf2c1_1*(-c_sigX3(2));
 
       /* Likelihood contribution */
-      double dF01 = pdfu*dF1_2*(1-F1c1_1-F2c1_1);
+      double dF01 = dF1_2*(1-F1c1_1-F2c1_1);
 
       /* Score contributions from dF01 wrt. u1 and u2 */
-      double sc_u1 = (1/dF01)*(ddF1_2_u1*pdfu*(1-F1c1_1-F2c1_1)+dF1_2*dpdfu_u1*(1-F1c1_1-F2c1_1)+dF1_2*pdfu*(-dF1c1_1_u1-dF2c1_1_u1));
-      double sc_u2 = (1/dF01)*(ddF1_2_u2*pdfu*(1-F1c1_1-F2c1_1)+dF1_2*dpdfu_u2*(1-F1c1_1-F2c1_1)+dF1_2*pdfu*(-dF1c1_1_u2-dF2c1_1_u2));
+      double sc_u1 = (1/dF01)*(ddF1_2_u1*(1-F1c1_1-F2c1_1)+dF1_2*(-dF1c1_1_u1-dF2c1_1_u1));
+      double sc_u2 = (1/dF01)*(ddF1_2_u2*(1-F1c1_1-F2c1_1)+dF1_2*(-dF1c1_1_u2-dF2c1_1_u2));
 
       /* Adding to return vector */
       res(i,0) = sc_u1;
@@ -1533,25 +1438,16 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
       double inner3 = pow(alph_c3[0],2)/c_sig3[0];
       double pdf2c1_2 = 1/sq_twopi*1/sd3*exp(-0.5*inner3);
 
-      /* Calculating the pdf of u1 and u2 */
-      mat pu = u.row(i);
-      mat inu = pu*isigu*pu.t();
-      double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
-
-      /* Derivative of the pdf of the u's wrt u1 and u2 */
-      double dpdfu_u1 = pdfu*-0.5*-(sigu(0,1)*pu(1)+sigu(1,0)*pu(1)-2*sigu(1,1)*pu(0))/denom;
-      double dpdfu_u2 = pdfu*-0.5*(2*sigu(0,0)*pu(1)-sigu(0,1)*pu(0)-sigu(1,0)*pu(0))/denom;
-
       /* Score contribution from F2c1_1 */
       double dF2c1_2_u1 = dpi2_2_u1(i)*pn(alph_c3,sd3)+pi2_2(i)*pdf2c1_2*(-c_sigX3(1));
       double dF2c1_2_u2 = dpi2_2_u2(i)*pn(alph_c3,sd3)+pi2_2(i)*pdf2c1_2*(-c_sigX3(2));
 
       /* Likelihood contribution */
-      double dF10 = pdfu*dF1_1*(1-F1c1_2-F2c1_2);
+      double dF10 = dF1_1*(1-F1c1_2-F2c1_2);
 
       /* Score contributions from dF10 wrt. u1 and u2 */
-      double sc_u1 = (1/dF10)*(ddF1_1_u1*pdfu*(1-F1c1_2-F2c1_2)+dF1_1*dpdfu_u1*(1-F1c1_2-F2c1_2)+dF1_1*pdfu*(-dF1c1_2_u1-dF2c1_2_u1));
-      double sc_u2 = (1/dF10)*(ddF1_1_u2*pdfu*(1-F1c1_2-F2c1_2)+dF1_1*dpdfu_u2*(1-F1c1_2-F2c1_2)+dF1_1*pdfu*(-dF1c1_2_u2-dF2c1_2_u2));
+      double sc_u1 = (1/dF10)*(ddF1_1_u1*(1-F1c1_2-F2c1_2)+dF1_1*(-dF1c1_2_u1-dF2c1_2_u1));
+      double sc_u2 = (1/dF10)*(ddF1_1_u2*(1-F1c1_2-F2c1_2)+dF1_1*(-dF1c1_2_u2-dF2c1_2_u2));
 
       /* Adding to return vector */
       res(i,0) = sc_u1;
@@ -1659,25 +1555,16 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
       double inner3 = pow(alph_c3[0],2)/c_sig3[0];
       double pdf2c2_1 = 1/sq_twopi*1/sd3*exp(-0.5*inner3);
 
-      /* Calculating the pdf of u1 and u2 */
-      mat pu = u.row(i);
-      mat inu = pu*isigu*pu.t();
-      double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
-
-      /* Derivative of the pdf of the u's wrt u1 and u2 */
-      double dpdfu_u1 = pdfu*-0.5*-(sigu(0,1)*pu(1)+sigu(1,0)*pu(1)-2*sigu(1,1)*pu(0))/denom;
-      double dpdfu_u2 = pdfu*-0.5*(2*sigu(0,0)*pu(1)-sigu(0,1)*pu(0)-sigu(1,0)*pu(0))/denom;
-
       /* Score contribution from F2c2_1 */
       double dF2c2_1_u1 = dpi2_1_u1(i)*pn(alph_c3,sd3)+pi2_1(i)*pdf2c2_1*(-c_sigX3(1));
       double dF2c2_1_u2 = dpi2_1_u2(i)*pn(alph_c3,sd3)+pi2_1(i)*pdf2c2_1*(-c_sigX3(2));
 
       /* Likelihood contribution */
-      double dF02 = pdfu*dF2_2*(1-F1c2_1-F2c2_1);
+      double dF02 = dF2_2*(1-F1c2_1-F2c2_1);
 
       /* Score contributions from dF02 wrt. u1 and u2 */
-      double sc_u1 = (1/dF02)*(ddF2_2_u1*pdfu*(1-F1c2_1-F2c2_1)+dF2_2*dpdfu_u1*(1-F1c2_1-F2c2_1)+dF2_2*pdfu*(-dF1c2_1_u1-dF2c2_1_u1));
-      double sc_u2 = (1/dF02)*(ddF2_2_u2*pdfu*(1-F1c2_1-F2c2_1)+dF2_2*dpdfu_u2*(1-F1c2_1-F2c2_1)+dF2_2*pdfu*(-dF1c2_1_u2-dF2c2_1_u2));
+      double sc_u1 = (1/dF02)*(ddF2_2_u1*(1-F1c2_1-F2c2_1)+dF2_2*(-dF1c2_1_u1-dF2c2_1_u1));
+      double sc_u2 = (1/dF02)*(ddF2_2_u2*(1-F1c2_1-F2c2_1)+dF2_2*(-dF1c2_1_u2-dF2c2_1_u2));
 
       /* Adding to return vector */
       res(i,0) = sc_u1;
@@ -1785,25 +1672,16 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
       double inner3 = pow(alph_c3[0],2)/c_sig3[0];
       double pdf2c2_2 = 1/sq_twopi*1/sd3*exp(-0.5*inner3);
 
-      /* Calculating the pdf of u1 and u2 */
-      mat pu = u.row(i);
-      mat inu = pu*isigu*pu.t();
-      double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
-
-      /* Derivative of the pdf of the u's wrt u1 and u2 */
-      double dpdfu_u1 = pdfu*-0.5*-(sigu(0,1)*pu(1)+sigu(1,0)*pu(1)-2*sigu(1,1)*pu(0))/denom;
-      double dpdfu_u2 = pdfu*-0.5*(2*sigu(0,0)*pu(1)-sigu(0,1)*pu(0)-sigu(1,0)*pu(0))/denom;
-
       /* Score contribution from F2c2_2 */
       double dF2c2_2_u1 = dpi2_2_u1(i)*pn(alph_c3,sd3)+pi2_2(i)*pdf2c2_2*(-c_sigX3(1));
       double dF2c2_2_u2 = dpi2_2_u2(i)*pn(alph_c3,sd3)+pi2_2(i)*pdf2c2_2*(-c_sigX3(2));
 
       /* Likelihood contribution */
-      double dF20 = pdfu*dF2_1*(1-F1c2_2-F2c2_2);
+      double dF20 = dF2_1*(1-F1c2_2-F2c2_2);
 
       /* Score contributions from dF20 wrt. u1 and u2 */
-      double sc_u1 = (1/dF20)*(ddF2_1_u1*pdfu*(1-F1c2_2-F2c2_2)+dF2_1*dpdfu_u1*(1-F1c2_2-F2c2_2)+dF2_1*pdfu*(-dF1c2_2_u1-dF2c2_2_u1));
-      double sc_u2 = (1/dF20)*(ddF2_1_u2*pdfu*(1-F1c2_2-F2c2_2)+dF2_1*dpdfu_u2*(1-F1c2_2-F2c2_2)+dF2_1*pdfu*(-dF1c2_2_u2-dF2c2_2_u2));
+      double sc_u1 = (1/dF20)*(ddF2_1_u1*(1-F1c2_2-F2c2_2)+dF2_1*(-dF1c2_2_u1-dF2c2_2_u1));
+      double sc_u2 = (1/dF20)*(ddF2_1_u2*(1-F1c2_2-F2c2_2)+dF2_1*(-dF1c2_2_u2-dF2c2_2_u2));
 
       /* Adding to return vector */
       res(i,0) = sc_u1;
@@ -2073,15 +1951,6 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
       double dcdf22_u1 = cdf2c2_1*pdf2_2*(-c_sigX8(1,0)) + cdf2c2_2*pdf2_1*(-c_sigX8(0,0));
       double dcdf22_u2 = cdf2c2_1*pdf2_2*(-c_sigX8(1,1)) + cdf2c2_2*pdf2_1*(-c_sigX8(0,1));
 
-      /* Calculating the pdf of u1 and u2 */
-      mat pu = u.row(i);
-      mat inu = pu*isigu*pu.t();
-      double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
-
-      /* Derivative of the pdf of the u's wrt u1 and u2 */
-      double dpdfu_u1 = pdfu*-0.5*-(sigu(0,1)*pu(1)+sigu(1,0)*pu(1)-2*sigu(1,1)*pu(0))/denom;
-      double dpdfu_u2 = pdfu*-0.5*(2*sigu(0,0)*pu(1)-sigu(0,1)*pu(0)-sigu(1,0)*pu(0))/denom;
-
       /* Score contributions from F11, F12, F21 and F22 */
       double dF11_u1 = dpi11_u1(i)*cdf11+pi1_1(i)*pi1_2(i)*dcdf11_u1;
       double dF12_u1 = dpi12_u1(i)*cdf12+pi1_1(i)*pi2_2(i)*dcdf12_u1;
@@ -2094,15 +1963,37 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
       double dF22_u2 = dpi22_u2(i)*cdf22+pi2_1(i)*pi2_2(i)*dcdf22_u2;
 
       /* Likelihood contribution */
-      double F00 = pdfu*(1-F1_1-F1_2-F2_1-F2_2+F11+F12+F21+F22);
+      double F00 = 1-F1_1-F1_2-F2_1-F2_2+F11+F12+F21+F22;
 
       /* Score contribution from F00 */
-      double sc_u1 = (1/F00)*(dpdfu_u1*(1-F1_1-F1_2-F2_1-F2_2+F11+F12+F21+F22)+pdfu*(-dF1_1_u1-dF1_2_u1-dF2_1_u1-dF2_2_u1+dF11_u1+dF12_u1+dF21_u1+dF22_u1));
-      double sc_u2 = (1/F00)*(dpdfu_u2*(1-F1_1-F1_2-F2_1-F2_2+F11+F12+F21+F22)+pdfu*(-dF1_1_u2-dF1_2_u2-dF2_1_u2-dF2_2_u2+dF11_u2+dF12_u2+dF21_u2+dF22_u2));
+      double sc_u1 = (1/F00)*(-dF1_1_u1-dF1_2_u1-dF2_1_u1-dF2_2_u1+dF11_u1+dF12_u1+dF21_u1+dF22_u1);
+      double sc_u2 = (1/F00)*(-dF1_1_u2-dF1_2_u2-dF2_1_u2-dF2_2_u2+dF11_u2+dF12_u2+dF21_u2+dF22_u2);
 
       /* Adding to return vector */
       res(i,0) = sc_u1;
       res(i,1) = sc_u2;
+    }
+    if (cond) {
+      /* For the pdf of u */
+      uvec rc(2); rc(0) = 4; rc(1) = 5;
+      mat sigu = sigma.submat(rc,rc);
+      mat isigu = sigu.i();
+      double dsigu = det(sigu);
+      double sq_dsigu = sqrt(dsigu);
+
+      /* Calculating the pdf of u1 and u2 */
+      mat pu = u.row(i);
+      mat inu = pu*isigu*pu.t();
+      double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
+
+      /* Derivative of the pdf of the u's wrt u1 and u2 */
+      double denom = sigu(0,0)*sigu(1,1)-sigu(0,1)*sigu(1,0);
+      double dpdfu_u1 = pdfu*(-0.5)*(2*sigu(1,1)*pu(0)-sigu(0,1)*pu(1)-sigu(1,0)*pu(1))/denom;
+      double dpdfu_u2 = pdfu*(-0.5)*(2*sigu(0,0)*pu(1)-sigu(0,1)*pu(0)-sigu(1,0)*pu(0))/denom;
+
+      /* Adding to score */
+      res(i,0) += (1/pdfu)*dpdfu_u1;
+      res(i,1) += (1/pdfu)*dpdfu_u2;
     }
   }
   return(res);
@@ -2116,7 +2007,7 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
 /*------------------------------------------------------------------------------------------------------------*/
 /* Hes */
 // [[Rcpp::export]]
-mat Hes(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
+mat Hes(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
   /* y: 1x2 matrix with event type (0, 1 or 2) of family member 1 and 2
      b: 1x4 matrix with XB for event type 1 and 2 (b1 and b2) for family member 1 and 2
         the order is b1_1, b1_2, b2_1 and b2_2
@@ -2135,8 +2026,8 @@ mat Hes(mat y, mat b, mat u, mat sigma, mat alph, mat dalph){
   mat u2_p(1,2); u2_p(0,0) = u(0,0); u2_p(0,1) = u(0,1)+h;
   mat u2_m(1,2); u2_m(0,0) = u(0,0); u2_m(0,1) = u(0,1)-h;
 
-  res.row(0) = (Dloglik(y, b, u1_p, sigma, alph, dalph)-Dloglik(y, b, u1_m, sigma, alph, dalph))/(2*h);
-  res.row(1) = (Dloglik(y, b, u2_p, sigma, alph, dalph)-Dloglik(y, b, u2_m, sigma, alph, dalph))/(2*h);
+  res.row(0) = (Dloglik(y, b, u1_p, sigma, alph, dalph, cond)-Dloglik(y, b, u1_m, sigma, alph, dalph, cond))/(2*h);
+  res.row(1) = (Dloglik(y, b, u2_p, sigma, alph, dalph, cond)-Dloglik(y, b, u2_m, sigma, alph, dalph, cond))/(2*h);
 
   return(res);
 }
