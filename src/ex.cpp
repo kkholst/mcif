@@ -202,9 +202,9 @@ return res;
 /*
 Conditional mean and variance-covariance matrix
 */
-vecmat conMuSig(mat sigma, vec x, uvec rc1, uvec rc2) {
-  int n = rc1.n_elem;
-  int k = rc2.n_elem;
+vecmat conMuSig(mat sigma, vec mu, vec x, uvec rc1, uvec rc2) {
+  vec mu1 = mu.elem(rc1);
+  vec mu2 = mu.elem(rc2);
 
   mat sig11 = sigma.submat(rc1,rc1);
   mat sig12 = sigma.submat(rc1,rc2);
@@ -215,9 +215,6 @@ vecmat conMuSig(mat sigma, vec x, uvec rc1, uvec rc2) {
   mat sigS = sig12*isig22;
 
   vec a = x.elem(rc2);
-
-  vec mu1 = zeros<vec>(n);
-  vec mu2 = zeros<vec>(k);
 
   /* Conditional mean and variance-covariance matrix */
   vec c_mu = mu1 + sig12*isig22*(a-mu2);
@@ -257,659 +254,594 @@ vec loglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
   vec res(n);
 
   for (int i=0; i<n; i++) {
-    /* Both family members experience event 1, estimating ddF11 */
-    if((y(i,0) == 1) & (y(i,1) == 1)){
-
-      /* Specifying which parts of sigma apply */
-      uvec rc1(2); rc1(0) = 0; rc1(1) = 1;
-      uvec rc2(2); rc2(0) = 4; rc2(1) = 5;
-
-      /* Mean vector (used for estimation of conditional mean) */
+    /* Vectors (used for estimation of conditional mean) */
       vec mu(6) ;
       mu(0) = alph(i,0);
       mu(1) = alph(i,1);
       mu(2) = alph(i,2);
       mu(3) = alph(i,3);
-      mu(4) = u(i,0);
-      mu(5) = u(i,1);
-
-      /* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-      vecmat out = conMuSig(sigma, mu, rc1, rc2);
-      vec c_mu = out.V;
-      mat c_sig = out.M1;
-      mat ic_sig = c_sig.i(); // the inverse
-      double dc_sig = det(c_sig); // the determinant
-
-      /* Pulling out the appropriate alphas from alph */
-      mat alph_sub(n,2);
-      alph_sub.col(0) = alph.col(0); // alph1_1
-      alph_sub.col(1) = alph.col(1); // alph1_2
-
-      /* Transposing matrix to be of the form 2xn */
-      mat alph_f = alph_sub.t();
-
-      /* Centering the alphas */
-      mat alph_c = alph_f.col(i)-c_mu;
-
-      /* Calculating the pdf of alpha */
-      mat inner = alph_c.t()*ic_sig*alph_c;
-      double pdf11 = 1/twopi*1/sqrt(dc_sig)*exp(-0.5*inner(0));
-
-      /* Loglikelihood contribution */
-      double ddF11 = pi1_1(i)*pi1_2(i)*dalph(i,0)*dalph(i,1)*pdf11; // pi1_1, pi1_2, dalph1_1, dalph1_2
-      res(i) = log(ddF11);
-    }
-    /* Family member 1 experience event 1, family member 2 experience event 2, estimating ddF12 */
-    else if((y(i,0) == 1) & (y(i,1) == 2)){
-
-      /* Specifying which parts of sigma apply */
-      uvec rc1(2); rc1(0) = 0; rc1(1) = 3;
-      uvec rc2(2); rc2(0) = 4; rc2(1) = 5;
-
-      /* Mean vector (used for estimation of conditional mean) */
-      vec mu(6) ;
-      mu(0) = alph(i,0);
-      mu(1) = alph(i,1);
-      mu(2) = alph(i,2);
-      mu(3) = alph(i,3);
-      mu(4) = u(i,0);
-      mu(5) = u(i,1);
-
-      /* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-      vecmat out = conMuSig(sigma, mu, rc1, rc2);
-      vec c_mu = out.V;
-      mat c_sig = out.M1;
-      mat ic_sig = c_sig.i(); // the inverse
-      double dc_sig = det(c_sig); // the determinant
-
-      /* Pulling out the appropriate alphas from alph */
-      mat alph_sub(n,2);
-      alph_sub.col(0) = alph.col(0); // alph1_1
-      alph_sub.col(1) = alph.col(3); // alph2_2
-
-      /* Transposing matrix to be of the form 2xn */
-      mat alph_f = alph_sub.t();
-
-      /* Centering the alphas */
-      mat alph_c = alph_f.col(i)-c_mu;
-
-      /* Calculating the pdf of alpha*/
-      mat inner = alph_c.t()*ic_sig*alph_c;
-      double pdf12 = 1/twopi*1/sqrt(dc_sig)*exp(-0.5*inner(0));
-
-      /* Loglikelihood contribution */
-      double ddF12 = pi1_1(i)*pi2_2(i)*dalph(i,0)*dalph(i,3)*pdf12; // pi1_1, pi2_2, dalph1_1, dalph2_2
-      res(i) = log(ddF12);
-    }
-    /* Family member 1 experience event 2, family member 2 experience event 1, estimating ddF21 */
-    else if((y(i,0) == 2) & (y(i,1) == 1)){
-
-      /* Specifying which parts of sigma apply */
-      uvec rc1(2); rc1(0) = 2; rc1(1) = 1;
-      uvec rc2(2); rc2(0) = 4; rc2(1) = 5;
-
-      /* Mean vector (used for estimation of conditional mean) */
-      vec mu(6) ;
-      mu(0) = alph(i,0);
-      mu(1) = alph(i,1);
-      mu(2) = alph(i,2);
-      mu(3) = alph(i,3);
-      mu(4) = u(i,0);
-      mu(5) = u(i,1);
-
-      /* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-      vecmat out = conMuSig(sigma, mu, rc1, rc2);
-      vec c_mu = out.V;
-      mat c_sig = out.M1;
-      mat ic_sig = c_sig.i(); // the inverse
-      double dc_sig = det(c_sig); // the determinant
-
-      /* Pulling out the appropriate alphas from alph */
-      mat alph_sub(n,2);
-      alph_sub.col(0) = alph.col(2); // alph2_1
-      alph_sub.col(1) = alph.col(1); // alph1_2
-
-      /* Transposing matrix to be of the form 2xn */
-      mat alph_f = alph_sub.t();
-
-      /* Centering the alphas */
-      mat alph_c = alph_f.col(i)-c_mu;
-
-      /* Calculating the pdf */
-      mat inner = alph_c.t()*ic_sig*alph_c;
-      double pdf21 = 1/twopi*1/sqrt(dc_sig)*exp(-0.5*inner(0));
-
-      /* Loglikelihood contribution */
-      double ddF21 = pi2_1(i)*pi1_2(i)*dalph(i,2)*dalph(i,1)*pdf21; // pi2_1, pi1_2, dalph2_1, dalph1_2
-      res(i) = log(ddF21);
-    }
-    /* Both family members experience event 2, estimating ddF22 */
-    else if((y(i,0) == 2) & (y(i,1) == 2)){
-
-      /* Specifying which parts of sigma apply */
-      uvec rc1(2); rc1(0) = 2; rc1(1) = 3;
-      uvec rc2(2); rc2(0) = 4; rc2(1) = 5;
-
-      /* Mean vector (used for estimation of conditional mean) */
-      vec mu(6) ;
-      mu(0) = alph(i,0);
-      mu(1) = alph(i,1);
-      mu(2) = alph(i,2);
-      mu(3) = alph(i,3);
-      mu(4) = u(i,0);
-      mu(5) = u(i,1);
-
-      /* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-      vecmat out = conMuSig(sigma, mu, rc1, rc2);
-      vec c_mu = out.V;
-      mat c_sig = out.M1;
-      mat ic_sig = c_sig.i(); // the inverse
-      double dc_sig = det(c_sig); // the determinant
-
-      /* Pulling out the appropriate alphas from alph */
-      mat alph_sub(n,2);
-      alph_sub.col(0) = alph.col(2); // alph2_1
-      alph_sub.col(1) = alph.col(3); // alph2_2
-
-      /* Transposing matrix to be of the form 2xn */
-      mat alph_f = alph_sub.t();
-
-      /* Centering the alphas */
-      mat alph_c = alph_f.col(i)-c_mu;
-
-      /* Calculating the pdf of alpha */
-      mat inner = alph_c.t()*ic_sig*alph_c;
-      double pdf22 = 1/twopi*1/sqrt(dc_sig)*exp(-0.5*inner(0));
-
-      /* Loglikelihood contribution */
-      double ddF22 = pi2_1(i)*pi2_2(i)*dalph(i,2)*dalph(i,3)*pdf22; // pi2_1, pi2_2, dalph2_1, dalph2_2
-      res(i) = log(ddF22);
-    }
-    /* Family member 1 experience event 0, family member 2 experience event 1, estimating dF01 */
-    else if((y(i,0) == 0) & (y(i,1) == 1)){
-
-      /* Specifying which parts of sigma apply */
-      uvec rc1(1); rc1(0) = 0;
-      uvec rc2(1); rc2(0) = 1;
-      uvec rc3(1); rc3(0) = 2;
-      uvec rc4(2); rc4(0) = 4; rc4(1) = 5;
-      uvec rc5(3); rc5(0) = 1 ; rc5(1) = 4; rc5(2) = 5;
-
-      /* Mean vector (used for estimation of conditional mean) */
-      vec mu(6) ;
-      mu(0) = alph(i,0);
-      mu(1) = alph(i,1);
-      mu(2) = alph(i,2);
-      mu(3) = alph(i,3);
-      mu(4) = u(i,0);
-      mu(5) = u(i,1);
-
-      /* Marginal dF1_2 */
-      /* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-      vecmat out = conMuSig(sigma, mu, rc2, rc4);
-      vec c_mu = out.V;
-      mat c_sig = out.M1;
-      mat ic_sig = c_sig.i(); // the inverse
-      double dc_sig = det(c_sig); // the determinant
-
-      /* Pulling out the appropriate alpha from alph */
-      mat alph_sub(n,1);
-      alph_sub.col(0) = alph.col(1); // alph1_2
-
-      /* Transposing matrix to be of the form 1xn */
-      mat alph_f = alph_sub.t();
-
-      /* Centering the alpha */
-      mat alph_c = alph_f.col(i)-c_mu;
-
-      /* Calculating the pdf */
-      mat inner = alph_c.t()*ic_sig*alph_c;
-      double pdf1_2 = 1/sq_twopi*1/sqrt(dc_sig)*exp(-0.5*inner(0));
-
-      /* Estimation of dF1_2 */
-      double dF1_2 = pi1_2(i)*dalph(i,1)*pdf1_2; // pi1_2, dalph1_2
-
-      /* Conditional F1c1_1 */
-      /* Conditional mean and variance-covariance matrix, conditional on alph1_2, u1 and u2 */
-      vecmat out2 = conMuSig(sigma, mu, rc1, rc5);
-      vec c_mu2 = out2.V;
-      mat c_sig2 = out2.M1;
-      mat c_sigX2 = out2.M2;
-
-      /* Pulling out the appropriate alpha from alph */
-      mat alph_sub2(n,1);
-      alph_sub2.col(0) = alph.col(0); // alph1_1
-
-      /* Transposing matrix to be of the form 1xn */
-      mat alph_f2 = alph_sub2.t();
-
-      /* Centering the alpha */
-      mat alph_c2 = alph_f2.col(i)-c_mu2;
-
-      /* Estimation of F1c1_1 */
-      double F1c1_1 = pi1_1(i)*pn(alph_c2,sqrt(c_sig2[0]));
-
-      /* Conditional F2c1_1 */
-      /* Conditional mean and variance-covariance matrix, conditional on alph1_2, u1 and u2 */
-      vecmat out3 = conMuSig(sigma, mu, rc3, rc5);
-      vec c_mu3 = out3.V;
-      mat c_sig3 = out3.M1;
-
-      /* Pulling out the appropriate alpha from alph */
-      mat alph_sub3(n,1);
-      alph_sub3.col(0) = alph.col(2); // alph2_1
-
-      /* Transposing matrix to be of the form 1xn */
-      mat alph_f3 = alph_sub3.t();
-
-      /* Centering the alpha */
-      mat alph_c3 = alph_f3.col(i)-c_mu3;
-
-      /* Estimation of F2c1_1 */
-      double F2c1_1 = pi2_1(i)*pn(alph_c3,sqrt(c_sig3[0]));
-
-      /* Loglikelihood contribution */
-      double dF01 = dF1_2*(1-F1c1_1-F2c1_1);
-      res(i) = log(dF01);
-    }
-    /* Family member 1 experience event 1, family member 2 experience event 0, estimating dF10 */
-    else if((y(i,0) == 1) & (y(i,1) == 0)){
-
-      /* Specifying which parts of sigma apply */
-      uvec rc1(1); rc1(0) = 0;
-      uvec rc2(1); rc2(0) = 1;
-      uvec rc3(1); rc3(0) = 3;
-      uvec rc4(2); rc4(0) = 4; rc4(1) = 5;
-      uvec rc5(3); rc5(0) = 0 ; rc5(1) = 4; rc5(2) = 5;
-
-      /* Mean vector (used for estimation of conditional mean) */
-      vec mu(6) ;
-      mu(0) = alph(i,0);
-      mu(1) = alph(i,1);
-      mu(2) = alph(i,2);
-      mu(3) = alph(i,3);
-      mu(4) = u(i,0);
-      mu(5) = u(i,1);
-
-      /* Marginal dF1_1 */
-      /* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-      vecmat out = conMuSig(sigma, mu, rc1, rc4);
-      vec c_mu = out.V;
-      mat c_sig = out.M1;
-      mat ic_sig = c_sig.i(); // the inverse
-      double dc_sig = det(c_sig); // the determinant
-
-      /* Pulling out the appropriate alpha from alph */
-      mat alph_sub(n,1);
-      alph_sub.col(0) = alph.col(0); // alph1_1
-
-      /* Transposing matrix to be of the form 1xn */
-      mat alph_f = alph_sub.t();
-
-      /* Centering the alpha */
-      mat alph_c = alph_f.col(i)-c_mu;
-
-      /* Calculating the pdf */
-      mat inner = alph_c.t()*ic_sig*alph_c;
-      double pdf1_1 = 1/sq_twopi*1/sqrt(dc_sig)*exp(-0.5*inner(0));
-
-      /* Estimation of dF1_1 */
-      double dF1_1 = pi1_1(i)*dalph(i,0)*pdf1_1; // pi1_1, dalph1_1
-
-      /* Conditional F1c1_2 */
-      /* Conditional mean and variance-covariance matrix, conditional on alph1_1, u1 and u2 */
-      vecmat out2 = conMuSig(sigma, mu, rc2, rc5);
-      vec c_mu2 = out2.V;
-      mat c_sig2 = out2.M1;
-
-      /* Pulling out the appropriate alpha from alph */
-      mat alph_sub2(n,1);
-      alph_sub2.col(0) = alph.col(1); // alph1_2
-
-      /* Transposing matrix to be of the form 1xn */
-      mat alph_f2 = alph_sub2.t();
-
-      /* Centering the alpha */
-      mat alph_c2 = alph_f2.col(i)-c_mu2;
-
-      /* Estimation of F1c1_2 */
-      double F1c1_2 = pi1_2(i)*pn(alph_c2,sqrt(c_sig2[0]));
-
-      /* Conditional F2c1_2 */
-      /* Conditional mean and variance-covariance matrix, conditional on alph1_1, u1 and u2 */
-      vecmat out3 = conMuSig(sigma, mu, rc3, rc5);
-      vec c_mu3 = out3.V;
-      mat c_sig3 = out3.M1;
-
-      /* Pulling out the appropriate alpha from alph */
-      mat alph_sub3(n,1);
-      alph_sub3.col(0) = alph.col(3); // alph2_2
-
-      /* Transposing matrix to be of the form 1xn */
-      mat alph_f3 = alph_sub3.t();
-
-      /* Centering the alpha */
-      mat alph_c3 = alph_f3.col(i)-c_mu3;
-
-      /* Estimation of F2c1_2 */
-      double F2c1_2 = pi2_2(i)*pn(alph_c3,sqrt(c_sig3[0]));
-
-      /* Loglikelihood contribution */
-      double dF10 = dF1_1*(1-F1c1_2-F2c1_2);
-      res(i) = log(dF10);
-    }
-    /* Family member 1 experience event 0, family member 2 experience event 2, estimating dF02 */
-    else if((y(i,0) == 0) & (y(i,1) == 2)){
-
-      /* Specifying which parts of sigma apply */
-      uvec rc1(1); rc1(0) = 0;
-      uvec rc2(1); rc2(0) = 2;
-      uvec rc3(1); rc3(0) = 3;
-      uvec rc4(2); rc4(0) = 4; rc4(1) = 5;
-      uvec rc5(3); rc5(0) = 3 ; rc5(1) = 4; rc5(2) = 5;
-
-      /* Mean vector (used for estimation of conditional mean) */
-      vec mu(6) ;
-      mu(0) = alph(i,0);
-      mu(1) = alph(i,1);
-      mu(2) = alph(i,2);
-      mu(3) = alph(i,3);
-      mu(4) = u(i,0);
-      mu(5) = u(i,1);
-
-      /* Marginal dF2_2 */
-      /* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-      vecmat out = conMuSig(sigma, mu, rc3, rc4);
-      vec c_mu = out.V;
-      mat c_sig = out.M1;
-      mat ic_sig = c_sig.i(); // the inverse
-      double dc_sig = det(c_sig); // the determinant
-
-      /* Pulling out the appropriate alpha from alph */
-      mat alph_sub(n,1);
-      alph_sub.col(0) = alph.col(3); // alph2_2
-
-      /* Transposing matrix to be of the form 1xn */
-      mat alph_f = alph_sub.t();
-
-      /* Centering the alpha */
-      mat alph_c = alph_f.col(i)-c_mu;
-
-      /* Calculating the pdf */
-      mat inner = alph_c.t()*ic_sig*alph_c;
-      double pdf2_2 = 1/sq_twopi*1/sqrt(dc_sig)*exp(-0.5*inner(0));
-
-      /* Estimation of dF2_2 */
-      double dF2_2 = pi2_2(i)*dalph(i,3)*pdf2_2; // pi2_2, dalph2_2
-
-      /* Conditional F1c2_1 */
-      /* Conditional mean and variance-covariance matrix, conditional on alph2_2, u1 and u2 */
-      vecmat out2 = conMuSig(sigma, mu, rc1, rc5);
-      vec c_mu2 = out2.V;
-      mat c_sig2 = out2.M1;
-
-      /* Pulling out the appropriate alpha from alph */
-      mat alph_sub2(n,1);
-      alph_sub2.col(0) = alph.col(0); // alph1_1
-
-      /* Transposing matrix to be of the form 1xn */
-      mat alph_f2 = alph_sub2.t();
-
-      /* Centering the alpha */
-      mat alph_c2 = alph_f2.col(i)-c_mu2;
-
-      /* Estimation of F1c2_1 */
-      double F1c2_1 = pi1_1(i)*pn(alph_c2,sqrt(c_sig2[0]));
-
-      /* Conditional F2c2_1 */
-      /* Conditional mean and variance-covariance matrix, conditional on alph2_2, u1 and u2 */
-      vecmat out3 = conMuSig(sigma, mu, rc2, rc5);
-      vec c_mu3 = out3.V;
-      mat c_sig3 = out3.M1;
-
-      /* Pulling out the appropriate alpha from alph */
-      mat alph_sub3(n,1);
-      alph_sub3.col(0) = alph.col(2); // alph2_1
-
-      /* Transposing matrix to be of the form 1xn */
-      mat alph_f3 = alph_sub3.t();
-
-      /* Centering the alpha */
-      mat alph_c3 = alph_f3.col(i)-c_mu3;
-
-      /* Estimation of F2c2_1 */
-      double F2c2_1 = pi2_1(i)*pn(alph_c3,sqrt(c_sig3[0]));
-
-      /* Loglikelihood contribution */
-      double dF02 = dF2_2*(1-F1c2_1-F2c2_1);
-      res(i) = log(dF02);
-    }
-    /* Family member 1 experience event 2, family member 2 experience event 0, estimating dF20 */
-    else if((y(i,0) == 2) & (y(i,1) == 0)){
-
-      /* Specifying which parts of sigma apply */
-      uvec rc1(1); rc1(0) = 1;
-      uvec rc2(1); rc2(0) = 2;
-      uvec rc3(1); rc3(0) = 3;
-      uvec rc4(2); rc4(0) = 4; rc4(1) = 5;
-      uvec rc5(3); rc5(0) = 2; rc5(1) = 4; rc5(2) = 5;
-
-      /* Mean vector (used for estimation of conditional mean) */
-      vec mu(6) ;
-      mu(0) = alph(i,0);
-      mu(1) = alph(i,1);
-      mu(2) = alph(i,2);
-      mu(3) = alph(i,3);
-      mu(4) = u(i,0);
-      mu(5) = u(i,1);
-
-      /* Marginal dF2_1 */
-      /* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-      vecmat out = conMuSig(sigma, mu, rc2, rc4);
-      vec c_mu = out.V;
-      mat c_sig = out.M1;
-      mat ic_sig = c_sig.i(); // the inverse
-      double dc_sig = det(c_sig); // the determinant
-
-      /* Pulling out the appropriate alpha from alph */
-      mat alph_sub(n,1);
-      alph_sub.col(0) = alph.col(2); // alph2_1
-
-      /* Transposing matrix to be of the form 1xn */
-      mat alph_f = alph_sub.t();
-
-      /* Centering the alpha */
-      mat alph_c = alph_f.col(i)-c_mu;
-
-      /* Calculating the pdf */
-      mat inner = alph_c.t()*ic_sig*alph_c;
-      double pdf2_1 = 1/sq_twopi*1/sqrt(dc_sig)*exp(-0.5*inner(0));
-
-      /* Estimation of dF2_1 */
-      double dF2_1 = pi2_1(i)*dalph(i,2)*pdf2_1; // pi2_1, dalph2_1
-
-      /* Conditional F1c2_2 */
-      /* Conditional mean and variance-covariance matrix, conditional on alph2_1, u1 and u2 */
-      vecmat out2 = conMuSig(sigma, mu, rc1, rc5);
-      vec c_mu2 = out2.V;
-      mat c_sig2 = out2.M1;
-
-      /* Pulling out the appropriate alpha from alph */
-      mat alph_sub2(n,1);
-      alph_sub2.col(0) = alph.col(1); // alph1_2
-
-      /* Transposing matrix to be of the form 1xn */
-      mat alph_f2 = alph_sub2.t();
-
-      /* Centering the alpha */
-      mat alph_c2 = alph_f2.col(i)-c_mu2;
-
-      /* Estimation of F1c2_2 */
-      double F1c2_2 = pi1_2(i)*pn(alph_c2,sqrt(c_sig2[0]));
-
-      /* Conditional F2c2_2 */
-      /* Conditional mean and variance-covariance matrix, conditional on alph2_1, u1 and u2 */
-      vecmat out3 = conMuSig(sigma, mu, rc3, rc5);
-      vec c_mu3 = out3.V;
-      mat c_sig3 = out3.M1;
-
-      /* Pulling out the appropriate alpha from alph */
-      mat alph_sub3(n,1);
-      alph_sub3.col(0) = alph.col(3); // alph2_2
-
-      /* Transposing matrix to be of the form 1xn */
-      mat alph_f3 = alph_sub3.t();
-
-      /* Centering the alpha */
-      mat alph_c3 = alph_f3.col(i)-c_mu3;
-
-      /* Estimation of F2c2_2 */
-      double F2c2_2 = pi2_2(i)*pn(alph_c3,sqrt(c_sig3[0]));
-
-      /* Loglikelihood contribution */
-      double dF20 = dF2_1*(1-F1c2_2-F2c2_2);
-      res(i) = log(dF20);
-    }
-    /* Family member 1 experience event 0, family member 2 experience event 0, estimating F00 */
-    else{
-      /* Specifying which parts of sigma apply */
-      uvec rc1(1); rc1(0) = 0;
-      uvec rc2(1); rc2(0) = 1;
-      uvec rc3(1); rc3(0) = 2;
-      uvec rc4(1); rc4(0) = 3;
-      uvec rc5(2); rc5(0) = 4; rc5(1) = 5;
-
-      uvec rc6(2); rc6(0) = 0; rc6(1) = 1;
-      uvec rc7(2); rc7(0) = 0; rc7(1) = 3;
-      uvec rc8(2); rc8(0) = 2; rc8(1) = 1;
-      uvec rc9(2); rc9(0) = 2; rc9(1) = 3;
-
-      /* Mean vector (used for estimation of conditional mean) */
-      vec mu(6) ;
-      mu(0) = alph(i,0);
-      mu(1) = alph(i,1);
-      mu(2) = alph(i,2);
-      mu(3) = alph(i,3);
-      mu(4) = u(i,0);
-      mu(5) = u(i,1);
-
-      /* Marginal F1_1, F1_2, F2_1 and F2_2 */
-      /* Conditional mean and variance-covariance matrices, conditional on u1 and u2 */
-      vecmat out1 = conMuSig(sigma, mu, rc1, rc5);
-      vec c_mu1 = out1.V;
-      mat c_sig1 = out1.M1;
-
-      vecmat out2 = conMuSig(sigma, mu, rc2, rc5);
-      vec c_mu2 = out2.V;
-      mat c_sig2 = out2.M1;
-
-      vecmat out3 = conMuSig(sigma, mu, rc3, rc5);
-      vec c_mu3 = out3.V;
-      mat c_sig3 = out3.M1;
-
-      vecmat out4 = conMuSig(sigma, mu, rc4, rc5);
-      vec c_mu4 = out4.V;
-      mat c_sig4 = out4.M1;
-
-      /* Pulling out the appropriate alphas from alph */
-      mat alph_sub1_1(n,1);
-      mat alph_sub1_2(n,1);
-      mat alph_sub2_1(n,1);
-      mat alph_sub2_2(n,1);
-      alph_sub1_1.col(0) = alph.col(0); // alph1_1
-      alph_sub1_2.col(0) = alph.col(1); // alph1_2
-      alph_sub2_1.col(0) = alph.col(2); // alph2_1
-      alph_sub2_2.col(0) = alph.col(3); // alph2_2
-
-      /* Transposing matrices to be of the form 1xn */
-      mat alph_f1_1 = alph_sub1_1.t();
-      mat alph_f1_2 = alph_sub1_2.t();
-      mat alph_f2_1 = alph_sub2_1.t();
-      mat alph_f2_2 = alph_sub2_2.t();
-
-      /* Centering the alphas */
-      mat alph_c1_1 = alph_f1_1.col(i)-c_mu1;
-      mat alph_c1_2 = alph_f1_2.col(i)-c_mu2;
-      mat alph_c2_1 = alph_f2_1.col(i)-c_mu3;
-      mat alph_c2_2 = alph_f2_2.col(i)-c_mu4;
-
-      /* Estimation of F1_1, F1_2, F2_1 and F2_2 */
-      double F1_1 = pi1_1(i)*pn(alph_c1_1,sqrt(c_sig1[0]));
-      double F1_2 = pi1_2(i)*pn(alph_c1_2,sqrt(c_sig2[0]));
-      double F2_1 = pi2_1(i)*pn(alph_c2_1,sqrt(c_sig3[0]));
-      double F2_2 = pi2_2(i)*pn(alph_c2_2,sqrt(c_sig4[0]));
-
-      /* Joint probabilities F11, F12, F21 and F22 */
-      /* Conditional mean and variance-covariance matrices, conditional on u1 and u2 */
-      vecmat out5 = conMuSig(sigma, mu, rc6, rc5);
-      vec c_mu5 = out5.V;
-      mat c_sig5 = out5.M1;
-
-      vecmat out6 = conMuSig(sigma, mu, rc7, rc5);
-      vec c_mu6 = out6.V;
-      mat c_sig6 = out6.M1;
-
-      vecmat out7 = conMuSig(sigma, mu, rc8, rc5);
-      vec c_mu7 = out7.V;
-      mat c_sig7 = out7.M1;
-
-      vecmat out8 = conMuSig(sigma, mu, rc9, rc5);
-      vec c_mu8 = out8.V;
-      mat c_sig8 = out8.M1;
-
-      /* Pulling out the appropriate alphas from alph */
-      mat alph_sub11(n,2);
-      alph_sub11.col(0) = alph.col(0); // alph1_1
-      alph_sub11.col(1) = alph.col(1); // alph1_2
-
-      mat alph_sub12(n,2);
-      alph_sub12.col(0) = alph.col(0); // alph1_1
-      alph_sub12.col(1) = alph.col(3); // alph2_2
-
-      mat alph_sub21(n,2);
-      alph_sub21.col(0) = alph.col(2); // alph2_1
-      alph_sub21.col(1) = alph.col(1); // alph1_2
-
-      mat alph_sub22(n,2);
-      alph_sub22.col(0) = alph.col(2); // alph2_1
-      alph_sub22.col(1) = alph.col(3); // alph2_2
-
-      /* Transposing matrices to be of the form 2xn */
-      mat alph_f11 = alph_sub11.t();
-      mat alph_f12 = alph_sub12.t();
-      mat alph_f21 = alph_sub21.t();
-      mat alph_f22 = alph_sub22.t();
-
-      /* Estimating F11, F12, F21 and F22 */
-      double F11 = pi1_1(i)*pi1_2(i)*pn2(alph_f11.col(i),c_mu5,c_sig5);
-      double F12 = pi1_1(i)*pi2_2(i)*pn2(alph_f12.col(i),c_mu6,c_sig6);
-      double F21 = pi2_1(i)*pi1_2(i)*pn2(alph_f21.col(i),c_mu7,c_sig7);
-      double F22 = pi2_1(i)*pi2_2(i)*pn2(alph_f22.col(i),c_mu8,c_sig8);
-
-      /* Loglikelihood contribution */
-      double F00 = (1-F1_1-F1_2-F2_1-F2_2+F11+F12+F21+F22);
-      res(i) = log(F00);
-    }
-    if (cond) {
-      /* For the pdf of u */
-      uvec rc(2); rc(0) = 4; rc(1) = 5;
-      mat sigu = sigma.submat(rc,rc);
-      mat isigu = sigu.i();
-      double dsigu = det(sigu);
-      double sq_dsigu = sqrt(dsigu);
-      mat pu = u.row(i);
-      mat inu = pu*isigu*pu.t();
-
-      /* The pdf of u */
-      double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
-
-      /* Adding to loglik */
-      res(i) += log(pdfu);
-    }
+      mu(4) = 0;
+      mu(5) = 0;
+
+      vec x(6) ;
+      x(0) = alph(i,0);
+      x(1) = alph(i,1);
+      x(2) = alph(i,2);
+      x(3) = alph(i,3);
+      x(4) = u(i,0);
+      x(5) = u(i,1);
+
+      /* Both family members experience event 1, estimating ddF11 */
+      if((y(i,0) == 1) & (y(i,1) == 1)){
+
+	/* Specifying which parts of sigma apply */
+	uvec rc1(2); rc1(0) = 0; rc1(1) = 1;
+	uvec rc2(2); rc2(0) = 4; rc2(1) = 5;
+
+	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
+	vecmat out = conMuSig(sigma, mu, x, rc1, rc2);
+	vec c_mu = out.V;
+	mat c_sig = out.M1;
+	mat ic_sig = c_sig.i(); // the inverse
+	double dc_sig = det(c_sig); // the determinant
+
+	/* Pulling out the appropriate alphas from alph */
+	mat alph_sub(n,2);
+	alph_sub.col(0) = alph.col(0); // alph1_1
+	alph_sub.col(1) = alph.col(1); // alph1_2
+
+	/* Transposing matrix to be of the form 2xn */
+	mat alph_f = alph_sub.t();
+
+	/* Centering the alphas */
+	mat alph_c = alph_f.col(i)-c_mu;
+
+	/* Calculating the pdf of alpha */
+	mat inner = alph_c.t()*ic_sig*alph_c;
+	double pdf11 = 1/twopi*1/sqrt(dc_sig)*exp(-0.5*inner(0));
+
+	/* Loglikelihood contribution */
+	double ddF11 = pi1_1(i)*pi1_2(i)*dalph(i,0)*dalph(i,1)*pdf11; // pi1_1, pi1_2, dalph1_1, dalph1_2
+	res(i) = log(ddF11);
+      }
+      /* Family member 1 experience event 1, family member 2 experience event 2, estimating ddF12 */
+      else if((y(i,0) == 1) & (y(i,1) == 2)){
+
+	/* Specifying which parts of sigma apply */
+	uvec rc1(2); rc1(0) = 0; rc1(1) = 3;
+	uvec rc2(2); rc2(0) = 4; rc2(1) = 5;
+
+	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
+	vecmat out = conMuSig(sigma, mu, x, rc1, rc2);
+	vec c_mu = out.V;
+	mat c_sig = out.M1;
+	mat ic_sig = c_sig.i(); // the inverse
+	double dc_sig = det(c_sig); // the determinant
+
+	/* Pulling out the appropriate alphas from alph */
+	mat alph_sub(n,2);
+	alph_sub.col(0) = alph.col(0); // alph1_1
+	alph_sub.col(1) = alph.col(3); // alph2_2
+
+	/* Transposing matrix to be of the form 2xn */
+	mat alph_f = alph_sub.t();
+
+	/* Centering the alphas */
+	mat alph_c = alph_f.col(i)-c_mu;
+
+	/* Calculating the pdf of alpha*/
+	mat inner = alph_c.t()*ic_sig*alph_c;
+	double pdf12 = 1/twopi*1/sqrt(dc_sig)*exp(-0.5*inner(0));
+
+	/* Loglikelihood contribution */
+	double ddF12 = pi1_1(i)*pi2_2(i)*dalph(i,0)*dalph(i,3)*pdf12; // pi1_1, pi2_2, dalph1_1, dalph2_2
+	res(i) = log(ddF12);
+      }
+      /* Family member 1 experience event 2, family member 2 experience event 1, estimating ddF21 */
+      else if((y(i,0) == 2) & (y(i,1) == 1)){
+
+	/* Specifying which parts of sigma apply */
+	uvec rc1(2); rc1(0) = 2; rc1(1) = 1;
+	uvec rc2(2); rc2(0) = 4; rc2(1) = 5;
+
+	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
+	vecmat out = conMuSig(sigma, mu, x, rc1, rc2);
+	vec c_mu = out.V;
+	mat c_sig = out.M1;
+	mat ic_sig = c_sig.i(); // the inverse
+	double dc_sig = det(c_sig); // the determinant
+
+	/* Pulling out the appropriate alphas from alph */
+	mat alph_sub(n,2);
+	alph_sub.col(0) = alph.col(2); // alph2_1
+	alph_sub.col(1) = alph.col(1); // alph1_2
+
+	/* Transposing matrix to be of the form 2xn */
+	mat alph_f = alph_sub.t();
+
+	/* Centering the alphas */
+	mat alph_c = alph_f.col(i)-c_mu;
+
+	/* Calculating the pdf */
+	mat inner = alph_c.t()*ic_sig*alph_c;
+	double pdf21 = 1/twopi*1/sqrt(dc_sig)*exp(-0.5*inner(0));
+
+	/* Loglikelihood contribution */
+	double ddF21 = pi2_1(i)*pi1_2(i)*dalph(i,2)*dalph(i,1)*pdf21; // pi2_1, pi1_2, dalph2_1, dalph1_2
+	res(i) = log(ddF21);
+      }
+      /* Both family members experience event 2, estimating ddF22 */
+      else if((y(i,0) == 2) & (y(i,1) == 2)){
+
+	/* Specifying which parts of sigma apply */
+	uvec rc1(2); rc1(0) = 2; rc1(1) = 3;
+	uvec rc2(2); rc2(0) = 4; rc2(1) = 5;
+
+	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
+	vecmat out = conMuSig(sigma, mu, x, rc1, rc2);
+	vec c_mu = out.V;
+	mat c_sig = out.M1;
+	mat ic_sig = c_sig.i(); // the inverse
+	double dc_sig = det(c_sig); // the determinant
+
+	/* Pulling out the appropriate alphas from alph */
+	mat alph_sub(n,2);
+	alph_sub.col(0) = alph.col(2); // alph2_1
+	alph_sub.col(1) = alph.col(3); // alph2_2
+
+	/* Transposing matrix to be of the form 2xn */
+	mat alph_f = alph_sub.t();
+
+	/* Centering the alphas */
+	mat alph_c = alph_f.col(i)-c_mu;
+
+	/* Calculating the pdf of alpha */
+	mat inner = alph_c.t()*ic_sig*alph_c;
+	double pdf22 = 1/twopi*1/sqrt(dc_sig)*exp(-0.5*inner(0));
+
+	/* Loglikelihood contribution */
+	double ddF22 = pi2_1(i)*pi2_2(i)*dalph(i,2)*dalph(i,3)*pdf22; // pi2_1, pi2_2, dalph2_1, dalph2_2
+	res(i) = log(ddF22);
+      }
+      /* Family member 1 experience event 0, family member 2 experience event 1, estimating dF01 */
+      else if((y(i,0) == 0) & (y(i,1) == 1)){
+
+	/* Specifying which parts of sigma apply */
+	uvec rc1(1); rc1(0) = 0;
+	uvec rc2(1); rc2(0) = 1;
+	uvec rc3(1); rc3(0) = 2;
+	uvec rc4(2); rc4(0) = 4; rc4(1) = 5;
+	uvec rc5(3); rc5(0) = 1 ; rc5(1) = 4; rc5(2) = 5;
+
+	/* Marginal dF1_2 */
+	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
+	vecmat out = conMuSig(sigma, mu, x, rc2, rc4);
+	vec c_mu = out.V;
+	mat c_sig = out.M1;
+	mat ic_sig = c_sig.i(); // the inverse
+	double dc_sig = det(c_sig); // the determinant
+
+	/* Pulling out the appropriate alpha from alph */
+	mat alph_sub(n,1);
+	alph_sub.col(0) = alph.col(1); // alph1_2
+
+	/* Transposing matrix to be of the form 1xn */
+	mat alph_f = alph_sub.t();
+
+	/* Centering the alpha */
+	mat alph_c = alph_f.col(i)-c_mu;
+
+	/* Calculating the pdf */
+	mat inner = alph_c.t()*ic_sig*alph_c;
+	double pdf1_2 = 1/sq_twopi*1/sqrt(dc_sig)*exp(-0.5*inner(0));
+
+	/* Estimation of dF1_2 */
+	double dF1_2 = pi1_2(i)*dalph(i,1)*pdf1_2; // pi1_2, dalph1_2
+
+	/* Conditional F1c1_1 */
+	/* Conditional mean and variance-covariance matrix, conditional on alph1_2, u1 and u2 */
+	vecmat out2 = conMuSig(sigma, mu, x, rc1, rc5);
+	vec c_mu2 = out2.V;
+	mat c_sig2 = out2.M1;
+	mat c_sigX2 = out2.M2;
+
+	/* Pulling out the appropriate alpha from alph */
+	mat alph_sub2(n,1);
+	alph_sub2.col(0) = alph.col(0); // alph1_1
+
+	/* Transposing matrix to be of the form 1xn */
+	mat alph_f2 = alph_sub2.t();
+
+	/* Centering the alpha */
+	mat alph_c2 = alph_f2.col(i)-c_mu2;
+
+	/* Estimation of F1c1_1 */
+	double F1c1_1 = pi1_1(i)*pn(alph_c2,sqrt(c_sig2[0]));
+
+	/* Conditional F2c1_1 */
+	/* Conditional mean and variance-covariance matrix, conditional on alph1_2, u1 and u2 */
+	vecmat out3 = conMuSig(sigma, mu, x, rc3, rc5);
+	vec c_mu3 = out3.V;
+	mat c_sig3 = out3.M1;
+
+	/* Pulling out the appropriate alpha from alph */
+	mat alph_sub3(n,1);
+	alph_sub3.col(0) = alph.col(2); // alph2_1
+
+	/* Transposing matrix to be of the form 1xn */
+	mat alph_f3 = alph_sub3.t();
+
+	/* Centering the alpha */
+	mat alph_c3 = alph_f3.col(i)-c_mu3;
+
+	/* Estimation of F2c1_1 */
+	double F2c1_1 = pi2_1(i)*pn(alph_c3,sqrt(c_sig3[0]));
+
+	/* Loglikelihood contribution */
+	double dF01 = dF1_2*(1-F1c1_1-F2c1_1);
+	res(i) = log(dF01);
+      }
+      /* Family member 1 experience event 1, family member 2 experience event 0, estimating dF10 */
+      else if((y(i,0) == 1) & (y(i,1) == 0)){
+
+	/* Specifying which parts of sigma apply */
+	uvec rc1(1); rc1(0) = 0;
+	uvec rc2(1); rc2(0) = 1;
+	uvec rc3(1); rc3(0) = 3;
+	uvec rc4(2); rc4(0) = 4; rc4(1) = 5;
+	uvec rc5(3); rc5(0) = 0 ; rc5(1) = 4; rc5(2) = 5;
+
+	/* Marginal dF1_1 */
+	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
+	vecmat out = conMuSig(sigma, mu, x, rc1, rc4);
+	vec c_mu = out.V;
+	mat c_sig = out.M1;
+	mat ic_sig = c_sig.i(); // the inverse
+	double dc_sig = det(c_sig); // the determinant
+
+	/* Pulling out the appropriate alpha from alph */
+	mat alph_sub(n,1);
+	alph_sub.col(0) = alph.col(0); // alph1_1
+
+	/* Transposing matrix to be of the form 1xn */
+	mat alph_f = alph_sub.t();
+
+	/* Centering the alpha */
+	mat alph_c = alph_f.col(i)-c_mu;
+
+	/* Calculating the pdf */
+	mat inner = alph_c.t()*ic_sig*alph_c;
+	double pdf1_1 = 1/sq_twopi*1/sqrt(dc_sig)*exp(-0.5*inner(0));
+
+	/* Estimation of dF1_1 */
+	double dF1_1 = pi1_1(i)*dalph(i,0)*pdf1_1; // pi1_1, dalph1_1
+
+	/* Conditional F1c1_2 */
+	/* Conditional mean and variance-covariance matrix, conditional on alph1_1, u1 and u2 */
+	vecmat out2 = conMuSig(sigma, mu, x, rc2, rc5);
+	vec c_mu2 = out2.V;
+	mat c_sig2 = out2.M1;
+
+	/* Pulling out the appropriate alpha from alph */
+	mat alph_sub2(n,1);
+	alph_sub2.col(0) = alph.col(1); // alph1_2
+
+	/* Transposing matrix to be of the form 1xn */
+	mat alph_f2 = alph_sub2.t();
+
+	/* Centering the alpha */
+	mat alph_c2 = alph_f2.col(i)-c_mu2;
+
+	/* Estimation of F1c1_2 */
+	double F1c1_2 = pi1_2(i)*pn(alph_c2,sqrt(c_sig2[0]));
+
+	/* Conditional F2c1_2 */
+	/* Conditional mean and variance-covariance matrix, conditional on alph1_1, u1 and u2 */
+	vecmat out3 = conMuSig(sigma, mu, x, rc3, rc5);
+	vec c_mu3 = out3.V;
+	mat c_sig3 = out3.M1;
+
+	/* Pulling out the appropriate alpha from alph */
+	mat alph_sub3(n,1);
+	alph_sub3.col(0) = alph.col(3); // alph2_2
+
+	/* Transposing matrix to be of the form 1xn */
+	mat alph_f3 = alph_sub3.t();
+
+	/* Centering the alpha */
+	mat alph_c3 = alph_f3.col(i)-c_mu3;
+
+	/* Estimation of F2c1_2 */
+	double F2c1_2 = pi2_2(i)*pn(alph_c3,sqrt(c_sig3[0]));
+
+	/* Loglikelihood contribution */
+	double dF10 = dF1_1*(1-F1c1_2-F2c1_2);
+	res(i) = log(dF10);
+      }
+      /* Family member 1 experience event 0, family member 2 experience event 2, estimating dF02 */
+      else if((y(i,0) == 0) & (y(i,1) == 2)){
+
+	/* Specifying which parts of sigma apply */
+	uvec rc1(1); rc1(0) = 0;
+	uvec rc2(1); rc2(0) = 2;
+	uvec rc3(1); rc3(0) = 3;
+	uvec rc4(2); rc4(0) = 4; rc4(1) = 5;
+	uvec rc5(3); rc5(0) = 3 ; rc5(1) = 4; rc5(2) = 5;
+
+	/* Marginal dF2_2 */
+	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
+	vecmat out = conMuSig(sigma, mu, x, rc3, rc4);
+	vec c_mu = out.V;
+	mat c_sig = out.M1;
+	mat ic_sig = c_sig.i(); // the inverse
+	double dc_sig = det(c_sig); // the determinant
+
+	/* Pulling out the appropriate alpha from alph */
+	mat alph_sub(n,1);
+	alph_sub.col(0) = alph.col(3); // alph2_2
+
+	/* Transposing matrix to be of the form 1xn */
+	mat alph_f = alph_sub.t();
+
+	/* Centering the alpha */
+	mat alph_c = alph_f.col(i)-c_mu;
+
+	/* Calculating the pdf */
+	mat inner = alph_c.t()*ic_sig*alph_c;
+	double pdf2_2 = 1/sq_twopi*1/sqrt(dc_sig)*exp(-0.5*inner(0));
+
+	/* Estimation of dF2_2 */
+	double dF2_2 = pi2_2(i)*dalph(i,3)*pdf2_2; // pi2_2, dalph2_2
+
+	/* Conditional F1c2_1 */
+	/* Conditional mean and variance-covariance matrix, conditional on alph2_2, u1 and u2 */
+	vecmat out2 = conMuSig(sigma, mu, x, rc1, rc5);
+	vec c_mu2 = out2.V;
+	mat c_sig2 = out2.M1;
+
+	/* Pulling out the appropriate alpha from alph */
+	mat alph_sub2(n,1);
+	alph_sub2.col(0) = alph.col(0); // alph1_1
+
+	/* Transposing matrix to be of the form 1xn */
+	mat alph_f2 = alph_sub2.t();
+
+	/* Centering the alpha */
+	mat alph_c2 = alph_f2.col(i)-c_mu2;
+
+	/* Estimation of F1c2_1 */
+	double F1c2_1 = pi1_1(i)*pn(alph_c2,sqrt(c_sig2[0]));
+
+	/* Conditional F2c2_1 */
+	/* Conditional mean and variance-covariance matrix, conditional on alph2_2, u1 and u2 */
+	vecmat out3 = conMuSig(sigma, mu, x, rc2, rc5);
+	vec c_mu3 = out3.V;
+	mat c_sig3 = out3.M1;
+
+	/* Pulling out the appropriate alpha from alph */
+	mat alph_sub3(n,1);
+	alph_sub3.col(0) = alph.col(2); // alph2_1
+
+	/* Transposing matrix to be of the form 1xn */
+	mat alph_f3 = alph_sub3.t();
+
+	/* Centering the alpha */
+	mat alph_c3 = alph_f3.col(i)-c_mu3;
+
+	/* Estimation of F2c2_1 */
+	double F2c2_1 = pi2_1(i)*pn(alph_c3,sqrt(c_sig3[0]));
+
+	/* Loglikelihood contribution */
+	double dF02 = dF2_2*(1-F1c2_1-F2c2_1);
+	res(i) = log(dF02);
+      }
+      /* Family member 1 experience event 2, family member 2 experience event 0, estimating dF20 */
+      else if((y(i,0) == 2) & (y(i,1) == 0)){
+
+	/* Specifying which parts of sigma apply */
+	uvec rc1(1); rc1(0) = 1;
+	uvec rc2(1); rc2(0) = 2;
+	uvec rc3(1); rc3(0) = 3;
+	uvec rc4(2); rc4(0) = 4; rc4(1) = 5;
+	uvec rc5(3); rc5(0) = 2; rc5(1) = 4; rc5(2) = 5;
+
+	/* Marginal dF2_1 */
+	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
+	vecmat out = conMuSig(sigma, mu, x, rc2, rc4);
+	vec c_mu = out.V;
+	mat c_sig = out.M1;
+	mat ic_sig = c_sig.i(); // the inverse
+	double dc_sig = det(c_sig); // the determinant
+
+	/* Pulling out the appropriate alpha from alph */
+	mat alph_sub(n,1);
+	alph_sub.col(0) = alph.col(2); // alph2_1
+
+	/* Transposing matrix to be of the form 1xn */
+	mat alph_f = alph_sub.t();
+
+	/* Centering the alpha */
+	mat alph_c = alph_f.col(i)-c_mu;
+
+	/* Calculating the pdf */
+	mat inner = alph_c.t()*ic_sig*alph_c;
+	double pdf2_1 = 1/sq_twopi*1/sqrt(dc_sig)*exp(-0.5*inner(0));
+
+	/* Estimation of dF2_1 */
+	double dF2_1 = pi2_1(i)*dalph(i,2)*pdf2_1; // pi2_1, dalph2_1
+
+	/* Conditional F1c2_2 */
+	/* Conditional mean and variance-covariance matrix, conditional on alph2_1, u1 and u2 */
+	vecmat out2 = conMuSig(sigma, mu, x, rc1, rc5);
+	vec c_mu2 = out2.V;
+	mat c_sig2 = out2.M1;
+
+	/* Pulling out the appropriate alpha from alph */
+	mat alph_sub2(n,1);
+	alph_sub2.col(0) = alph.col(1); // alph1_2
+
+	/* Transposing matrix to be of the form 1xn */
+	mat alph_f2 = alph_sub2.t();
+
+	/* Centering the alpha */
+	mat alph_c2 = alph_f2.col(i)-c_mu2;
+
+	/* Estimation of F1c2_2 */
+	double F1c2_2 = pi1_2(i)*pn(alph_c2,sqrt(c_sig2[0]));
+
+	/* Conditional F2c2_2 */
+	/* Conditional mean and variance-covariance matrix, conditional on alph2_1, u1 and u2 */
+	vecmat out3 = conMuSig(sigma, mu, x, rc3, rc5);
+	vec c_mu3 = out3.V;
+	mat c_sig3 = out3.M1;
+
+	/* Pulling out the appropriate alpha from alph */
+	mat alph_sub3(n,1);
+	alph_sub3.col(0) = alph.col(3); // alph2_2
+
+	/* Transposing matrix to be of the form 1xn */
+	mat alph_f3 = alph_sub3.t();
+
+	/* Centering the alpha */
+	mat alph_c3 = alph_f3.col(i)-c_mu3;
+
+	/* Estimation of F2c2_2 */
+	double F2c2_2 = pi2_2(i)*pn(alph_c3,sqrt(c_sig3[0]));
+
+	/* Loglikelihood contribution */
+	double dF20 = dF2_1*(1-F1c2_2-F2c2_2);
+	res(i) = log(dF20);
+      }
+      /* Family member 1 experience event 0, family member 2 experience event 0, estimating F00 */
+      else{
+	/* Specifying which parts of sigma apply */
+	uvec rc1(1); rc1(0) = 0;
+	uvec rc2(1); rc2(0) = 1;
+	uvec rc3(1); rc3(0) = 2;
+	uvec rc4(1); rc4(0) = 3;
+	uvec rc5(2); rc5(0) = 4; rc5(1) = 5;
+
+	uvec rc6(2); rc6(0) = 0; rc6(1) = 1;
+	uvec rc7(2); rc7(0) = 0; rc7(1) = 3;
+	uvec rc8(2); rc8(0) = 2; rc8(1) = 1;
+	uvec rc9(2); rc9(0) = 2; rc9(1) = 3;
+
+	/* Marginal F1_1, F1_2, F2_1 and F2_2 */
+	/* Conditional mean and variance-covariance matrices, conditional on u1 and u2 */
+	vecmat out1 = conMuSig(sigma, mu, x, rc1, rc5);
+	vec c_mu1 = out1.V;
+	mat c_sig1 = out1.M1;
+
+	vecmat out2 = conMuSig(sigma, mu, x, rc2, rc5);
+	vec c_mu2 = out2.V;
+	mat c_sig2 = out2.M1;
+
+	vecmat out3 = conMuSig(sigma, mu, x, rc3, rc5);
+	vec c_mu3 = out3.V;
+	mat c_sig3 = out3.M1;
+
+	vecmat out4 = conMuSig(sigma, mu, x, rc4, rc5);
+	vec c_mu4 = out4.V;
+	mat c_sig4 = out4.M1;
+
+	/* Pulling out the appropriate alphas from alph */
+	mat alph_sub1_1(n,1);
+	mat alph_sub1_2(n,1);
+	mat alph_sub2_1(n,1);
+	mat alph_sub2_2(n,1);
+	alph_sub1_1.col(0) = alph.col(0); // alph1_1
+	alph_sub1_2.col(0) = alph.col(1); // alph1_2
+	alph_sub2_1.col(0) = alph.col(2); // alph2_1
+	alph_sub2_2.col(0) = alph.col(3); // alph2_2
+
+	/* Transposing matrices to be of the form 1xn */
+	mat alph_f1_1 = alph_sub1_1.t();
+	mat alph_f1_2 = alph_sub1_2.t();
+	mat alph_f2_1 = alph_sub2_1.t();
+	mat alph_f2_2 = alph_sub2_2.t();
+
+	/* Centering the alphas */
+	mat alph_c1_1 = alph_f1_1.col(i)-c_mu1;
+	mat alph_c1_2 = alph_f1_2.col(i)-c_mu2;
+	mat alph_c2_1 = alph_f2_1.col(i)-c_mu3;
+	mat alph_c2_2 = alph_f2_2.col(i)-c_mu4;
+
+	/* Estimation of F1_1, F1_2, F2_1 and F2_2 */
+	double F1_1 = pi1_1(i)*pn(alph_c1_1,sqrt(c_sig1[0]));
+	double F1_2 = pi1_2(i)*pn(alph_c1_2,sqrt(c_sig2[0]));
+	double F2_1 = pi2_1(i)*pn(alph_c2_1,sqrt(c_sig3[0]));
+	double F2_2 = pi2_2(i)*pn(alph_c2_2,sqrt(c_sig4[0]));
+
+	/* Joint probabilities F11, F12, F21 and F22 */
+	/* Conditional mean and variance-covariance matrices, conditional on u1 and u2 */
+	vecmat out5 = conMuSig(sigma, mu, x, rc6, rc5);
+	vec c_mu5 = out5.V;
+	mat c_sig5 = out5.M1;
+
+	vecmat out6 = conMuSig(sigma, mu, x, rc7, rc5);
+	vec c_mu6 = out6.V;
+	mat c_sig6 = out6.M1;
+
+	vecmat out7 = conMuSig(sigma, mu, x, rc8, rc5);
+	vec c_mu7 = out7.V;
+	mat c_sig7 = out7.M1;
+
+	vecmat out8 = conMuSig(sigma, mu, x, rc9, rc5);
+	vec c_mu8 = out8.V;
+	mat c_sig8 = out8.M1;
+
+	/* Pulling out the appropriate alphas from alph */
+	mat alph_sub11(n,2);
+	alph_sub11.col(0) = alph.col(0); // alph1_1
+	alph_sub11.col(1) = alph.col(1); // alph1_2
+
+	mat alph_sub12(n,2);
+	alph_sub12.col(0) = alph.col(0); // alph1_1
+	alph_sub12.col(1) = alph.col(3); // alph2_2
+
+	mat alph_sub21(n,2);
+	alph_sub21.col(0) = alph.col(2); // alph2_1
+	alph_sub21.col(1) = alph.col(1); // alph1_2
+
+	mat alph_sub22(n,2);
+	alph_sub22.col(0) = alph.col(2); // alph2_1
+	alph_sub22.col(1) = alph.col(3); // alph2_2
+
+	/* Transposing matrices to be of the form 2xn */
+	mat alph_f11 = alph_sub11.t();
+	mat alph_f12 = alph_sub12.t();
+	mat alph_f21 = alph_sub21.t();
+	mat alph_f22 = alph_sub22.t();
+
+	/* Estimating F11, F12, F21 and F22 */
+	double F11 = pi1_1(i)*pi1_2(i)*pn2(alph_f11.col(i),c_mu5,c_sig5);
+	double F12 = pi1_1(i)*pi2_2(i)*pn2(alph_f12.col(i),c_mu6,c_sig6);
+	double F21 = pi2_1(i)*pi1_2(i)*pn2(alph_f21.col(i),c_mu7,c_sig7);
+	double F22 = pi2_1(i)*pi2_2(i)*pn2(alph_f22.col(i),c_mu8,c_sig8);
+
+	/* Loglikelihood contribution */
+	double F00 = (1-F1_1-F1_2-F2_1-F2_2+F11+F12+F21+F22);
+	res(i) = log(F00);
+      }
+      if (cond) {
+	/* For the pdf of u */
+	uvec rc(2); rc(0) = 4; rc(1) = 5;
+	mat sigu = sigma.submat(rc,rc);
+	mat isigu = sigu.i();
+	double dsigu = det(sigu);
+	double sq_dsigu = sqrt(dsigu);
+	mat pu = u.row(i);
+	mat inu = pu*isigu*pu.t();
+
+	/* The pdf of u */
+	double pdfu = 1/twopi*1/sq_dsigu*exp(-0.5*inu(0));
+
+	/* Adding to loglik */
+	res(i) += log(pdfu);
+      }
   }
   return(res);
 }
-
 
 //Rcpp::Rcout << "a12" << std::endl << alph_c12 ;
 //Rcpp::Rcout << "everywhere";
@@ -925,9 +857,9 @@ vec loglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
 mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
   /* y: nx2 matrix with event type (0, 1 or 2) of family member 1 and 2
      b: nx4 matrix with XB for event type 1 and 2 (b1 and b2) for family member 1 and 2
-        the order is b1_1, b1_2, b2_1 and b2_2
+     the order is b1_1, b1_2, b2_1 and b2_2
      u: nx2 matrix with the random effects u1 and u2 affecting pi1 and pi2 (cluster-specific risk levels)
-        the random effects are shared by family member 1 and 2
+     the random effects are shared by family member 1 and 2
      sigma: 6x6 matrix. variance-covariance matrix, order: event1_1, event1_2, event2_1, event2_2, u1, u2
      alph: nx4 matrix, inside the Probit link, order a1_1, a1_2, a2_1, a2_2
      dalph: nx4 matrix, derivative of alph wrt. t, order da1_1, da1_2, da2_1, da2_2
@@ -972,6 +904,23 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
   mat res(n,2);
 
   for (int i=0; i<n; i++) {
+    /* Vectors (used for estimation of conditional mean) */
+    vec mu(6) ;
+    mu(0) = alph(i,0);
+    mu(1) = alph(i,1);
+    mu(2) = alph(i,2);
+    mu(3) = alph(i,3);
+    mu(4) = 0;
+    mu(5) = 0;
+
+    vec x(6) ;
+    x(0) = alph(i,0);
+    x(1) = alph(i,1);
+    x(2) = alph(i,2);
+    x(3) = alph(i,3);
+    x(4) = u(i,0);
+    x(5) = u(i,1);
+
     /* Both family members experience event 1, estimating score contribution from ddF11 */
     if((y(i,0) == 1) & (y(i,1) == 1)){
 
@@ -979,17 +928,8 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
       uvec rc1(2); rc1(0) = 0; rc1(1) = 1;
       uvec rc2(2); rc2(0) = 4; rc2(1) = 5;
 
-      /* Mean vector (used for estimation of conditional mean) */
-      vec mu(6) ;
-      mu(0) = alph(i,0);
-      mu(1) = alph(i,1);
-      mu(2) = alph(i,2);
-      mu(3) = alph(i,3);
-      mu(4) = u(i,0);
-      mu(5) = u(i,1);
-
       /* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-      vecmat out = conMuSig(sigma, mu, rc1, rc2);
+      vecmat out = conMuSig(sigma, mu, x, rc1, rc2);
       vec c_mu = out.V;
       mat c_sig = out.M1;
       mat c_sigX = out.M2;
@@ -1032,7 +972,6 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
       /* Adding to return vector */
       res(i,0) = sc_u1;
       res(i,1) = sc_u2;
-
     }
     /* Family member 1 experiences event 1, family member 2 experiences event 2, estimating score contribution from ddF12 */
     else if((y(i,0) == 1) & (y(i,1) == 2)){
@@ -1041,17 +980,8 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
       uvec rc1(2); rc1(0) = 0; rc1(1) = 3;
       uvec rc2(2); rc2(0) = 4; rc2(1) = 5;
 
-      /* Mean vector (used for estimation of conditional mean) */
-      vec mu(6) ;
-      mu(0) = alph(i,0);
-      mu(1) = alph(i,1);
-      mu(2) = alph(i,2);
-      mu(3) = alph(i,3);
-      mu(4) = u(i,0);
-      mu(5) = u(i,1);
-
       /* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-      vecmat out = conMuSig(sigma, mu, rc1, rc2);
+      vecmat out = conMuSig(sigma, mu, x, rc1, rc2);
       vec c_mu = out.V;
       mat c_sig = out.M1;
       mat c_sigX = out.M2;
@@ -1103,17 +1033,8 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
       uvec rc1(2); rc1(0) = 2; rc1(1) = 1;
       uvec rc2(2); rc2(0) = 4; rc2(1) = 5;
 
-      /* Mean vector (used for estimation of conditional mean) */
-      vec mu(6) ;
-      mu(0) = alph(i,0);
-      mu(1) = alph(i,1);
-      mu(2) = alph(i,2);
-      mu(3) = alph(i,3);
-      mu(4) = u(i,0);
-      mu(5) = u(i,1);
-
       /* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-      vecmat out = conMuSig(sigma, mu, rc1, rc2);
+      vecmat out = conMuSig(sigma, mu, x, rc1, rc2);
       vec c_mu = out.V;
       mat c_sig = out.M1;
       mat c_sigX = out.M2;
@@ -1165,17 +1086,8 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
       uvec rc1(2); rc1(0) = 2; rc1(1) = 3;
       uvec rc2(2); rc2(0) = 4; rc2(1) = 5;
 
-      /* Mean vector (used for estimation of conditional mean) */
-      vec mu(6) ;
-      mu(0) = alph(i,0);
-      mu(1) = alph(i,1);
-      mu(2) = alph(i,2);
-      mu(3) = alph(i,3);
-      mu(4) = u(i,0);
-      mu(5) = u(i,1);
-
       /* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-      vecmat out = conMuSig(sigma, mu, rc1, rc2);
+      vecmat out = conMuSig(sigma, mu, x, rc1, rc2);
       vec c_mu = out.V;
       mat c_sig = out.M1;
       mat c_sigX = out.M2;
@@ -1229,18 +1141,9 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
       uvec rc4(2); rc4(0) = 4; rc4(1) = 5;
       uvec rc5(3); rc5(0) = 1; rc5(1) = 4; rc5(2) = 5;
 
-      /* Mean vector (used for estimation of conditional mean) */
-      vec mu(6) ;
-      mu(0) = alph(i,0);
-      mu(1) = alph(i,1);
-      mu(2) = alph(i,2);
-      mu(3) = alph(i,3);
-      mu(4) = u(i,0);
-      mu(5) = u(i,1);
-
       /* Marginal dF1_2 */
       /* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-      vecmat out1 = conMuSig(sigma, mu, rc2, rc4);
+      vecmat out1 = conMuSig(sigma, mu, x, rc2, rc4);
       vec c_mu1 = out1.V;
       mat c_sig1 = out1.M1;
       mat c_sigX1 = out1.M2;
@@ -1269,7 +1172,7 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
 
       /* Conditional F1c1_1 */
       /* Conditional mean and variance-covariance matrix, conditional on alph1_2, u1 and u2 */
-      vecmat out2 = conMuSig(sigma, mu, rc1, rc5);
+      vecmat out2 = conMuSig(sigma, mu, x, rc1, rc5);
       vec c_mu2 = out2.V;
       mat c_sig2 = out2.M1;
       mat c_sigX2 = out2.M2;
@@ -1298,7 +1201,7 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
 
       /* Conditional F2c1_1 */
       /* Conditional mean and variance-covariance matrix, conditional on alph1_2, u1 and u2 */
-      vecmat out3 = conMuSig(sigma, mu, rc3, rc5);
+      vecmat out3 = conMuSig(sigma, mu, x, rc3, rc5);
       vec c_mu3 = out3.V;
       mat c_sig3 = out3.M1;
       mat c_sigX3 = out3.M2;
@@ -1346,18 +1249,9 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
       uvec rc4(2); rc4(0) = 4; rc4(1) = 5;
       uvec rc5(3); rc5(0) = 0; rc5(1) = 4; rc5(2) = 5;
 
-      /* Mean vector (used for estimation of conditional mean) */
-      vec mu(6) ;
-      mu(0) = alph(i,0);
-      mu(1) = alph(i,1);
-      mu(2) = alph(i,2);
-      mu(3) = alph(i,3);
-      mu(4) = u(i,0);
-      mu(5) = u(i,1);
-
       /* Marginal dF1_1 */
       /* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-      vecmat out1 = conMuSig(sigma, mu, rc1, rc4);
+      vecmat out1 = conMuSig(sigma, mu, x, rc1, rc4);
       vec c_mu1 = out1.V;
       mat c_sig1 = out1.M1;
       mat c_sigX1 = out1.M2;
@@ -1386,7 +1280,7 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
 
       /* Conditional F1c1_2 */
       /* Conditional mean and variance-covariance matrix, conditional on alph1_1, u1 and u2 */
-      vecmat out2 = conMuSig(sigma, mu, rc2, rc5);
+      vecmat out2 = conMuSig(sigma, mu, x, rc2, rc5);
       vec c_mu2 = out2.V;
       mat c_sig2 = out2.M1;
       mat c_sigX2 = out2.M2;
@@ -1415,7 +1309,7 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
 
       /* Conditional F2c1_2 */
       /* Conditional mean and variance-covariance matrix, conditional on alph1_1, u1 and u2 */
-      vecmat out3 = conMuSig(sigma, mu, rc3, rc5);
+      vecmat out3 = conMuSig(sigma, mu, x, rc3, rc5);
       vec c_mu3 = out3.V;
       mat c_sig3 = out3.M1;
       mat c_sigX3 = out3.M2;
@@ -1463,18 +1357,9 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
       uvec rc4(2); rc4(0) = 4; rc4(1) = 5;
       uvec rc5(3); rc5(0) = 3; rc5(1) = 4; rc5(2) = 5;
 
-      /* Mean vector (used for estimation of conditional mean) */
-      vec mu(6) ;
-      mu(0) = alph(i,0);
-      mu(1) = alph(i,1);
-      mu(2) = alph(i,2);
-      mu(3) = alph(i,3);
-      mu(4) = u(i,0);
-      mu(5) = u(i,1);
-
       /* Marginal dF2_2 */
       /* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-      vecmat out1 = conMuSig(sigma, mu, rc3, rc4);
+      vecmat out1 = conMuSig(sigma, mu, x, rc3, rc4);
       vec c_mu1 = out1.V;
       mat c_sig1 = out1.M1;
       mat c_sigX1 = out1.M2;
@@ -1503,7 +1388,7 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
 
       /* Conditional F1c2_1 */
       /* Conditional mean and variance-covariance matrix, conditional on alph2_2, u1 and u2 */
-      vecmat out2 = conMuSig(sigma, mu, rc1, rc5);
+      vecmat out2 = conMuSig(sigma, mu, x, rc1, rc5);
       vec c_mu2 = out2.V;
       mat c_sig2 = out2.M1;
       mat c_sigX2 = out2.M2;
@@ -1532,7 +1417,7 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
 
       /* Conditional F2c2_1 */
       /* Conditional mean and variance-covariance matrix, conditional on alph2_2, u1 and u2 */
-      vecmat out3 = conMuSig(sigma, mu, rc2, rc5);
+      vecmat out3 = conMuSig(sigma, mu, x, rc2, rc5);
       vec c_mu3 = out3.V;
       mat c_sig3 = out3.M1;
       mat c_sigX3 = out3.M2;
@@ -1580,18 +1465,9 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
       uvec rc4(2); rc4(0) = 4; rc4(1) = 5;
       uvec rc5(3); rc5(0) = 2; rc5(1) = 4; rc5(2) = 5;
 
-      /* Mean vector (used for estimation of conditional mean) */
-      vec mu(6) ;
-      mu(0) = alph(i,0);
-      mu(1) = alph(i,1);
-      mu(2) = alph(i,2);
-      mu(3) = alph(i,3);
-      mu(4) = u(i,0);
-      mu(5) = u(i,1);
-
       /* Marginal dF2_1 */
       /* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-      vecmat out1 = conMuSig(sigma, mu, rc2, rc4);
+      vecmat out1 = conMuSig(sigma, mu, x, rc2, rc4);
       vec c_mu1 = out1.V;
       mat c_sig1 = out1.M1;
       mat c_sigX1 = out1.M2;
@@ -1620,7 +1496,7 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
 
       /* Conditional F1c2_2 */
       /* Conditional mean and variance-covariance matrix, conditional on alph2_1, u1 and u2 */
-      vecmat out2 = conMuSig(sigma, mu, rc1, rc5);
+      vecmat out2 = conMuSig(sigma, mu, x, rc1, rc5);
       vec c_mu2 = out2.V;
       mat c_sig2 = out2.M1;
       mat c_sigX2 = out2.M2;
@@ -1649,7 +1525,7 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
 
       /* Conditional F2c2_2 */
       /* Conditional mean and variance-covariance matrix, conditional on alph2_1, u1 and u2 */
-      vecmat out3 = conMuSig(sigma, mu, rc3, rc5);
+      vecmat out3 = conMuSig(sigma, mu, x, rc3, rc5);
       vec c_mu3 = out3.V;
       mat c_sig3 = out3.M1;
       mat c_sigX3 = out3.M2;
@@ -1706,36 +1582,27 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
       uvec rc12(3); rc12(0) = 2; rc12(1) = 4; rc12(2) = 5;
       uvec rc13(3); rc13(0) = 3; rc13(1) = 4; rc13(2) = 5;
 
-      /* Mean vector (used for estimation of conditional mean) */
-      vec mu(6) ;
-      mu(0) = alph(i,0);
-      mu(1) = alph(i,1);
-      mu(2) = alph(i,2);
-      mu(3) = alph(i,3);
-      mu(4) = u(i,0);
-      mu(5) = u(i,1);
-
       /* Marginal F1_1, F1_2, F2_1 and F2_2 */
       /* Conditional mean and variance-covariance matrices, conditional on u1 and u2 */
-      vecmat out1 = conMuSig(sigma, mu, rc1, rc5);
+      vecmat out1 = conMuSig(sigma, mu, x, rc1, rc5);
       vec c_mu1 = out1.V;
       mat c_sig1 = out1.M1;
       mat c_sigX1 = out1.M2;
       double sd1 = sqrt(c_sig1[0]);
 
-      vecmat out2 = conMuSig(sigma, mu, rc2, rc5);
+      vecmat out2 = conMuSig(sigma, mu, x, rc2, rc5);
       vec c_mu2 = out2.V;
       mat c_sig2 = out2.M1;
       mat c_sigX2 = out2.M2;
       double sd2 = sqrt(c_sig2[0]);
 
-      vecmat out3 = conMuSig(sigma, mu, rc3, rc5);
+      vecmat out3 = conMuSig(sigma, mu, x, rc3, rc5);
       vec c_mu3 = out3.V;
       mat c_sig3 = out3.M1;
       mat c_sigX3 = out3.M2;
       double sd3 = sqrt(c_sig3[0]);
 
-      vecmat out4 = conMuSig(sigma, mu, rc4, rc5);
+      vecmat out4 = conMuSig(sigma, mu, x, rc4, rc5);
       vec c_mu4 = out4.V;
       mat c_sig4 = out4.M1;
       mat c_sigX4 = out4.M2;
@@ -1793,25 +1660,25 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
 
       /* Joint probabilities F11, F12, F21 and F22 */
       /* Conditional mean and variance-covariance matrices, conditional on u1 and u2 */
-      vecmat out5 = conMuSig(sigma, mu, rc6, rc5);
+      vecmat out5 = conMuSig(sigma, mu, x, rc6, rc5);
       vec c_mu5 = out5.V;
       mat c_sig5 = out5.M1;
       mat c_sigX5 = out5.M2;
       mat ic_sig5 = c_sig5.i(); // the inverse
 
-      vecmat out6 = conMuSig(sigma, mu, rc7, rc5);
+      vecmat out6 = conMuSig(sigma, mu, x, rc7, rc5);
       vec c_mu6 = out6.V;
       mat c_sig6 = out6.M1;
       mat c_sigX6 = out6.M2;
       mat ic_sig6 = c_sig6.i(); // the inverse
 
-      vecmat out7 = conMuSig(sigma, mu, rc8, rc5);
+      vecmat out7 = conMuSig(sigma, mu, x, rc8, rc5);
       vec c_mu7 = out7.V;
       mat c_sig7 = out7.M1;
       mat c_sigX7 = out7.M2;
       mat ic_sig7 = c_sig7.i(); // the inverse
 
-      vecmat out8 = conMuSig(sigma, mu, rc9, rc5);
+      vecmat out8 = conMuSig(sigma, mu, x, rc9, rc5);
       vec c_mu8 = out8.V;
       mat c_sig8 = out8.M1;
       mat c_sigX8 = out8.M2;
@@ -1852,13 +1719,13 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
       double F22 = pi2_1(i)*pi2_2(i)*cdf22;
 
       /* Conditional mean and variance-covariance matrix for F1c1_1 and F1c1_2 */
-      vecmat out9 = conMuSig(sigma, mu, rc1, rc11);
+      vecmat out9 = conMuSig(sigma, mu, x, rc1, rc11);
       vec c_mu9 = out9.V;
       mat c_sig9 = out9.M1;
       mat c_sigX9 = out9.M2;
       double sd9 = sqrt(c_sig9[0]);
 
-      vecmat out10 = conMuSig(sigma, mu, rc2, rc10);
+      vecmat out10 = conMuSig(sigma, mu, x, rc2, rc10);
       vec c_mu10 = out10.V;
       mat c_sig10 = out10.M1;
       mat c_sigX10 = out10.M2;
@@ -1877,13 +1744,13 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
       double dcdf11_u2 = cdf1c1_1*pdf1_2*(-c_sigX5(1,1)) + cdf1c1_2*pdf1_1*(-c_sigX5(0,1));
 
       /* Conditional mean and variance-covariance matrix for F1c2_1 and F2c1_2 */
-      vecmat out11 = conMuSig(sigma, mu, rc1, rc13);
+      vecmat out11 = conMuSig(sigma, mu, x, rc1, rc13);
       vec c_mu11 = out11.V;
       mat c_sig11 = out11.M1;
       mat c_sigX11 = out11.M2;
       double sd11 = sqrt(c_sig11[0]);
 
-      vecmat out12 = conMuSig(sigma, mu, rc4, rc10);
+      vecmat out12 = conMuSig(sigma, mu, x, rc4, rc10);
       vec c_mu12 = out12.V;
       mat c_sig12 = out12.M1;
       mat c_sigX12 = out12.M2;
@@ -1902,13 +1769,13 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
       double dcdf12_u2 = cdf1c2_1*pdf2_2*(-c_sigX6(1,1)) + cdf2c1_2*pdf1_1*(-c_sigX6(0,1));
 
       /* Conditional mean and variance-covariance matrix for F2c1_1 and F1c2_2 */
-      vecmat out13 = conMuSig(sigma, mu, rc3, rc11);
+      vecmat out13 = conMuSig(sigma, mu, x, rc3, rc11);
       vec c_mu13 = out13.V;
       mat c_sig13 = out13.M1;
       mat c_sigX13 = out13.M2;
       double sd13 = sqrt(c_sig13[0]);
 
-      vecmat out14 = conMuSig(sigma, mu, rc2, rc12);
+      vecmat out14 = conMuSig(sigma, mu, x, rc2, rc12);
       vec c_mu14 = out14.V;
       mat c_sig14 = out14.M1;
       mat c_sigX14 = out14.M2;
@@ -1927,13 +1794,13 @@ mat Dloglik(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
       double dcdf21_u2 = cdf2c1_1*pdf1_2*(-c_sigX7(1,1)) + cdf1c2_2*pdf2_1*(-c_sigX7(0,1));
 
       /* Conditional mean and variance-covariance matrix for F2c2_1 and F2c2_2 */
-      vecmat out15 = conMuSig(sigma, mu, rc3, rc13);
+      vecmat out15 = conMuSig(sigma, mu, x, rc3, rc13);
       vec c_mu15 = out15.V;
       mat c_sig15 = out15.M1;
       mat c_sigX15 = out15.M2;
       double sd15 = sqrt(c_sig15[0]);
 
-      vecmat out16 = conMuSig(sigma, mu, rc4, rc12);
+      vecmat out16 = conMuSig(sigma, mu, x, rc4, rc12);
       vec c_mu16 = out16.V;
       mat c_sig16 = out16.M1;
       mat c_sigX16 = out16.M2;

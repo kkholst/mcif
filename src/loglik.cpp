@@ -19,8 +19,7 @@ const double twopi = 2*datum::pi;
 const double sq_twopi = sqrt(twopi);
 const double h = 1e-8;
 
-const unsigned _inner_NR_iter=10;
-const double _inner_NR_abseps=0.000001;
+const double _inner_NR_abseps=0.00001;
 
 class vecmat {
 public:
@@ -80,7 +79,6 @@ double pn(mat y, mat mu, mat sigma) {
   res = val;
   return(res);
 }
-
 
 /*
 Conditional mean and variance-covariance matrix
@@ -149,7 +147,7 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0)
     mu(3) = alph(i,3);
     mu(4) = u(i,0);
     mu(5) = u(i,1);
-    
+
     /* Both family members experience event 1, estimating ddF11 */
     if((y(i,0) == 1) & (y(i,1) == 1)){
 
@@ -223,7 +221,6 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0)
       /* Specifying which parts of sigma apply */
       uvec rc1(2); rc1(0) = 2; rc1(1) = 1;
       uvec rc2(2); rc2(0) = 4; rc2(1) = 5;
-
 
       /* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
       vecmat out = conMuSig(sigma, mu, rc1, rc2);
@@ -792,7 +789,7 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0
       mu(3) = alph(i,3);
       mu(4) = u(i,0);
       mu(5) = u(i,1);
-    
+
     /* Both family members experience event 1, estimating score contribution from ddF11 */
     if((y(i,0) == 1) & (y(i,1) == 1)){
 
@@ -950,9 +947,8 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0
       /* Adding to return vector */
       res(i,0) = sc_u1;
       res(i,1) = sc_u2;
-
     }
-/* Both family members experience event 2, estimating score contribution from ddF22 */
+    /* Both family members experience event 2, estimating score contribution from ddF22 */
     else if((y(i,0) == 2) & (y(i,1) == 2)){
 
       /* Specifying which parts of sigma apply */
@@ -1063,8 +1059,7 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0
       /* Estimation of F1c1_1 */
       double p1 = pn(alph_c2,0.0,c_sig2[0]);
       double F1c1_1 = pi1_1(i)*p1;
-      
-      
+
       /* Calculating the pdf */
       double sd2 = sqrt(c_sig2[0]);
       double inner2 = pow(alph_c2[0],2)/c_sig2[0];
@@ -1189,7 +1184,7 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0
       vecmat out3 = conMuSig(sigma, mu, rc3, rc5);
       vec c_mu3 = out3.V;
       mat c_sig3 = out3.M1;
-      mat c_sigX3 = out3.M2;      
+      mat c_sigX3 = out3.M2;
 
       /* Pulling out the appropriate alpha from alph */
       mat alph_sub3(n,1);
@@ -1517,7 +1512,7 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0
       double p2 = pn(alph_c1_2,0.0,sd2*sd2);
       double p3 = pn(alph_c2_1,0.0,sd3*sd3);
       double p4 = pn(alph_c2_2,0.0,sd4*sd4);
-      
+
       double F1_1 = pi1_1(i)*p1;
       double F1_2 = pi1_2(i)*p2;
       double F2_1 = pi2_1(i)*p3;
@@ -1786,17 +1781,17 @@ mat D2loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=
   return(res);
 }
 
-
 /*
 Marginal likelihood via AGQ
 */
 // [[Rcpp::export]]
-vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, int nq=1) {
+vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, int nq=1, double stepsize=0.7, unsigned iter=20, bool debug=false) {
+  //BEGIN_RCPP
   QuadRule gh(nq);
   double K = sqrt(2);
   vec z = gh.Abscissa();
-  vec w = gh.Weight();  
-  int n = y.n_rows;  
+  vec w = gh.Weight();
+  int n = y.n_rows;
   vec warn(n); warn.fill(1);
   vec res(n); res.fill(0);
   for (int i=0; i<n; i++) {
@@ -1804,40 +1799,70 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, int nq=1) {
     mat b0 = b.row(i);
     mat alph0 = alph.row(i);
     mat dalph0 = dalph.row(i);
-    mat u0(1,2); u0.fill(0);
+    mat u0(1,2); // u0.fill(0);
     double conv = 1;
     mat H(2,2);
     mat U(1,2);
-    for (unsigned j=0; j<_inner_NR_iter; j++) {
-      U = Dloglikfull(y0,b0,u0,sigma,alph0,dalph0);
-      conv = (U(0)*U(0)+U(1)*U(1))/2;
-      if (conv<_inner_NR_abseps) {
-	warn(i) = 0;
-	break;
+
+    /* Newton-Raphson */
+    vec L;
+    double Lbest = -1e6;
+    mat ubest(1,2); ubest.fill(0);
+    mat Hbest(2,2); Hbest=D2loglikfull(y0,b0,ubest,sigma,alph0,dalph0);
+    int delta = 0;
+    for (int r=-delta; r<=delta; r++){
+      for (int s=-delta; s<=delta; s++){
+	double r0 = r*sqrt(sigma(4,4));
+	double s0 = s*sqrt(sigma(5,5));
+    	u0(0,0) = r0;
+    	u0(0,1) = s0;
+	for (unsigned j=0; j<iter; j++) {
+	  U = Dloglikfull(y0,b0,u0,sigma,alph0,dalph0);
+	  conv = (U(0)*U(0)+U(1)*U(1))/2;
+	  if (conv<_inner_NR_abseps) {
+	    warn(i) = 0;
+	    break;
+	  }
+	  H = D2loglikfull(y0,b0,u0,sigma,alph0,dalph0);
+	  u0 = u0-stepsize*U*H.i();
+	  L = loglikfull(y0,b0,u0,sigma,alph0,dalph0);
+	}
+	if (!(L(0)==NA) & (L(0) > Lbest)){
+	  Lbest = L(0);
+	  ubest = u0;
+	  Hbest = H;
+	}
       }
-      H = D2loglikfull(y0,b0,u0,sigma,alph0,dalph0);
-      u0 = u0-U*H.i();
     }
+    u0 = ubest;
+    H = Hbest;
+    if (debug) {
+      U = Dloglikfull(y0,b0,u0,sigma,alph0,dalph0);
+      Rcpp::Rcout << "U: " << std::endl << U << std::endl;
+    }
+    /* Laplace approximation */
     if (nq==0) {
-      vec logf = loglikfull(y0,b0,u0,sigma,alph0,dalph0); 
+      vec logf = loglikfull(y0,b0,u0,sigma,alph0,dalph0);
       double lapl = log(twopi)-0.5*log(det(H))+logf(0);
       res(i) = lapl;
-    } else {    
+    } else {
+      /* Adaptive Gaussian quadrature */
       mat G = -H;
       mat B = chol(G);
       double Sum = 0;
       for (unsigned k=0; k<z.n_elem; k++) {
-	for (unsigned l=0; l<z.n_elem; l++) {
-	  mat z0(2,1);
-	  z0(0) = z[k]; z0(1) = z[l];
-	  mat a0 = u0.t()+K*B.i()*z0;
+      	for (unsigned l=0; l<z.n_elem; l++) {
+      	  mat z0(2,1);
+      	  z0(0) = z[k]; z0(1) = z[l];
+      	  mat a0 = u0.t()+K*B.i()*z0;
 	  double w0 = w[k]*w[l]*exp(z0[0]*z0[0]+z0[1]*z0[1]);
-	  double ll0 = loglikfull(y0,b0,a0.t(),sigma,alph0,dalph0)[0]; 
+	  double ll0 = loglikfull(y0,b0,a0.t(),sigma,alph0,dalph0)[0];
 	  Sum += exp(ll0)*w0;
-	}
-      }    
+      	}
+      }
       res(i) = 2*log(K)-0.5*log(det(G))+log(Sum);
     }
-  }  
+  }
   return(res);
+  //END_RCPP
 }
