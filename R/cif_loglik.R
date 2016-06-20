@@ -143,7 +143,7 @@ dalpha <- cbind(dspl.1[1:n], dspl.1[(n+1):(n*2)], dspl.2[1:n], dspl.2[(n+1):(n*2
 #-----------------------------------------------------------------------
 # Loglikelihood
 #-----------------------------------------------------------------------
-ll <- .Call("mcif_loglik", y, b, sigma, alpha, dalpha, nq=nq, stepsize, PACKAGE="mcif")
+ll <- loglik(y, b, sigma, alpha, dalpha, nq=nq, stepsize)
 if (grad==FALSE){
 k <- -sum(ll)
 return(k)
