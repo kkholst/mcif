@@ -3,7 +3,7 @@
 #include <RcppArmadillo.h>
 #include <Rmath.h>
 #include <mvtnormAPI.h>
-#include <quadrule.h>
+#include "quadrule.h"
 
 using namespace Rcpp;
 using namespace arma;
