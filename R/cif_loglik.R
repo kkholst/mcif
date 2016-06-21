@@ -81,7 +81,7 @@ sigma <- A%*%sigma88%*%t(A)
 
 # Spline parameters - have to be monotonically increasing
 a1 <- vector()
-a1[1] <- a1.1
+a1[1] <- a1.1*20
 a1[2] <- a1[1]+exp(a1.2)
 a1[3] <- a1[2]+exp(a1.3)
 a1[4] <- a1[3]+exp(a1.4)
@@ -91,7 +91,7 @@ a1[6] <- a1[5]+exp(a1.6)
 #a1[8] <- a1[7]+exp(a1.8)
 
 a2 <- vector()
-a2[1] <- a2.1
+a2[1] <- a2.1*20
 a2[2] <- a2[1]+exp(a2.2)
 a2[3] <- a2[2]+exp(a2.3)
 a2[4] <- a2[3]+exp(a2.4)
