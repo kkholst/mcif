@@ -114,7 +114,7 @@ vecmat conMuSig(mat sigma, vec x, uvec rc1, uvec rc2) {
 
 /* logfy */
 // [[Rcpp::export]]
-vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
+vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=1){
   /* y: nx2 matrix with event type (0, 1 or 2) of family member 1 and 2
      b: nx4 matrix with XB for event type 1 and 2 (b1 and b2) for family member 1 and 2
         the order is b1_1, b1_2, b2_1 and b2_2
@@ -699,7 +699,7 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0)
       double F00 = (1-F1_1-F1_2-F2_1-F2_2+F11+F12+F21+F22);
       res(i) = log(F00);
     }
-    if (!cond) {
+    if (cond) {
       /* For the pdf of u */
       uvec rc(2); rc(0) = 4; rc(1) = 5;
       mat sigu = sigma.submat(rc,rc);
@@ -731,7 +731,7 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0)
 /*------------------------------------------------------------------------------------------------------------*/
 /* Dlogfy */
 // [[Rcpp::export]]
-mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
+mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=1){
   /* y: nx2 matrix with event type (0, 1 or 2) of family member 1 and 2
      b: nx4 matrix with XB for event type 1 and 2 (b1 and b2) for family member 1 and 2
         the order is b1_1, b1_2, b2_1 and b2_2
@@ -1722,7 +1722,7 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0
       res(i,0) = sc_u1;
       res(i,1) = sc_u2;
     }
-    if (!cond) {
+    if (cond) {
       /* For the pdf of u */
       uvec rc(2); rc(0) = 4; rc(1) = 5;
       mat sigu = sigma.submat(rc,rc);
@@ -1756,7 +1756,7 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0
 /*------------------------------------------------------------------------------------------------------------*/
 /* Hes */
 // [[Rcpp::export]]
-mat D2loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=0){
+mat D2loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=1){
   /* y: 1x2 matrix with event type (0, 1 or 2) of family member 1 and 2
      b: 1x4 matrix with XB for event type 1 and 2 (b1 and b2) for family member 1 and 2
         the order is b1_1, b1_2, b2_1 and b2_2
@@ -1786,7 +1786,6 @@ Marginal likelihood via AGQ
 */
 // [[Rcpp::export]]
 vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, int nq=1, double stepsize=0.7, unsigned iter=20, bool debug=false) {
-  //BEGIN_RCPP
   QuadRule gh(nq);
   double K = sqrt(2);
   vec z = gh.Abscissa();
@@ -1799,17 +1798,17 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, int nq=1, double stepsi
     mat b0 = b.row(i);
     mat alph0 = alph.row(i);
     mat dalph0 = dalph.row(i);
-    mat u0(1,2); // u0.fill(0);
+    mat u0(1,2);
     double conv = 1;
     mat H(2,2);
     mat U(1,2);
 
     /* Newton-Raphson */
     vec L;
-    double Lbest = -1e6;
-    mat ubest(1,2); ubest.fill(0);
-    mat Hbest(2,2); Hbest=D2loglikfull(y0,b0,ubest,sigma,alph0,dalph0);
-    int delta = 0;
+    double Lb = -1e6;
+    mat ub(1,2); ub.fill(0);
+    mat Hb(2,2); Hb=D2loglikfull(y0,b0,ub,sigma,alph0,dalph0);
+    int delta = 1;
     for (int r=-delta; r<=delta; r++){
       for (int s=-delta; s<=delta; s++){
 	double r0 = r*sqrt(sigma(4,4));
@@ -1821,24 +1820,31 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, int nq=1, double stepsi
 	  conv = (U(0)*U(0)+U(1)*U(1))/2;
 	  if (conv<_inner_NR_abseps) {
 	    warn(i) = 0;
-	    break;
+ 	    break;
 	  }
 	  H = D2loglikfull(y0,b0,u0,sigma,alph0,dalph0);
 	  u0 = u0-stepsize*U*H.i();
 	  L = loglikfull(y0,b0,u0,sigma,alph0,dalph0);
 	}
-	if (!(L(0)==NA) & (L(0) > Lbest)){
-	  Lbest = L(0);
-	  ubest = u0;
-	  Hbest = H;
+	if (!(L(0)==NA) & (L(0) > Lb)){
+	  Lb = L(0);
+	  ub = u0;
+	  Hb = H;
 	}
       }
     }
-    u0 = ubest;
-    H = Hbest;
+    u0 = ub;
+    H = Hb;
     if (debug) {
       U = Dloglikfull(y0,b0,u0,sigma,alph0,dalph0);
-      Rcpp::Rcout << "U: " << std::endl << U << std::endl;
+      //Rcpp::Rcout << "L: " << std::endl << L << std::endl;
+      //Rcpp::Rcout << "U: " << std::endl << U << std::endl;
+      // Rcpp::Rcout << "i: " << std::endl << i << std::endl;
+      //Rcpp::Rcout << "H: " << std::endl << H << std::endl;
+      //Rcpp::Rcout << "u0: " << std::endl << u0 << std::endl;
+      //Rcpp::Rcout << "sigma: " << std::endl << sigma << std::endl;
+      //Rcpp::Rcout << "alph0: " << std::endl << alph0 << std::endl;
+      //Rcpp::Rcout << "dalph0: " << std::endl << dalph0 << std::endl;
     }
     /* Laplace approximation */
     if (nq==0) {
@@ -1847,22 +1853,42 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, int nq=1, double stepsi
       res(i) = lapl;
     } else {
       /* Adaptive Gaussian quadrature */
+      bool useSVD = false;
       mat G = -H;
-      mat B = chol(G);
+      double logdetG = 0;
+      mat Bi;
+      if (!useSVD){
+	mat W; vec s; mat V;
+	svd(W,s,V,G);
+	vec is=s;
+	for (unsigned m=0; m<s.n_elem; m++){
+	  if (s[m]<1e-9){
+	    s[m] = 1e-9;
+	    is[m] = 0;
+	  } else {
+	    is[m] = 1/sqrt(s[m]);
+	  }
+	}
+	Bi = trans(W*diagmat(is)*V);
+	logdetG = sum(log(s));
+      } else {
+	mat B = chol(G);
+	Bi = B.i();
+	logdetG = log(det(G));
+      }
       double Sum = 0;
       for (unsigned k=0; k<z.n_elem; k++) {
       	for (unsigned l=0; l<z.n_elem; l++) {
       	  mat z0(2,1);
       	  z0(0) = z[k]; z0(1) = z[l];
-      	  mat a0 = u0.t()+K*B.i()*z0;
+      	  mat a0 = u0.t()+K*Bi*z0;
 	  double w0 = w[k]*w[l]*exp(z0[0]*z0[0]+z0[1]*z0[1]);
 	  double ll0 = loglikfull(y0,b0,a0.t(),sigma,alph0,dalph0)[0];
 	  Sum += exp(ll0)*w0;
       	}
       }
-      res(i) = 2*log(K)-0.5*log(det(G))+log(Sum);
+      res(i) = 2*log(K)-0.5*logdetG+log(Sum);
     }
   }
   return(res);
-  //END_RCPP
 }
