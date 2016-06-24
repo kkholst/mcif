@@ -1776,7 +1776,7 @@ mat D2loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=
 Marginal likelihood via AGQ
 */
 // [[Rcpp::export]]
-vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat eb0, int nq=1, double stepsize=0.7, unsigned iter=20, int useeb0=0, bool debug=false) {
+vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat eb0, int nq=1, double stepsize=0.7, int useeb0=0, unsigned iter=20, bool debug=false) {
   QuadRule gh(nq);
   double K = sqrt(2);
   vec z = gh.Abscissa();
@@ -1845,6 +1845,7 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat eb0, int nq=1, doub
     }
     if (debug) {
       U = Dloglikfull(y0,b0,u0,sigma,alph0,dalph0);
+      Rcpp::Rcout << "U: " << U  <<std::endl;
     }
     /* Laplace approximation */
     if (nq==0) {
