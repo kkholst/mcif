@@ -1,4 +1,4 @@
-cif.loglik <- function(par, y, x.1, x.2, spl, dspl, dgt, ID, nq, grad=FALSE, stepsize, ...){
+cif.loglik <- function(par, y, x.1, x.2, spl, dspl, dgt, eb0, ID, nq, stepsize, useeb0, grad=FALSE,  ...){
 #-----------------------------------------------------------------------
 # Parameters
 #-----------------------------------------------------------------------
@@ -143,9 +143,10 @@ dalpha <- cbind(dspl.1[1:n], dspl.1[(n+1):(n*2)], dspl.2[1:n], dspl.2[(n+1):(n*2
 #-----------------------------------------------------------------------
 # Loglikelihood
 #-----------------------------------------------------------------------
-ll <- loglik(y, b, sigma, alpha, dalpha, nq=nq, stepsize)
+ll <- loglik(y, b, sigma, alpha, dalpha, eb0, nq, stepsize, useeb0)
 if (grad==FALSE){
 k <- -sum(ll)
+k
 return(k)
 }
 if(grad==TRUE){
