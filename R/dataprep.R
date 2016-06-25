@@ -45,7 +45,7 @@ t1 <- data[, paste(time, 1, sep="")]
 t2 <- data[, paste(time, 2, sep="")]
 
 # Max. time
-delta <- max(t1,t2)+1e-10
+delta <- max(t1,t2)+1e-8
 
 # Transforming t1 and t2
 gt1 <- g(t1,delta)
