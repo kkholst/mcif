@@ -19,7 +19,7 @@ const double twopi = 2*datum::pi;
 const double sq_twopi = sqrt(twopi);
 const double h = 1e-8;
 
-const double _inner_NR_abseps=0.00001;
+const double _inner_NR_abseps=0.000001;
 
 class vecmat {
 public:
@@ -887,7 +887,6 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=1
       /* Adding to return vector */
       res(i,0) = sc_u1;
       res(i,1) = sc_u2;
-
     }
     /* Family member 1 experiences event 2, family member 2 experiences event 1, estimating score contribution from ddF21 */
     else if((y(i,0) == 2) & (y(i,1) == 1)){
@@ -1775,7 +1774,7 @@ mat D2loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=
 Marginal likelihood via AGQ
 */
 // [[Rcpp::export]]
-vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat eb0, int nq=1, double stepsize=0.7, int useeb0=0, unsigned iter=20, bool debug=false) {
+vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat eb0, int nq=1, double stepsize=0.7, unsigned iter=20, bool debug=false) {
   QuadRule gh(nq);
   double K = sqrt(2);
   vec z = gh.Abscissa();
@@ -1788,63 +1787,24 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat eb0, int nq=1, doub
     mat b0 = b.row(i);
     mat alph0 = alph.row(i);
     mat dalph0 = dalph.row(i);
-    mat u0(1,2);
+    mat u0(1,2); u0 = eb0.row(i);
     double conv = 1;
     mat H(2,2);
     mat U(1,2);
-
-    /* Newton-Raphson */
-    vec L;
-    double Lb = -1e6;
-    mat ub(1,2); ub.fill(0);
-    mat Hb(2,2); Hb=D2loglikfull(y0,b0,ub,sigma,alph0,dalph0);
-    int delta = 1;
-
-    if (useeb0==1){
-      u0 = eb0.row(i);
-      for (unsigned v=0; v<iter; v++) {
-	U = Dloglikfull(y0,b0,u0,sigma,alph0,dalph0);
-	conv = (U(0)*U(0)+U(1)*U(1))/2;
-	if (conv<_inner_NR_abseps) {
-	  warn(i) = 0;
-	  break;
-	}
-	H = D2loglikfull(y0,b0,u0,sigma,alph0,dalph0);
-	u0 = u0-stepsize*U*H.i();
-	L = loglikfull(y0,b0,u0,sigma,alph0,dalph0);
+    /* Newton Raphson */
+    for (unsigned j=0; j<iter; j++) {
+      U = Dloglikfull(y0,b0,u0,sigma,alph0,dalph0);
+      H = D2loglikfull(y0,b0,u0,sigma,alph0,dalph0);
+      conv = (U(0)*U(0)+U(1)*U(1))/2;
+      if (conv<_inner_NR_abseps) {
+	warn(i) = 0;
+	break;
       }
-    }
-    else {
-      for (int r=-delta; r<=delta; r++){
-	for (int s=-delta; s<=delta; s++){
-	  double r0 = r*sqrt(sigma(4,4));
-	  double s0 = s*sqrt(sigma(5,5));
-	  u0(0,0) = r0;
-	  u0(0,1) = s0;
-	  for (unsigned j=0; j<iter; j++) {
-	    U = Dloglikfull(y0,b0,u0,sigma,alph0,dalph0);
-	    conv = (U(0)*U(0)+U(1)*U(1))/2;
-	    if (conv<_inner_NR_abseps) {
-	      warn(i) = 0;
-	      break;
-	    }
-	    H = D2loglikfull(y0,b0,u0,sigma,alph0,dalph0);
-	    u0 = u0-stepsize*U*H.i();
-	    L = loglikfull(y0,b0,u0,sigma,alph0,dalph0);
-	  }
-	  if (is_finite(L[0]) & (L[0] > Lb)){
-	    Lb = L[0];
-	    ub = u0;
-	    Hb = H;
-	  }
-	}
-      }
-      u0 = ub;
-      H = Hb;
+      u0 = u0-U*H.i();
     }
     if (debug) {
       U = Dloglikfull(y0,b0,u0,sigma,alph0,dalph0);
-      Rcpp::Rcout << "U: " << U  <<std::endl;
+      Rcpp::Rcout << "U: " << U <<std::endl;
     }
     /* Laplace approximation */
     if (nq==0) {
@@ -1862,11 +1822,11 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat eb0, int nq=1, doub
 	svd(W,s,V,G);
 	vec is=s;
 	for (unsigned m=0; m<s.n_elem; m++){
-	  if (s[m]<1e-9){
-	    s[m] = 1e-9;
-	    is[m] = 0;
+	  if (s(m)<1e-9){
+	    s(m) = 1e-9;
+	    is(m) = 0;
 	  } else {
-	    is[m] = 1/sqrt(s[m]);
+	    is(m) = 1/sqrt(s(m));
 	  }
 	}
 	Bi = trans(W*diagmat(is)*V);
@@ -1894,10 +1854,10 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat eb0, int nq=1, doub
 }
 
 /*
-EB0 - intelligent starting values of u0 (for estimation of score and Hessian)
+EB - Empirical Bayes, intelligent starting values of u0 (for estimation of score and Hessian)
 */
 // [[Rcpp::export]]
-mat EB0(mat y, mat b, mat sigma, mat alph, mat dalph, double stepsize=0.7, unsigned iter=20) {
+mat EB(mat y, mat b, mat sigma, mat alph, mat dalph, double stepsize=0.7, unsigned iter=20, bool debug=true) {
   int n = y.n_rows;
   vec warn(n); warn.fill(1);
   mat eb0(n,2);
@@ -1906,42 +1866,26 @@ mat EB0(mat y, mat b, mat sigma, mat alph, mat dalph, double stepsize=0.7, unsig
     mat b0 = b.row(i);
     mat alph0 = alph.row(i);
     mat dalph0 = dalph.row(i);
-    mat u0(1,2);
+    mat u0(1,2); u0.fill(0);
     double conv = 1;
     mat H(2,2);
     mat U(1,2);
-
-    /* Newton-Raphson */
-    vec L;
-    double Lb = -1e6;
-    mat ub(1,2); ub.fill(0);
-    mat Hb(2,2); Hb=D2loglikfull(y0,b0,ub,sigma,alph0,dalph0);
-    int delta = 1;
-    for (int r=-delta; r<=delta; r++){
-      for (int s=-delta; s<=delta; s++){
-	double r0 = r*sqrt(sigma(4,4));
-	double s0 = s*sqrt(sigma(5,5));
-    	u0(0,0) = r0;
-    	u0(0,1) = s0;
-	for (unsigned j=0; j<iter; j++) {
-	  U = Dloglikfull(y0,b0,u0,sigma,alph0,dalph0);
-	  conv = (U(0)*U(0)+U(1)*U(1))/2;
-	  if (conv<_inner_NR_abseps) {
-	    warn(i) = 0;
- 	    break;
-	  }
-	  H = D2loglikfull(y0,b0,u0,sigma,alph0,dalph0);
-	  u0 = u0-stepsize*U*H.i();
-	  L = loglikfull(y0,b0,u0,sigma,alph0,dalph0);
-	}
-	if (is_finite(L[0]) & (L[0] > Lb)){
-	  Lb = L[0];
-	  ub = u0;
-	  Hb = H;
-	}
+    /* Newton Raphson */
+    for (unsigned j=0; j<iter; j++) {
+      U = Dloglikfull(y0,b0,u0,sigma,alph0,dalph0);
+      H = D2loglikfull(y0,b0,u0,sigma,alph0,dalph0);
+      conv = (U(0)*U(0)+U(1)*U(1))/2;
+      if (conv<_inner_NR_abseps) {
+	warn(i) = 0;
+	break;
       }
+      u0 = u0-U*H.i();
     }
-    eb0.row(i) = ub;
+    if (debug) {
+      U = Dloglikfull(y0,b0,u0,sigma,alph0,dalph0);
+      Rcpp::Rcout << "U: " << U <<std::endl;
+    }
+    eb0.row(i) = u0;
   }
   return(eb0);
 }

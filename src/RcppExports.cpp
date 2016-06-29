@@ -72,8 +72,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // loglik
-vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat eb0, int nq, double stepsize, int useeb0, unsigned iter, bool debug);
-RcppExport SEXP mcif_loglik(SEXP ySEXP, SEXP bSEXP, SEXP sigmaSEXP, SEXP alphSEXP, SEXP dalphSEXP, SEXP eb0SEXP, SEXP nqSEXP, SEXP stepsizeSEXP, SEXP useeb0SEXP, SEXP iterSEXP, SEXP debugSEXP) {
+vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat eb0, int nq, double stepsize, unsigned iter, bool debug);
+RcppExport SEXP mcif_loglik(SEXP ySEXP, SEXP bSEXP, SEXP sigmaSEXP, SEXP alphSEXP, SEXP dalphSEXP, SEXP eb0SEXP, SEXP nqSEXP, SEXP stepsizeSEXP, SEXP iterSEXP, SEXP debugSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -85,16 +85,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< mat >::type eb0(eb0SEXP);
     Rcpp::traits::input_parameter< int >::type nq(nqSEXP);
     Rcpp::traits::input_parameter< double >::type stepsize(stepsizeSEXP);
-    Rcpp::traits::input_parameter< int >::type useeb0(useeb0SEXP);
     Rcpp::traits::input_parameter< unsigned >::type iter(iterSEXP);
     Rcpp::traits::input_parameter< bool >::type debug(debugSEXP);
-    __result = Rcpp::wrap(loglik(y, b, sigma, alph, dalph, eb0, nq, stepsize, useeb0, iter, debug));
+    __result = Rcpp::wrap(loglik(y, b, sigma, alph, dalph, eb0, nq, stepsize, iter, debug));
     return __result;
 END_RCPP
 }
-// EB0
-mat EB0(mat y, mat b, mat sigma, mat alph, mat dalph, double stepsize, unsigned iter);
-RcppExport SEXP mcif_EB0(SEXP ySEXP, SEXP bSEXP, SEXP sigmaSEXP, SEXP alphSEXP, SEXP dalphSEXP, SEXP stepsizeSEXP, SEXP iterSEXP) {
+// EB
+mat EB(mat y, mat b, mat sigma, mat alph, mat dalph, double stepsize, unsigned iter, bool debug);
+RcppExport SEXP mcif_EB(SEXP ySEXP, SEXP bSEXP, SEXP sigmaSEXP, SEXP alphSEXP, SEXP dalphSEXP, SEXP stepsizeSEXP, SEXP iterSEXP, SEXP debugSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -105,7 +104,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< mat >::type dalph(dalphSEXP);
     Rcpp::traits::input_parameter< double >::type stepsize(stepsizeSEXP);
     Rcpp::traits::input_parameter< unsigned >::type iter(iterSEXP);
-    __result = Rcpp::wrap(EB0(y, b, sigma, alph, dalph, stepsize, iter));
+    Rcpp::traits::input_parameter< bool >::type debug(debugSEXP);
+    __result = Rcpp::wrap(EB(y, b, sigma, alph, dalph, stepsize, iter, debug));
     return __result;
 END_RCPP
 }
