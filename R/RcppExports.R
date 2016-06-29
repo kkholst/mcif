@@ -17,11 +17,11 @@ D2loglikfull <- function(y, b, u, sigma, alph, dalph, cond = 1L) {
     .Call('mcif_D2loglikfull', PACKAGE = 'mcif', y, b, u, sigma, alph, dalph, cond)
 }
 
-loglik <- function(y, b, sigma, alph, dalph, eb0, nq = 1L, stepsize = 0.7, useeb0 = 0L, iter = 20L, debug = FALSE) {
-    .Call('mcif_loglik', PACKAGE = 'mcif', y, b, sigma, alph, dalph, eb0, nq, stepsize, useeb0, iter, debug)
+loglik <- function(y, b, sigma, alph, dalph, eb0, nq = 1L, stepsize = 0.7, iter = 20L, debug = FALSE) {
+    .Call('mcif_loglik', PACKAGE = 'mcif', y, b, sigma, alph, dalph, eb0, nq, stepsize, iter, debug)
 }
 
-EB0 <- function(y, b, sigma, alph, dalph, stepsize = 0.7, iter = 20L) {
-    .Call('mcif_EB0', PACKAGE = 'mcif', y, b, sigma, alph, dalph, stepsize, iter)
+EB <- function(y, b, sigma, alph, dalph, stepsize = 0.7, iter = 20L, debug = TRUE) {
+    .Call('mcif_EB', PACKAGE = 'mcif', y, b, sigma, alph, dalph, stepsize, iter, debug)
 }
 

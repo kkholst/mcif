@@ -1,4 +1,4 @@
-cif.loglik <- function(par, y, x.1, x.2, spl, dspl, dgt, eb0, ID, nq, stepsize, useeb0, grad=FALSE,  ...){
+cif.loglik <- function(par, y, x.1, x.2, spl, dspl, dgt, eb0, ID, nq, stepsize, grad=FALSE,  ...){
 #-----------------------------------------------------------------------
 # Parameters
 #-----------------------------------------------------------------------
@@ -81,7 +81,7 @@ sigma <- A%*%sigma88%*%t(A)
 
 # Spline parameters - have to be monotonically increasing
 a1 <- vector()
-a1[1] <- a1.1*20
+a1[1] <- a1.1
 a1[2] <- a1[1]+exp(a1.2)
 a1[3] <- a1[2]+exp(a1.3)
 a1[4] <- a1[3]+exp(a1.4)
@@ -91,7 +91,7 @@ a1[6] <- a1[5]+exp(a1.6)
 #a1[8] <- a1[7]+exp(a1.8)
 
 a2 <- vector()
-a2[1] <- a2.1*20
+a2[1] <- a2.1
 a2[2] <- a2[1]+exp(a2.2)
 a2[3] <- a2[2]+exp(a2.3)
 a2[4] <- a2[3]+exp(a2.4)
@@ -140,10 +140,17 @@ alpha2 <- spl.2 #+ c(gam2_1, gam2_2)
 alpha <- cbind(alpha1[1:n], alpha1[(n+1):(n*2)], alpha2[1:n], alpha2[(n+1):(n*2)])
 dalpha <- cbind(dspl.1[1:n], dspl.1[(n+1):(n*2)], dspl.2[1:n], dspl.2[(n+1):(n*2)])
 
+# For sas
+datsas <- as.data.frame(cbind(y,b,alpha,dalpha))
+datsas$ID <- 1:nrow(datsas)
+colnames(datsas) <- c("y1","y2","b1_1","b1_2","b2_1","b2_2","alph1_1","alph1_2","alph2_1","alph2_2","dalph1_1","dalph1_2","dalph2_1","dalph2_2","ID")
+datsas
+write.table(datsas,file="../sas/data2706.txt",sep="\t",row.names=FALSE)
+
 #-----------------------------------------------------------------------
 # Loglikelihood
 #-----------------------------------------------------------------------
-ll <- loglik(y, b, sigma, alpha, dalpha, eb0, nq, stepsize, useeb0)
+ll <- loglik(y, b, sigma, alpha, dalpha, eb0, nq, stepsize)
 if (grad==FALSE){
 k <- -sum(ll)
 k
