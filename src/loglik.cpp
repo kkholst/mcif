@@ -870,14 +870,6 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=1
       double sc_u1 = dpi12_u1(i)*difflog+pi1_1(i)*pi2_2(i)*a_u1*difflog;
       double sc_u2 = dpi12_u2(i)*difflog+pi1_1(i)*pi2_2(i)*a_u2*difflog;
 
-      Rcpp::Rcout << "sc_u1 = " << sc_u1 << std::endl;
-      Rcpp::Rcout << "sc_u2 = " << sc_u2 << std::endl;
-      Rcpp::Rcout << "dpi11_u1 = " << dpi11_u1 << std::endl;
-      Rcpp::Rcout << "dpi11_u2 = " << dpi11_u2 << std::endl;
-      Rcpp::Rcout << "difflog = " << difflog << std::endl;
-      Rcpp::Rcout << "a_u1 = " << a_u1 << std::endl;
-      Rcpp::Rcout << "a_u2 = " << a_u2 << std::endl;
-
       /* Adding to return vector */
       res(i,0) = sc_u1;
       res(i,1) = sc_u2;
@@ -967,14 +959,6 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=1
       /* Score contributions from ddF22 wrt. u1 and u2 */
       double sc_u1 = dpi22_u1(i)*difflog+pi2_1(i)*pi2_2(i)*a_u1*difflog;
       double sc_u2 = dpi22_u2(i)*difflog+pi2_1(i)*pi2_2(i)*a_u2*difflog;
-
-      Rcpp::Rcout << "sc_u1 = " << sc_u1 << std::endl;
-      Rcpp::Rcout << "sc_u2 = " << sc_u2 << std::endl;
-      Rcpp::Rcout << "dpi22_u1 = " << dpi22_u1 << std::endl;
-      Rcpp::Rcout << "dpi22_u2 = " << dpi22_u2 << std::endl;
-      Rcpp::Rcout << "difflog = " << difflog << std::endl;
-      Rcpp::Rcout << "a_u1 = " << a_u1 << std::endl;
-      Rcpp::Rcout << "a_u2 = " << a_u2 << std::endl;
 
       /* Adding to return vector */
       res(i,0) = sc_u1;
