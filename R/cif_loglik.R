@@ -118,8 +118,8 @@ spl.1 <- spl%*%a1
 spl.2 <- spl%*%a2
 
 # Dalphas
-dspl.1 <- dspl%*%a1*dgt
-dspl.2 <- dspl%*%a2*dgt
+dspl.1 <- (dspl%*%a1)*dgt
+dspl.2 <- (dspl%*%a2)*dgt
 
 #-----------------------------------------------------------------------
 # X^T*gamma1 and X^T*gamma2 for individual 1 and 2
@@ -139,13 +139,6 @@ alpha2 <- spl.2 #+ c(gam2_1, gam2_2)
 # Splitting
 alpha <- cbind(alpha1[1:n], alpha1[(n+1):(n*2)], alpha2[1:n], alpha2[(n+1):(n*2)])
 dalpha <- cbind(dspl.1[1:n], dspl.1[(n+1):(n*2)], dspl.2[1:n], dspl.2[(n+1):(n*2)])
-
-# For sas
-datsas <- as.data.frame(cbind(y,b,alpha,dalpha))
-datsas$ID <- 1:nrow(datsas)
-colnames(datsas) <- c("y1","y2","b1_1","b1_2","b2_1","b2_2","alph1_1","alph1_2","alph2_1","alph2_2","dalph1_1","dalph1_2","dalph2_1","dalph2_2","ID")
-datsas
-write.table(datsas,file="../sas/data2706.txt",sep="\t",row.names=FALSE)
 
 #-----------------------------------------------------------------------
 # Loglikelihood
