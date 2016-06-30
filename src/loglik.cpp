@@ -161,13 +161,7 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=1)
       vecmat out = conMuSig(sigma, mu, rc1, rc2);
       vec c_mu = out.V;
       mat c_sig = out.M1;
-
-      Rcpp::Rcout << "c_sig = " << c_sig << std::endl;
-
       mat ic_sig = c_sig.i(); // the inverse
-
-      Rcpp::Rcout << "ic_sig = " << ic_sig << std::endl;
-
       double dc_sig = det(c_sig); // the determinant
 
       /* Pulling out the appropriate alphas from alph */
