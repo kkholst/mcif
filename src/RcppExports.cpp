@@ -21,8 +21,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // loglikfull
-vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond);
-RcppExport SEXP mcif_loglikfull(SEXP ySEXP, SEXP bSEXP, SEXP uSEXP, SEXP sigmaSEXP, SEXP alphSEXP, SEXP dalphSEXP, SEXP condSEXP) {
+vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool full);
+RcppExport SEXP mcif_loglikfull(SEXP ySEXP, SEXP bSEXP, SEXP uSEXP, SEXP sigmaSEXP, SEXP alphSEXP, SEXP dalphSEXP, SEXP fullSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -32,14 +32,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< mat >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< mat >::type alph(alphSEXP);
     Rcpp::traits::input_parameter< mat >::type dalph(dalphSEXP);
-    Rcpp::traits::input_parameter< bool >::type cond(condSEXP);
-    __result = Rcpp::wrap(loglikfull(y, b, u, sigma, alph, dalph, cond));
+    Rcpp::traits::input_parameter< bool >::type full(fullSEXP);
+    __result = Rcpp::wrap(loglikfull(y, b, u, sigma, alph, dalph, full));
     return __result;
 END_RCPP
 }
 // Dloglikfull
-mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond);
-RcppExport SEXP mcif_Dloglikfull(SEXP ySEXP, SEXP bSEXP, SEXP uSEXP, SEXP sigmaSEXP, SEXP alphSEXP, SEXP dalphSEXP, SEXP condSEXP) {
+mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool full);
+RcppExport SEXP mcif_Dloglikfull(SEXP ySEXP, SEXP bSEXP, SEXP uSEXP, SEXP sigmaSEXP, SEXP alphSEXP, SEXP dalphSEXP, SEXP fullSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -49,14 +49,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< mat >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< mat >::type alph(alphSEXP);
     Rcpp::traits::input_parameter< mat >::type dalph(dalphSEXP);
-    Rcpp::traits::input_parameter< bool >::type cond(condSEXP);
-    __result = Rcpp::wrap(Dloglikfull(y, b, u, sigma, alph, dalph, cond));
+    Rcpp::traits::input_parameter< bool >::type full(fullSEXP);
+    __result = Rcpp::wrap(Dloglikfull(y, b, u, sigma, alph, dalph, full));
     return __result;
 END_RCPP
 }
 // D2loglikfull
-mat D2loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond);
-RcppExport SEXP mcif_D2loglikfull(SEXP ySEXP, SEXP bSEXP, SEXP uSEXP, SEXP sigmaSEXP, SEXP alphSEXP, SEXP dalphSEXP, SEXP condSEXP) {
+mat D2loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool full);
+RcppExport SEXP mcif_D2loglikfull(SEXP ySEXP, SEXP bSEXP, SEXP uSEXP, SEXP sigmaSEXP, SEXP alphSEXP, SEXP dalphSEXP, SEXP fullSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -66,8 +66,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< mat >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< mat >::type alph(alphSEXP);
     Rcpp::traits::input_parameter< mat >::type dalph(dalphSEXP);
-    Rcpp::traits::input_parameter< bool >::type cond(condSEXP);
-    __result = Rcpp::wrap(D2loglikfull(y, b, u, sigma, alph, dalph, cond));
+    Rcpp::traits::input_parameter< bool >::type full(fullSEXP);
+    __result = Rcpp::wrap(D2loglikfull(y, b, u, sigma, alph, dalph, full));
     return __result;
 END_RCPP
 }
