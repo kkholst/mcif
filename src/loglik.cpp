@@ -1730,7 +1730,7 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat eb0, int nq=1, doub
       mat G = -H;
       double logdetG = 0;
       mat Bi;
-      if (!useSVD){
+      if (useSVD){
 	mat W; vec s; mat V;
 	svd(W,s,V,G);
 	vec is=s;
