@@ -116,7 +116,7 @@ vecmat conMuSig(mat sigma, vec x, uvec rc1, uvec rc2) {
 Full loglikelihood
 */
 // [[Rcpp::export]]
-vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=1){
+vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool full=1){
   /* y: nx2 matrix with event type (0, 1 or 2) of family member 1 and 2
      b: nx4 matrix with XB for event type 1 and 2 (b1 and b2) for family member 1 and 2
         the order is b1_1, b1_2, b2_1 and b2_2
@@ -701,7 +701,7 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=1)
       double F00 = (1-F1_1-F1_2-F2_1-F2_2+F11+F12+F21+F22);
       res(i) = log(F00);
     }
-    if (cond) {
+    if (full) {
       /* For the pdf of u */
       uvec rc(2); rc(0) = 4; rc(1) = 5;
       mat sigu = sigma.submat(rc,rc);
@@ -725,7 +725,7 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=1)
 Score function of full loglikelihood
 */
 // [[Rcpp::export]]
-mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=1){
+mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool full=1){
   /* y: nx2 matrix with event type (0, 1 or 2) of family member 1 and 2
      b: nx4 matrix with XB for event type 1 and 2 (b1 and b2) for family member 1 and 2
         the order is b1_1, b1_2, b2_1 and b2_2
@@ -1626,7 +1626,7 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=1
       res(i,0) = sc_u1;
       res(i,1) = sc_u2;
     }
-    if (cond) {
+    if (full) {
       /* u */
       uvec rc(2); rc(0) = 4; rc(1) = 5;
       mat sigu = sigma.submat(rc,rc);
@@ -1707,11 +1707,12 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat eb0, int nq=1, doub
 	warn(i) = 0;
 	break;
       }
-      u0 = u0-U*H.i();
+      u0 = u0-stepsize*U*H.i();
     }
     if (debug) {
       U = Dloglikfull(y0,b0,u0,sigma,alph0,dalph0);
       vec L = loglikfull(y0,b0,u0,sigma,alph0,dalph0);
+      Rcpp::Rcout << "conv: " << conv <<std::endl;
       Rcpp::Rcout << "L: " << L <<std::endl;
       Rcpp::Rcout << "U: " << U <<std::endl;
       Rcpp::Rcout << "i: " << i <<std::endl;
@@ -1789,7 +1790,7 @@ mat EB(mat y, mat b, mat sigma, mat alph, mat dalph, double stepsize=0.7, unsign
 	warn(i) = 0;
 	break;
       }
-      u0 = u0-U*H.i();
+      u0 = u0-stepsize*U*H.i();
     }
     if (debug) {
       U = Dloglikfull(y0,b0,u0,sigma,alph0,dalph0);
