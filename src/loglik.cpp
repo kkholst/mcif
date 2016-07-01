@@ -1650,7 +1650,7 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool full=1
 Hessian matrix of full loglikelihood
 */
 // [[Rcpp::export]]
-mat D2loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=1){
+mat D2loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool full=1){
   /* y: 1x2 matrix with event type (0, 1 or 2) of family member 1 and 2
      b: 1x4 matrix with XB for event type 1 and 2 (b1 and b2) for family member 1 and 2
         the order is b1_1, b1_2, b2_1 and b2_2
@@ -1670,8 +1670,8 @@ mat D2loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, bool cond=
   mat u2_m(1,2); u2_m(0,0) = u(0,0); u2_m(0,1) = u(0,1)-h;
 
   /* Central difference */
-  res.row(0) = (Dloglikfull(y, b, u1_p, sigma, alph, dalph, cond)-Dloglikfull(y, b, u1_m, sigma, alph, dalph, cond))/(2*h);
-  res.row(1) = (Dloglikfull(y, b, u2_p, sigma, alph, dalph, cond)-Dloglikfull(y, b, u2_m, sigma, alph, dalph, cond))/(2*h);
+  res.row(0) = (Dloglikfull(y, b, u1_p, sigma, alph, dalph, full)-Dloglikfull(y, b, u1_m, sigma, alph, dalph, full))/(2*h);
+  res.row(1) = (Dloglikfull(y, b, u2_p, sigma, alph, dalph, full)-Dloglikfull(y, b, u2_m, sigma, alph, dalph, full))/(2*h);
 
   /* Return */
   return(res);
