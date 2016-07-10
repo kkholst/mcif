@@ -1784,7 +1784,8 @@ mat EB(mat y, mat b, mat sigma, mat alph, mat dalph, double stepsize=0.7, unsign
     mat H(2,2);
     mat U(1,2);
     /* Newton Raphson */
-    for (unsigned j=0; j<iter; j++) {
+    unsigned j;
+    for (j=0; j<iter; j++) {
       U = Dloglikfull(y0,b0,u0,sigma,alph0,dalph0);
       H = D2loglikfull(y0,b0,u0,sigma,alph0,dalph0);
       conv = (U(0)*U(0)+U(1)*U(1))/2;
@@ -1796,7 +1797,12 @@ mat EB(mat y, mat b, mat sigma, mat alph, mat dalph, double stepsize=0.7, unsign
     }
     if (debug) {
       U = Dloglikfull(y0,b0,u0,sigma,alph0,dalph0);
+      vec L = loglikfull(y0,b0,u0,sigma,alph0,dalph0);
+      Rcpp::Rcout << "iter: " << j <<std::endl;
+      Rcpp::Rcout << "conv: " << conv <<std::endl;
+      Rcpp::Rcout << "L: " << L <<std::endl;
       Rcpp::Rcout << "U: " << U <<std::endl;
+      Rcpp::Rcout << "i: " << i <<std::endl;
     }
     eb0.row(i) = u0;
   }
