@@ -19,13 +19,101 @@ const double twopi = 2*datum::pi;
 const double sq_twopi = sqrt(twopi);
 const double h = 1e-8;
 
-const double _inner_NR_abseps=0.000001;
+const double _inner_NR_abseps=0.00001;
 
-class vecmat {
+class matfour {
 public:
-  vec V;
   mat M1;
   mat M2;
+  double M3;
+  mat M4;
+};
+
+class ss {
+public:
+  mat e1_1s; /* Individual 1 event 1 conditional on u*/
+  mat e2_1s; /* Individual 1 event 2 conditional on u*/
+  mat e1_2s; /* Individual 2 event 1 conditional on u*/
+  mat e2_2s; /* Individual 2 event 2 conditional on u*/
+
+  mat e1_1i; /* Individual 1 event 1 conditional on u, the inverse*/
+  mat e2_1i; /* Individual 1 event 2 conditional on u, the inverse*/
+  mat e1_2i; /* Individual 2 event 1 conditional on u, the inverse*/
+  mat e2_2i; /* Individual 2 event 2 conditional on u, the inverse*/
+
+  double e1_1d; /* Individual 1 event 1 conditional on u, the determinant*/
+  double e2_1d; /* Individual 1 event 2 conditional on u, the determinant*/
+  double e1_2d; /* Individual 2 event 1 conditional on u, the determinant*/
+  double e2_2d; /* Individual 2 event 2 conditional on u, the determinant*/
+
+  mat e1_1x; /* Individual 1 event 1 conditional on u, the sigx*/
+  mat e2_1x; /* Individual 1 event 2 conditional on u, the sigx*/
+  mat e1_2x; /* Individual 2 event 1 conditional on u, the sigx*/
+  mat e2_2x; /* Individual 2 event 2 conditional on u, the sigx*/
+
+  mat e1c1_1s; /* Individual 1 event 1 conditional on u and individual 2 event 1*/
+  mat e2c1_1s; /* Individual 1 event 2 conditional on u and individual 2 event 1*/
+  mat e1c1_2s; /* Individual 2 event 1 conditional on u and individual 1 event 1*/
+  mat e2c1_2s; /* Individual 2 event 2 conditional on u and individual 1 event 1*/
+
+  mat e1c1_1i; /* Individual 1 event 1 conditional on u and individual 2 event 1, the inverse*/
+  mat e2c1_1i; /* Individual 1 event 2 conditional on u and individual 2 event 1, the inverse*/
+  mat e1c1_2i; /* Individual 2 event 1 conditional on u and individual 1 event 1, the inverse*/
+  mat e2c1_2i; /* Individual 2 event 2 conditional on u and individual 1 event 1, the inverse*/
+
+  double e1c1_1d; /* Individual 1 event 1 conditional on u and individual 2 event 1, the determinant*/
+  double e2c1_1d; /* Individual 1 event 2 conditional on u and individual 2 event 1, the determinant*/
+  double e1c1_2d; /* Individual 2 event 1 conditional on u and individual 1 event 1, the determinant*/
+  double e2c1_2d; /* Individual 2 event 2 conditional on u and individual 1 event 1, the determinant*/
+
+  mat e1c1_1x; /* Individual 1 event 1 conditional on u and individual 2 event 1, the sigx*/
+  mat e2c1_1x; /* Individual 1 event 2 conditional on u and individual 2 event 1, the sigx*/
+  mat e1c1_2x; /* Individual 2 event 1 conditional on u and individual 1 event 1, the sigx*/
+  mat e2c1_2x; /* Individual 2 event 2 conditional on u and individual 1 event 1, the sigx*/
+
+  mat e1c2_1s; /* Individual 1 event 1 conditional on u and individual 2 event 2*/
+  mat e2c2_1s; /* Individual 1 event 2 conditional on u and individual 2 event 2*/
+  mat e1c2_2s; /* Individual 2 event 1 conditional on u and individual 1 event 2*/
+  mat e2c2_2s; /* Individual 2 event 2 conditional on u and individual 1 event 2*/
+
+  mat e1c2_1i; /* Individual 1 event 1 conditional on u and individual 2 event 2, the inverse*/
+  mat e2c2_1i; /* Individual 1 event 2 conditional on u and individual 2 event 2, the inverse*/
+  mat e1c2_2i; /* Individual 2 event 1 conditional on u and individual 1 event 2, the inverse*/
+  mat e2c2_2i; /* Individual 2 event 2 conditional on u and individual 1 event 2, the inverse*/
+
+  double e1c2_1d; /* Individual 1 event 1 conditional on u and individual 2 event 2, the determinant*/
+  double e2c2_1d; /* Individual 1 event 2 conditional on u and individual 2 event 2, the determinant*/
+  double e1c2_2d; /* Individual 2 event 1 conditional on u and individual 1 event 2, the determinant*/
+  double e2c2_2d; /* Individual 2 event 2 conditional on u and individual 1 event 2, the determinant*/
+
+  mat e1c2_1x; /* Individual 1 event 1 conditional on u and individual 2 event 2, the sigx*/
+  mat e2c2_1x; /* Individual 1 event 2 conditional on u and individual 2 event 2, the sigx*/
+  mat e1c2_2x; /* Individual 2 event 1 conditional on u and individual 1 event 2, the sigx*/
+  mat e2c2_2x; /* Individual 2 event 2 conditional on u and individual 1 event 2, the sigx*/
+
+  mat e11s; /* Individual 1 event 1 and individual 2 event 1 conditional on u*/
+  mat e12s; /* Individual 1 event 1 and individual 2 event 2 conditional on u*/
+  mat e21s; /* Individual 1 event 2 and individual 2 event 1 conditional on u*/
+  mat e22s; /* Individual 1 event 2 and individual 2 event 2 conditional on u*/
+
+  mat e11i; /* Individual 1 event 1 and individual 2 event 1 conditional on u, the inverse*/
+  mat e12i; /* Individual 1 event 1 and individual 2 event 2 conditional on u, the inverse*/
+  mat e21i; /* Individual 1 event 2 and individual 2 event 1 conditional on u, the inverse*/
+  mat e22i; /* Individual 1 event 2 and individual 2 event 2 conditional on u, the inverse*/
+
+  double e11d; /* Individual 1 event 1 and individual 2 event 1 conditional on u, the determinant*/
+  double e12d; /* Individual 1 event 1 and individual 2 event 2 conditional on u, the determinant*/
+  double e21d; /* Individual 1 event 2 and individual 2 event 1 conditional on u, the determinant*/
+  double e22d; /* Individual 1 event 2 and individual 2 event 2 conditional on u, the determinant*/
+
+  mat e11x; /* Individual 1 event 1 and individual 2 event 1 conditional on u, the sigx*/
+  mat e12x; /* Individual 1 event 1 and individual 2 event 2 conditional on u, the sigx*/
+  mat e21x; /* Individual 1 event 2 and individual 2 event 1 conditional on u, the sigx*/
+  mat e22x; /* Individual 1 event 2 and individual 2 event 2 conditional on u, the sigx*/
+
+  mat us;
+  mat ui;
+  double squd;
 };
 
 /*
@@ -81,42 +169,41 @@ double pn(mat y, mat mu, mat sigma) {
 }
 
 /*
-Conditional mean and variance-covariance matrix
+Miscellaneous things related to the conditional variance-covariance matrix
 */
-vecmat conMuSig(mat sigma, vec x, uvec rc1, uvec rc2) {
-  int n = rc1.n_elem;
-  int k = rc2.n_elem;
-
+matfour condsig(mat sigma, uvec rc1, uvec rc2) {
+  /* Decomposing sigma */
   mat sig11 = sigma.submat(rc1,rc1);
   mat sig12 = sigma.submat(rc1,rc2);
   mat sig21 = sigma.submat(rc2,rc1);
   mat sig22 = sigma.submat(rc2,rc2);
-
+  
   mat isig22 = sig22.i();
-  mat sigS = sig12*isig22;
+  mat xc_sig = sig12*isig22;
+  
+  /* Conditional variance-covariance matrix */
+  mat c_sig = sig11-xc_sig*sig21;
+  
+  /* Inverse */
+  mat ic_sig = c_sig.i();
 
-  vec a = x.elem(rc2);
-
-  vec mu1 = zeros<vec>(n);
-  vec mu2 = zeros<vec>(k);
-
-  /* Conditional mean and variance-covariance matrix */
-  vec c_mu = mu1 + sig12*isig22*(a-mu2);
-  mat c_sig = sig11-sig12*isig22*sig21;
+  /* The determinant */
+  double dc_sig = det(c_sig);
 
   /* Output */
-  vecmat out;
-  out.V = c_mu;
+  matfour out;
   out.M1 = c_sig;
-  out.M2 = sigS;
+  out.M2 = ic_sig;
+  out.M3 = dc_sig;
+  out.M4 = xc_sig;
   return(out);
 }
 
 /*
 Full loglikelihood
 */
-// [[Rcpp::export]]
-vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bool full=1){
+/*// [[Rcpp::export]]*/
+vec loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, bool full=1){
   /* y: nx2 matrix with event type (0, 1 or 2) of family member 1 and 2
      b: nx4 matrix with XB for event type 1 and 2 (b1 and b2) for family member 1 and 2
         the order is b1_1, b1_2, b2_1 and b2_2
@@ -136,24 +223,13 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
   vec pi2_1 = exp(b.col(2)+u.col(1))/(1+exp(b.col(0)+u.col(0))+exp(b.col(2)+u.col(1)));
   vec pi2_2 = exp(b.col(3)+u.col(1))/(1+exp(b.col(1)+u.col(0))+exp(b.col(3)+u.col(1)));
 
-  /* Specifying which parts of sigma apply */
-  uvec rc1(1); rc1(0) = 0;
-  uvec rc2(1); rc2(0) = 1;
-  uvec rc3(1); rc3(0) = 2;
-  uvec rc4(1); rc4(0) = 3;
-
-  uvec rc5(2); rc5(0) = 4; rc5(1) = 5;
-
-  uvec rc6(2); rc6(0) = 0; rc6(1) = 1;
-  uvec rc7(2); rc7(0) = 0; rc7(1) = 3;
-  uvec rc8(2); rc8(0) = 2; rc8(1) = 1;
-  uvec rc9(2); rc9(0) = 2; rc9(1) = 3;
-
-  uvec rc10(3); rc10(0) = 0; rc10(1) = 4; rc10(2) = 5;
-  uvec rc11(3); rc11(0) = 1; rc11(1) = 4; rc11(2) = 5;
-  uvec rc12(3); rc12(0) = 2; rc12(1) = 4; rc12(2) = 5;
-  uvec rc13(3); rc13(0) = 3; rc13(1) = 4; rc13(2) = 5;
-
+  /* Specifying which parts of mu to use */
+  uvec rc1_1u(3); rc1_1u(0)=0; rc1_1u(1)=4; rc1_1u(2)=5;
+  uvec rc1_2u(3); rc1_2u(0)=1; rc1_2u(1)=4; rc1_2u(2)=5;
+  uvec rc2_1u(3); rc2_1u(0)=2; rc2_1u(1)=4; rc2_1u(2)=5;
+  uvec rc2_2u(3); rc2_2u(0)=3; rc2_2u(1)=4; rc2_2u(2)=5;
+  uvec rcu(2); rcu(0)=4; rcu(1)=5;
+  
   /* Initialising loglik vector */
   vec res(n);
 
@@ -177,11 +253,12 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
 
 	/* Marginal dF1_2 */
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out = conMuSig(sigma, mu, rc2, rc5);
-	vec c_mu = out.V;
-	mat c_sig = out.M1;
-	mat ic_sig = c_sig.i(); // the inverse
-	double dc_sig = det(c_sig); // the determinant
+	mat c_sig = condsigma.e1_2s;
+	mat ic_sig = condsigma.e1_2i; // the inverse
+	double dc_sig = condsigma.e1_2d; // the determinant
+	mat sigX = condsigma.e1_2x; // the sigx
+	vec a = mu.elem(rcu);
+	vec c_mu = sigX*a;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub(n,1);
@@ -209,11 +286,12 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
 
 	/* Marginal dF2_2 */
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out = conMuSig(sigma, mu, rc4, rc5);
-	vec c_mu = out.V;
-	mat c_sig = out.M1;
-	mat ic_sig = c_sig.i(); // the inverse
-	double dc_sig = det(c_sig); // the determinant
+	mat c_sig = condsigma.e2_2s;
+	mat ic_sig = condsigma.e2_2i; // the inverse
+	double dc_sig = condsigma.e2_2d; // the determinant
+	mat sigX = condsigma.e2_2x; // the sigx
+	vec a = mu.elem(rcu);
+	vec c_mu = sigX*a;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub(n,1);
@@ -243,11 +321,12 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
 
 	/* Marginal dF1_1 */
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out = conMuSig(sigma, mu, rc1, rc5);
-	vec c_mu = out.V;
-	mat c_sig = out.M1;
-	mat ic_sig = c_sig.i(); // the inverse
-	double dc_sig = det(c_sig); // the determinant
+	mat c_sig = condsigma.e1_1s;
+	mat ic_sig = condsigma.e1_1i; // the inverse
+	double dc_sig = condsigma.e1_1d; // the determinant
+	mat sigX = condsigma.e1_1x; // the sigx
+	vec a = mu.elem(rcu);
+	vec c_mu = sigX*a;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub(n,1);
@@ -275,11 +354,12 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
 
 	/* Marginal dF2_1 */
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out = conMuSig(sigma, mu, rc3, rc5);
-	vec c_mu = out.V;
-	mat c_sig = out.M1;
-	mat ic_sig = c_sig.i(); // the inverse
-	double dc_sig = det(c_sig); // the determinant
+	mat c_sig = condsigma.e2_1s;
+	mat ic_sig = condsigma.e2_1i; // the inverse
+	double dc_sig = condsigma.e2_1d; // the determinant
+	mat sigX = condsigma.e2_1x; // the sigx
+	vec a = mu.elem(rcu);
+	vec c_mu = sigX*a;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub(n,1);
@@ -308,11 +388,12 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
       if((y(i,0) == 1) & (y(i,1) == 1)){
 
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out = conMuSig(sigma, mu, rc6, rc5);
-	vec c_mu = out.V;
-	mat c_sig = out.M1;
-	mat ic_sig = c_sig.i(); // the inverse
-	double dc_sig = det(c_sig); // the determinant
+	mat c_sig = condsigma.e11s;
+	mat ic_sig = condsigma.e11i; // the inverse
+	double dc_sig = condsigma.e11d; // the determinant
+	mat sigX = condsigma.e11x; // the sigx
+	vec a = mu.elem(rcu);
+	vec c_mu = sigX*a;
 
 	/* Pulling out the appropriate alphas from alph */
 	mat alph_sub(n,2);
@@ -338,11 +419,12 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
       else if((y(i,0) == 1) & (y(i,1) == 2)){
 
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out = conMuSig(sigma, mu, rc7, rc5);
-	vec c_mu = out.V;
-	mat c_sig = out.M1;
-	mat ic_sig = c_sig.i(); // the inverse
-	double dc_sig = det(c_sig); // the determinant
+	mat c_sig = condsigma.e12s;
+	mat ic_sig = condsigma.e12i; // the inverse
+	double dc_sig = condsigma.e12d; // the determinant
+	mat sigX = condsigma.e12x; // the sigx
+	vec a = mu.elem(rcu);
+	vec c_mu = sigX*a;
 
 	/* Pulling out the appropriate alphas from alph */
 	mat alph_sub(n,2);
@@ -367,11 +449,12 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
       else if((y(i,0) == 2) & (y(i,1) == 1)){
 
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out = conMuSig(sigma, mu, rc8, rc5);
-	vec c_mu = out.V;
-	mat c_sig = out.M1;
-	mat ic_sig = c_sig.i(); // the inverse
-	double dc_sig = det(c_sig); // the determinant
+	mat c_sig = condsigma.e21s;
+	mat ic_sig = condsigma.e21i; // the inverse
+	double dc_sig = condsigma.e21d; // the determinant
+	mat sigX = condsigma.e21x; // the sigx
+	vec a = mu.elem(rcu);
+	vec c_mu = sigX*a;
 
 	/* Pulling out the appropriate alphas from alph */
 	mat alph_sub(n,2);
@@ -395,11 +478,12 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
       else if((y(i,0) == 2) & (y(i,1) == 2)){
 
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out = conMuSig(sigma, mu, rc9, rc5);
-	vec c_mu = out.V;
-	mat c_sig = out.M1;
-	mat ic_sig = c_sig.i(); // the inverse
-	double dc_sig = det(c_sig); // the determinant
+	mat c_sig = condsigma.e22s;
+	mat ic_sig = condsigma.e22i; // the inverse
+	double dc_sig = condsigma.e22d; // the determinant
+	mat sigX = condsigma.e22x; // the sigx
+	vec a = mu.elem(rcu);
+	vec c_mu = sigX*a;
 
 	/* Pulling out the appropriate alphas from alph */
 	mat alph_sub(n,2);
@@ -424,11 +508,12 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
 
 	/* Marginal dF1_2 */
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out = conMuSig(sigma, mu, rc2, rc5);
-	vec c_mu = out.V;
-	mat c_sig = out.M1;
-	mat ic_sig = c_sig.i(); // the inverse
-	double dc_sig = det(c_sig); // the determinant
+	mat c_sig = condsigma.e1_2s;
+	mat ic_sig = condsigma.e1_2i; // the inverse
+	double dc_sig = condsigma.e1_2d; // the determinant
+	mat sigX = condsigma.e1_2x; // the sigx
+	vec a = mu.elem(rcu);
+	vec c_mu = sigX*a;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub(n,1);
@@ -449,10 +534,10 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
 
 	/* Conditional F1c1_1 */
 	/* Conditional mean and variance-covariance matrix, conditional on alph1_2, u1 and u2 */
-	vecmat out2 = conMuSig(sigma, mu, rc1, rc11);
-	vec c_mu2 = out2.V;
-	mat c_sig2 = out2.M1;
-	mat c_sigX2 = out2.M2;
+	mat c_sig2 = condsigma.e1c1_1s;
+	mat sigX2 = condsigma.e1c1_1x; // the sigx
+	vec a2 = mu.elem(rc1_2u);
+	vec c_mu2 = sigX2*a2;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub2(n,1);
@@ -469,9 +554,10 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
 
 	/* Conditional F2c1_1 */
 	/* Conditional mean and variance-covariance matrix, conditional on alph1_2, u1 and u2 */
-	vecmat out3 = conMuSig(sigma, mu, rc3, rc11);
-	vec c_mu3 = out3.V;
-	mat c_sig3 = out3.M1;
+	mat c_sig3 = condsigma.e2c1_1s;
+	mat sigX3 = condsigma.e2c1_1x; // the sigx
+	vec a3 = mu.elem(rc1_2u);
+	vec c_mu3 = sigX3*a3;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub3(n,1);
@@ -495,11 +581,12 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
 
 	/* Marginal dF1_1 */
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out = conMuSig(sigma, mu, rc1, rc5);
-	vec c_mu = out.V;
-	mat c_sig = out.M1;
-	mat ic_sig = c_sig.i(); // the inverse
-	double dc_sig = det(c_sig); // the determinant
+	mat c_sig = condsigma.e1_1s;
+	mat ic_sig = condsigma.e1_1i; // the inverse
+	double dc_sig = condsigma.e1_1d; // the determinant
+	mat sigX = condsigma.e1_1x; // the sigx
+	vec a = mu.elem(rcu);
+	vec c_mu = sigX*a;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub(n,1);
@@ -520,9 +607,10 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
 
 	/* Conditional F1c1_2 */
 	/* Conditional mean and variance-covariance matrix, conditional on alph1_1, u1 and u2 */
-	vecmat out2 = conMuSig(sigma, mu, rc2, rc10);
-	vec c_mu2 = out2.V;
-	mat c_sig2 = out2.M1;
+	mat c_sig2 = condsigma.e1c1_2s;
+	mat sigX2 = condsigma.e1c1_2x; // the sigx
+	vec a2 = mu.elem(rc1_1u);
+	vec c_mu2 = sigX2*a2;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub2(n,1);
@@ -539,9 +627,10 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
 
 	/* Conditional F2c1_2 */
 	/* Conditional mean and variance-covariance matrix, conditional on alph1_1, u1 and u2 */
-	vecmat out3 = conMuSig(sigma, mu, rc4, rc10);
-	vec c_mu3 = out3.V;
-	mat c_sig3 = out3.M1;
+	mat c_sig3 = condsigma.e2c1_2s;
+	mat sigX3 = condsigma.e2c1_2x; // the sigx
+	vec a3 = mu.elem(rc1_1u);
+	vec c_mu3 = sigX3*a3;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub3(n,1);
@@ -565,11 +654,12 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
 
 	/* Marginal dF2_2 */
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out = conMuSig(sigma, mu, rc4, rc5);
-	vec c_mu = out.V;
-	mat c_sig = out.M1;
-	mat ic_sig = c_sig.i(); // the inverse
-	double dc_sig = det(c_sig); // the determinant
+	mat c_sig = condsigma.e2_2s;
+	mat ic_sig = condsigma.e2_2i; // the inverse
+	double dc_sig = condsigma.e2_2d; // the determinant
+	mat sigX = condsigma.e2_2x; // the sigx
+	vec a = mu.elem(rcu);
+	vec c_mu = sigX*a;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub(n,1);
@@ -590,9 +680,10 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
 
 	/* Conditional F1c2_1 */
 	/* Conditional mean and variance-covariance matrix, conditional on alph2_2, u1 and u2 */
-	vecmat out2 = conMuSig(sigma, mu, rc1, rc13);
-	vec c_mu2 = out2.V;
-	mat c_sig2 = out2.M1;
+	mat c_sig2 = condsigma.e1c2_1s;
+	mat sigX2 = condsigma.e1c2_1x; // the sigx
+	vec a2 = mu.elem(rc2_2u);
+	vec c_mu2 = sigX2*a2;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub2(n,1);
@@ -609,9 +700,10 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
 
 	/* Conditional F2c2_1 */
 	/* Conditional mean and variance-covariance matrix, conditional on alph2_2, u1 and u2 */
-	vecmat out3 = conMuSig(sigma, mu, rc3, rc13);
-	vec c_mu3 = out3.V;
-	mat c_sig3 = out3.M1;
+	mat c_sig3 = condsigma.e2c2_1s;
+	mat sigX3 = condsigma.e2c2_1x; // the sigx
+	vec a3 = mu.elem(rc2_2u);
+	vec c_mu3 = sigX3*a3;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub3(n,1);
@@ -635,11 +727,12 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
 
 	/* Marginal dF2_1 */
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out = conMuSig(sigma, mu, rc3, rc5);
-	vec c_mu = out.V;
-	mat c_sig = out.M1;
-	mat ic_sig = c_sig.i(); // the inverse
-	double dc_sig = det(c_sig); // the determinant
+	mat c_sig = condsigma.e2_1s;
+	mat ic_sig = condsigma.e2_1i; // the inverse
+	double dc_sig = condsigma.e2_1d; // the determinant
+	mat sigX = condsigma.e2_1x; // the sigx
+	vec a = mu.elem(rcu);
+	vec c_mu = sigX*a;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub(n,1);
@@ -660,9 +753,10 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
 
 	/* Conditional F1c2_2 */
 	/* Conditional mean and variance-covariance matrix, conditional on alph2_1, u1 and u2 */
-	vecmat out2 = conMuSig(sigma, mu, rc2, rc12);
-	vec c_mu2 = out2.V;
-	mat c_sig2 = out2.M1;
+	mat c_sig2 = condsigma.e1c2_2s;
+	mat sigX2 = condsigma.e1c2_2x; // the sigx
+	vec a2 = mu.elem(rc2_1u);
+	vec c_mu2 = sigX2*a2;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub2(n,1);
@@ -679,9 +773,10 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
 
 	/* Conditional F2c2_2 */
 	/* Conditional mean and variance-covariance matrix, conditional on alph2_1, u1 and u2 */
-	vecmat out3 = conMuSig(sigma, mu, rc4, rc12);
-	vec c_mu3 = out3.V;
-	mat c_sig3 = out3.M1;
+	mat c_sig3 = condsigma.e2c2_2s;
+	mat sigX3 = condsigma.e2c2_2x; // the sigx
+	vec a3 = mu.elem(rc2_1u);
+	vec c_mu3 = sigX3*a3;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub3(n,1);
@@ -705,21 +800,25 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
 
 	/* Marginal F1_1, F1_2, F2_1 and F2_2 */
 	/* Conditional mean and variance-covariance matrices, conditional on u1 and u2 */
-	vecmat out1 = conMuSig(sigma, mu, rc1, rc5);
-	vec c_mu1 = out1.V;
-	mat c_sig1 = out1.M1;
+	mat c_sig1 = condsigma.e1_1s;
+	mat sigX1 = condsigma.e1_1x; // the sigx
+	vec a1 = mu.elem(rcu);
+	vec c_mu1 = sigX1*a1;
 
-	vecmat out2 = conMuSig(sigma, mu, rc2, rc5);
-	vec c_mu2 = out2.V;
-	mat c_sig2 = out2.M1;
+	mat c_sig2 = condsigma.e1_2s;
+	mat sigX2 = condsigma.e1_2x; // the sigx
+	vec a2 = mu.elem(rcu);
+	vec c_mu2 = sigX2*a2;
 
-	vecmat out3 = conMuSig(sigma, mu, rc3, rc5);
-	vec c_mu3 = out3.V;
-	mat c_sig3 = out3.M1;
+	mat c_sig3 = condsigma.e2_1s;
+	mat sigX3 = condsigma.e2_1x; // the sigx
+	vec a3 = mu.elem(rcu);
+	vec c_mu3 = sigX3*a3;
 
-	vecmat out4 = conMuSig(sigma, mu, rc4, rc5);
-	vec c_mu4 = out4.V;
-	mat c_sig4 = out4.M1;
+	mat c_sig4 = condsigma.e2_2s;
+	mat sigX4 = condsigma.e2_2x; // the sigx
+	vec a4 = mu.elem(rcu);
+	vec c_mu4 = sigX4*a4;
 
 	/* Pulling out the appropriate alphas from alph */
 	mat alph_sub1_1(n,1);
@@ -751,21 +850,25 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
 
 	/* Joint probabilities F11, F12, F21 and F22 */
 	/* Conditional mean and variance-covariance matrices, conditional on u1 and u2 */
-	vecmat out5 = conMuSig(sigma, mu, rc6, rc5);
-	vec c_mu5 = out5.V;
-	mat c_sig5 = out5.M1;
+	mat c_sig5 = condsigma.e11s;
+	mat sigX5 = condsigma.e11x; // the sigx
+	vec a5 = mu.elem(rcu);
+	vec c_mu5 = sigX5*a5;
 
-	vecmat out6 = conMuSig(sigma, mu, rc7, rc5);
-	vec c_mu6 = out6.V;
-	mat c_sig6 = out6.M1;
+	mat c_sig6 = condsigma.e12s;
+	mat sigX6 = condsigma.e12x; // the sigx
+	vec a6 = mu.elem(rcu);
+	vec c_mu6 = sigX6*a6;
 
-	vecmat out7 = conMuSig(sigma, mu, rc8, rc5);
-	vec c_mu7 = out7.V;
-	mat c_sig7 = out7.M1;
+	mat c_sig7 = condsigma.e21s;
+	mat sigX7 = condsigma.e21x; // the sigx
+	vec a7 = mu.elem(rcu);
+	vec c_mu7 = sigX7*a7;
 
-	vecmat out8 = conMuSig(sigma, mu, rc9, rc5);
-	vec c_mu8 = out8.V;
-	mat c_sig8 = out8.M1;
+	mat c_sig8 = condsigma.e22s;
+	mat sigX8 = condsigma.e22x; // the sigx
+	vec a8 = mu.elem(rcu);
+	vec c_mu8 = sigX8*a8;
 
 	/* Pulling out the appropriate alphas from alph */
 	mat alph_sub11(n,2);
@@ -803,11 +906,9 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
     }
     if (full) {
       /* For the pdf of u */
-      uvec rc(2); rc(0) = 4; rc(1) = 5;
-      mat sigu = sigma.submat(rc,rc);
-      mat isigu = sigu.i();
-      double dsigu = det(sigu);
-      double sq_dsigu = sqrt(dsigu);
+      mat sigu = condsigma.us;
+      mat isigu = condsigma.ui;
+      double sq_dsigu = condsigma.squd;
       mat pu = u.row(i);
       mat inu = pu*isigu*pu.t();
 
@@ -824,8 +925,8 @@ vec loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, boo
 /*
 Score function of full loglikelihood
 */
-// [[Rcpp::export]]
-mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bool full=1){
+/*// [[Rcpp::export]]*/
+mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, bool full=1){
   /* y: nx2 matrix with event type (0, 1 or 2) of family member 1 and 2
      b: nx4 matrix with XB for event type 1 and 2 (b1 and b2) for family member 1 and 2
      the order is b1_1, b1_2, b2_1 and b2_2
@@ -871,23 +972,12 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
   vec dpi21_u2 = dpi2_1_u2%pi1_2 + pi2_1%dpi1_2_u2;
   vec dpi22_u2 = dpi2_1_u2%pi2_2 + pi2_1%dpi2_2_u2;
 
-  /* Specifying which parts of sigma apply */
-  uvec rc1(1); rc1(0) = 0;
-  uvec rc2(1); rc2(0) = 1;
-  uvec rc3(1); rc3(0) = 2;
-  uvec rc4(1); rc4(0) = 3;
-
-  uvec rc5(2); rc5(0) = 4; rc5(1) = 5;
-
-  uvec rc6(2); rc6(0) = 0; rc6(1) = 1;
-  uvec rc7(2); rc7(0) = 0; rc7(1) = 3;
-  uvec rc8(2); rc8(0) = 2; rc8(1) = 1;
-  uvec rc9(2); rc9(0) = 2; rc9(1) = 3;
-
-  uvec rc10(3); rc10(0) = 0; rc10(1) = 4; rc10(2) = 5;
-  uvec rc11(3); rc11(0) = 1; rc11(1) = 4; rc11(2) = 5;
-  uvec rc12(3); rc12(0) = 2; rc12(1) = 4; rc12(2) = 5;
-  uvec rc13(3); rc13(0) = 3; rc13(1) = 4; rc13(2) = 5;
+  /* Specifying which parts of mu to use */
+  uvec rc1_1u(3); rc1_1u(0)=0; rc1_1u(1)=4; rc1_1u(2)=5;
+  uvec rc1_2u(3); rc1_2u(0)=1; rc1_2u(1)=4; rc1_2u(2)=5;
+  uvec rc2_1u(3); rc2_1u(0)=2; rc2_1u(1)=4; rc2_1u(2)=5;
+  uvec rc2_2u(3); rc2_2u(0)=3; rc2_2u(1)=4; rc2_2u(2)=5;
+  uvec rcu(2); rcu(0)=4; rcu(1)=5;
 
   /* Initialising Dloglik matrix */
   mat res(n,2);
@@ -922,10 +1012,11 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 
 	/* Marginal dF1_2 */
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out1 = conMuSig(sigma, mu, rc2, rc5);
-	vec c_mu1 = out1.V;
-	mat c_sig1 = out1.M1;
-	mat c_sigX1 = out1.M2;
+	mat c_sig1 = condsigma.e1_2s;
+	mat ic_sig1 = condsigma.e1_2i; // the inverse
+	mat sigX1 = condsigma.e1_2x; // the sigx
+	vec a1 = mu.elem(rcu);
+	vec c_mu1 = sigX1*a1;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub1(n,1);
@@ -950,8 +1041,8 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 	double dF2c1_1_u2 = dpi2_1_u2(i);
 
 	/* Score contributions from dF01 wrt. u1 and u2 */
-	double sc_u1 = (dpi1_2_u1(i)+pi1_2(i)*1/(2*c_sig1[0])*2*alph_c1[0]*c_sigX1(0))/pi1_2(i)-(dF1c1_1_u1+dF2c1_1_u1)/(1-F1c1_1-F2c1_1);
-	double sc_u2 = (dpi1_2_u2(i)+pi1_2(i)*1/(2*c_sig1[0])*2*alph_c1[0]*c_sigX1(1))/pi1_2(i)-(dF1c1_1_u2+dF2c1_1_u2)/(1-F1c1_1-F2c1_1);
+	double sc_u1 = (dpi1_2_u1(i)+pi1_2(i)*1/(2*c_sig1[0])*2*alph_c1[0]*sigX1(0))/pi1_2(i)-(dF1c1_1_u1+dF2c1_1_u1)/(1-F1c1_1-F2c1_1);
+	double sc_u2 = (dpi1_2_u2(i)+pi1_2(i)*1/(2*c_sig1[0])*2*alph_c1[0]*sigX1(1))/pi1_2(i)-(dF1c1_1_u2+dF2c1_1_u2)/(1-F1c1_1-F2c1_1);
 
 	/* Adding to return vector */
 	res(i,0) = sc_u1;
@@ -962,10 +1053,11 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 
 	/* Marginal dF2_2 */
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out1 = conMuSig(sigma, mu, rc4, rc5);
-	vec c_mu1 = out1.V;
-	mat c_sig1 = out1.M1;
-	mat c_sigX1 = out1.M2;
+	mat c_sig1 = condsigma.e2_2s;
+	mat ic_sig1 = condsigma.e2_2i; // the inverse
+	mat sigX1 = condsigma.e2_2x; // the sigx
+	vec a1 = mu.elem(rcu);
+	vec c_mu1 = sigX1*a1;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub1(n,1);
@@ -990,8 +1082,8 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 	double dF2c2_1_u2 = dpi2_1_u2(i);
 
 	/* Score contributions from dF01 wrt. u1 and u2 */
-	double sc_u1 = (dpi2_2_u1(i)+pi2_2(i)*1/(2*c_sig1[0])*2*alph_c1[0]*c_sigX1(0))/pi2_2(i)-(dF1c2_1_u1+dF2c2_1_u1)/(1-F1c2_1-F2c2_1);
-	double sc_u2 = (dpi2_2_u2(i)+pi2_2(i)*1/(2*c_sig1[0])*2*alph_c1[0]*c_sigX1(1))/pi2_2(i)-(dF1c2_1_u2+dF2c2_1_u2)/(1-F1c2_1-F2c2_1);
+	double sc_u1 = (dpi2_2_u1(i)+pi2_2(i)*1/(2*c_sig1[0])*2*alph_c1[0]*sigX1(0))/pi2_2(i)-(dF1c2_1_u1+dF2c2_1_u1)/(1-F1c2_1-F2c2_1);
+	double sc_u2 = (dpi2_2_u2(i)+pi2_2(i)*1/(2*c_sig1[0])*2*alph_c1[0]*sigX1(1))/pi2_2(i)-(dF1c2_1_u2+dF2c2_1_u2)/(1-F1c2_1-F2c2_1);
 
 	/* Adding to return vector */
 	res(i,0) = sc_u1;
@@ -1004,10 +1096,11 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 
 	/* Marginal dF1_1 */
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out1 = conMuSig(sigma, mu, rc1, rc5);
-	vec c_mu1 = out1.V;
-	mat c_sig1 = out1.M1;
-	mat c_sigX1 = out1.M2;
+	mat c_sig1 = condsigma.e1_1s;
+	mat ic_sig1 = condsigma.e1_1i; // the inverse
+	mat sigX1 = condsigma.e1_1x; // the sigx
+	vec a1 = mu.elem(rcu);
+	vec c_mu1 = sigX1*a1;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub1(n,1);
@@ -1032,8 +1125,8 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 	double dF2c1_2_u2 = dpi2_2_u2(i);
 
 	/* Score contributions from dF01 wrt. u1 and u2 */
-	double sc_u1 = (dpi1_1_u1(i)+pi1_1(i)*1/(2*c_sig1[0])*2*alph_c1[0]*c_sigX1(0))/pi1_1(i)-(dF1c1_2_u1+dF2c1_2_u1)/(1-F1c1_2-F2c1_2);
-	double sc_u2 = (dpi1_1_u2(i)+pi1_1(i)*1/(2*c_sig1[0])*2*alph_c1[0]*c_sigX1(1))/pi1_1(i)-(dF1c1_2_u2+dF2c1_2_u2)/(1-F1c1_2-F2c1_2);
+	double sc_u1 = (dpi1_1_u1(i)+pi1_1(i)*1/(2*c_sig1[0])*2*alph_c1[0]*sigX1(0))/pi1_1(i)-(dF1c1_2_u1+dF2c1_2_u1)/(1-F1c1_2-F2c1_2);
+	double sc_u2 = (dpi1_1_u2(i)+pi1_1(i)*1/(2*c_sig1[0])*2*alph_c1[0]*sigX1(1))/pi1_1(i)-(dF1c1_2_u2+dF2c1_2_u2)/(1-F1c1_2-F2c1_2);
 
 	/* Adding to return vector */
 	res(i,0) = sc_u1;
@@ -1044,10 +1137,11 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 
 	/* Marginal dF2_1 */
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out1 = conMuSig(sigma, mu, rc3, rc5);
-	vec c_mu1 = out1.V;
-	mat c_sig1 = out1.M1;
-	mat c_sigX1 = out1.M2;
+	mat c_sig1 = condsigma.e2_1s;
+	mat ic_sig1 = condsigma.e2_1i; // the inverse
+	mat sigX1 = condsigma.e2_1x; // the sigx
+	vec a1 = mu.elem(rcu);
+	vec c_mu1 = sigX1*a1;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub1(n,1);
@@ -1072,8 +1166,8 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 	double dF2c2_2_u2 = dpi2_2_u2(i);
 
 	/* Score contributions from dF01 wrt. u1 and u2 */
-	double sc_u1 = (dpi2_1_u1(i)+pi2_1(i)*1/(2*c_sig1[0])*2*alph_c1[0]*c_sigX1(0))/pi2_1(i)-(dF1c2_2_u1+dF2c2_2_u1)/(1-F1c2_2-F2c2_2);
-	double sc_u2 = (dpi2_1_u2(i)+pi2_1(i)*1/(2*c_sig1[0])*2*alph_c1[0]*c_sigX1(1))/pi2_1(i)-(dF1c2_2_u2+dF2c2_2_u2)/(1-F1c2_2-F2c2_2);
+	double sc_u1 = (dpi2_1_u1(i)+pi2_1(i)*1/(2*c_sig1[0])*2*alph_c1[0]*sigX1(0))/pi2_1(i)-(dF1c2_2_u1+dF2c2_2_u1)/(1-F1c2_2-F2c2_2);
+	double sc_u2 = (dpi2_1_u2(i)+pi2_1(i)*1/(2*c_sig1[0])*2*alph_c1[0]*sigX1(1))/pi2_1(i)-(dF1c2_2_u2+dF2c2_2_u2)/(1-F1c2_2-F2c2_2);
 
 	/* Adding to return vector */
 	res(i,0) = sc_u1;
@@ -1086,11 +1180,11 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
       if((y(i,0) == 1) & (y(i,1) == 1)){
 
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out = conMuSig(sigma, mu, rc6, rc5);
-	vec c_mu = out.V;
-	mat c_sig = out.M1;
-	mat c_sigX = out.M2;
-	mat ic_sig = c_sig.i(); // the inverse
+	mat c_sig = condsigma.e11s;
+	mat ic_sig = condsigma.e11i; // the inverse
+	mat sigX = condsigma.e11x; // the sigx
+	vec a = mu.elem(rcu);
+	vec c_mu = sigX*a;
 
 	/* Standard deviations */
 	double sd1 = sqrt(c_sig(0,0));
@@ -1112,8 +1206,8 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 
 	/* Derivatives */
 	double difflog = exp(-log(pi1_1(i))-log(pi1_2(i)));
-	double a_u1 = (alph_c(0)*c_sigX(0,0)/pow(sd1,2)+alph_c(1)*c_sigX(1,0)/pow(sd2,2)-r*c_sigX(0,0)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*c_sigX(1,0)/(sd1*sd2))/(1-pow(r,2));
-	double a_u2 = (alph_c(0)*c_sigX(0,1)/pow(sd1,2)+alph_c(1)*c_sigX(1,1)/pow(sd2,2)-r*c_sigX(0,1)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*c_sigX(1,1)/(sd1*sd2))/(1-pow(r,2));
+	double a_u1 = (alph_c(0)*sigX(0,0)/pow(sd1,2)+alph_c(1)*sigX(1,0)/pow(sd2,2)-r*sigX(0,0)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*sigX(1,0)/(sd1*sd2))/(1-pow(r,2));
+	double a_u2 = (alph_c(0)*sigX(0,1)/pow(sd1,2)+alph_c(1)*sigX(1,1)/pow(sd2,2)-r*sigX(0,1)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*sigX(1,1)/(sd1*sd2))/(1-pow(r,2));
 
 	/* Score contributions from ddF11 wrt. u1 and u2 */
 	double sc_u1 = dpi11_u1(i)*difflog+pi1_1(i)*pi1_2(i)*a_u1*difflog;
@@ -1127,11 +1221,11 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
       else if((y(i,0) == 1) & (y(i,1) == 2)){
 
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out = conMuSig(sigma, mu, rc7, rc5);
-	vec c_mu = out.V;
-	mat c_sig = out.M1;
-	mat c_sigX = out.M2;
-	mat ic_sig = c_sig.i(); // the inverse
+	mat c_sig = condsigma.e12s;
+	mat ic_sig = condsigma.e12i; // the inverse
+	mat sigX = condsigma.e12x; // the sigx
+	vec a = mu.elem(rcu);
+	vec c_mu = sigX*a;
 
 	/* Standard deviations */
 	double sd1 = sqrt(c_sig(0,0));
@@ -1153,8 +1247,8 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 
 	/* Derivatives */
 	double difflog = exp(-log(pi1_1(i))-log(pi2_2(i)));
-	double a_u1 = (alph_c(0)*c_sigX(0,0)/pow(sd1,2)+alph_c(1)*c_sigX(1,0)/pow(sd2,2)-r*c_sigX(0,0)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*c_sigX(1,0)/(sd1*sd2))/(1-pow(r,2));
-	double a_u2 = (alph_c(0)*c_sigX(0,1)/pow(sd1,2)+alph_c(1)*c_sigX(1,1)/pow(sd2,2)-r*c_sigX(0,1)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*c_sigX(1,1)/(sd1*sd2))/(1-pow(r,2));
+	double a_u1 = (alph_c(0)*sigX(0,0)/pow(sd1,2)+alph_c(1)*sigX(1,0)/pow(sd2,2)-r*sigX(0,0)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*sigX(1,0)/(sd1*sd2))/(1-pow(r,2));
+	double a_u2 = (alph_c(0)*sigX(0,1)/pow(sd1,2)+alph_c(1)*sigX(1,1)/pow(sd2,2)-r*sigX(0,1)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*sigX(1,1)/(sd1*sd2))/(1-pow(r,2));
 
 	/* Score contributions from ddF12 wrt. u1 and u2 */
 	double sc_u1 = dpi12_u1(i)*difflog+pi1_1(i)*pi2_2(i)*a_u1*difflog;
@@ -1168,11 +1262,11 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
       else if((y(i,0) == 2) & (y(i,1) == 1)){
 
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out = conMuSig(sigma, mu, rc8, rc5);
-	vec c_mu = out.V;
-	mat c_sig = out.M1;
-	mat c_sigX = out.M2;
-	mat ic_sig = c_sig.i(); // the inverse
+	mat c_sig = condsigma.e21s;
+	mat ic_sig = condsigma.e21i; // the inverse
+	mat sigX = condsigma.e21x; // the sigx
+	vec a = mu.elem(rcu);
+	vec c_mu = sigX*a;
 
 	/* Standard deviations */
 	double sd1 = sqrt(c_sig(0,0));
@@ -1194,8 +1288,8 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 
 	/* Derivatives */
 	double difflog = exp(-log(pi2_1(i))-log(pi1_2(i)));
-	double a_u1 = (alph_c(0)*c_sigX(0,0)/pow(sd1,2)+alph_c(1)*c_sigX(1,0)/pow(sd2,2)-r*c_sigX(0,0)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*c_sigX(1,0)/(sd1*sd2))/(1-pow(r,2));
-	double a_u2 = (alph_c(0)*c_sigX(0,1)/pow(sd1,2)+alph_c(1)*c_sigX(1,1)/pow(sd2,2)-r*c_sigX(0,1)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*c_sigX(1,1)/(sd1*sd2))/(1-pow(r,2));
+	double a_u1 = (alph_c(0)*sigX(0,0)/pow(sd1,2)+alph_c(1)*sigX(1,0)/pow(sd2,2)-r*sigX(0,0)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*sigX(1,0)/(sd1*sd2))/(1-pow(r,2));
+	double a_u2 = (alph_c(0)*sigX(0,1)/pow(sd1,2)+alph_c(1)*sigX(1,1)/pow(sd2,2)-r*sigX(0,1)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*sigX(1,1)/(sd1*sd2))/(1-pow(r,2));
 
 	/* Score contributions from ddF21 wrt. u1 and u2 */
 	double sc_u1 = dpi21_u1(i)*difflog+pi2_1(i)*pi1_2(i)*a_u1*difflog;
@@ -1209,11 +1303,11 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
       else if((y(i,0) == 2) & (y(i,1) == 2)){
 
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out = conMuSig(sigma, mu, rc9, rc5);
-	vec c_mu = out.V;
-	mat c_sig = out.M1;
-	mat c_sigX = out.M2;
-	mat ic_sig = c_sig.i(); // the inverse
+	mat c_sig = condsigma.e22s;
+	mat ic_sig = condsigma.e22i; // the inverse
+	mat sigX = condsigma.e22x; // the sigx
+	vec a = mu.elem(rcu);
+	vec c_mu = sigX*a;
 
 	/* Standard deviations */
 	double sd1 = sqrt(c_sig(0,0));
@@ -1235,8 +1329,8 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 
 	/* Derivatives */
 	double difflog = exp(-log(pi2_1(i))-log(pi2_2(i)));
-	double a_u1 = (alph_c(0)*c_sigX(0,0)/pow(sd1,2)+alph_c(1)*c_sigX(1,0)/pow(sd2,2)-r*c_sigX(0,0)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*c_sigX(1,0)/(sd1*sd2))/(1-pow(r,2));
-	double a_u2 = (alph_c(0)*c_sigX(0,1)/pow(sd1,2)+alph_c(1)*c_sigX(1,1)/pow(sd2,2)-r*c_sigX(0,1)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*c_sigX(1,1)/(sd1*sd2))/(1-pow(r,2));
+	double a_u1 = (alph_c(0)*sigX(0,0)/pow(sd1,2)+alph_c(1)*sigX(1,0)/pow(sd2,2)-r*sigX(0,0)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*sigX(1,0)/(sd1*sd2))/(1-pow(r,2));
+	double a_u2 = (alph_c(0)*sigX(0,1)/pow(sd1,2)+alph_c(1)*sigX(1,1)/pow(sd2,2)-r*sigX(0,1)*alph_c(1)/(sd1*sd2)-r*alph_c(0)*sigX(1,1)/(sd1*sd2))/(1-pow(r,2));
 
 	/* Score contributions from ddF22 wrt. u1 and u2 */
 	double sc_u1 = dpi22_u1(i)*difflog+pi2_1(i)*pi2_2(i)*a_u1*difflog;
@@ -1251,10 +1345,11 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 
 	/* Marginal dF1_2 */
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out1 = conMuSig(sigma, mu, rc2, rc5);
-	vec c_mu1 = out1.V;
-	mat c_sig1 = out1.M1;
-	mat c_sigX1 = out1.M2;
+	mat c_sig1 = condsigma.e1_2s;
+	mat ic_sig1 = condsigma.e1_2i; // the inverse
+	mat sigX1 = condsigma.e1_2x; // the sigx
+	vec a1 = mu.elem(rcu);
+	vec c_mu1 = sigX1*a1;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub1(n,1);
@@ -1268,10 +1363,11 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 
 	/* Conditional F1c1_1 */
 	/* Conditional mean and variance-covariance matrix, conditional on alph1_2, u1 and u2 */
-	vecmat out2 = conMuSig(sigma, mu, rc1, rc11);
-	vec c_mu2 = out2.V;
-	mat c_sig2 = out2.M1;
-	mat c_sigX2 = out2.M2;
+	mat c_sig2 = condsigma.e1c1_1s;
+	mat ic_sig2 = condsigma.e1c1_1i; // the inverse
+	mat sigX2 = condsigma.e1c1_1x; // the sigx
+	vec a2 = mu.elem(rc1_2u);
+	vec c_mu2 = sigX2*a2;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub2(n,1);
@@ -1293,15 +1389,16 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 	double pdf1c1_1 = 1/sq_twopi*1/sd2*exp(-0.5*inner2);
 
 	/* Score contribution from F1c1_1 */
-	double dF1c1_1_u1 = dpi1_1_u1(i)*p1+pi1_1(i)*pdf1c1_1*(-c_sigX2(1));
-	double dF1c1_1_u2 = dpi1_1_u2(i)*p1+pi1_1(i)*pdf1c1_1*(-c_sigX2(2));
+	double dF1c1_1_u1 = dpi1_1_u1(i)*p1+pi1_1(i)*pdf1c1_1*(-sigX2(1));
+	double dF1c1_1_u2 = dpi1_1_u2(i)*p1+pi1_1(i)*pdf1c1_1*(-sigX2(2));
 
 	/* Conditional F2c1_1 */
 	/* Conditional mean and variance-covariance matrix, conditional on alph1_2, u1 and u2 */
-	vecmat out3 = conMuSig(sigma, mu, rc3, rc11);
-	vec c_mu3 = out3.V;
-	mat c_sig3 = out3.M1;
-	mat c_sigX3 = out3.M2;
+	mat c_sig3 = condsigma.e2c1_1s;
+	mat ic_sig3 = condsigma.e2c1_1i; // the inverse
+	mat sigX3 = condsigma.e2c1_1x; // the sigx
+	vec a3 = mu.elem(rc1_2u);
+	vec c_mu3 = sigX3*a3;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub3(n,1);
@@ -1323,12 +1420,12 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 	double pdf2c1_1 = 1/sq_twopi*1/sd3*exp(-0.5*inner3);
 
 	/* Score contribution from F2c1_1 */
-	double dF2c1_1_u1 = dpi2_1_u1(i)*p3+pi2_1(i)*pdf2c1_1*(-c_sigX3(1));
-	double dF2c1_1_u2 = dpi2_1_u2(i)*p3+pi2_1(i)*pdf2c1_1*(-c_sigX3(2));
+	double dF2c1_1_u1 = dpi2_1_u1(i)*p3+pi2_1(i)*pdf2c1_1*(-sigX3(1));
+	double dF2c1_1_u2 = dpi2_1_u2(i)*p3+pi2_1(i)*pdf2c1_1*(-sigX3(2));
 
 	/* Score contributions from dF01 wrt. u1 and u2 */
-	double sc_u1 = (dpi1_2_u1(i)+pi1_2(i)*1/(2*c_sig1[0])*2*alph_c1[0]*c_sigX1(0))/pi1_2(i)-(dF1c1_1_u1+dF2c1_1_u1)/(1-F1c1_1-F2c1_1);
-	double sc_u2 = (dpi1_2_u2(i)+pi1_2(i)*1/(2*c_sig1[0])*2*alph_c1[0]*c_sigX1(1))/pi1_2(i)-(dF1c1_1_u2+dF2c1_1_u2)/(1-F1c1_1-F2c1_1);
+	double sc_u1 = (dpi1_2_u1(i)+pi1_2(i)*1/(2*c_sig1[0])*2*alph_c1[0]*sigX1(0))/pi1_2(i)-(dF1c1_1_u1+dF2c1_1_u1)/(1-F1c1_1-F2c1_1);
+	double sc_u2 = (dpi1_2_u2(i)+pi1_2(i)*1/(2*c_sig1[0])*2*alph_c1[0]*sigX1(1))/pi1_2(i)-(dF1c1_1_u2+dF2c1_1_u2)/(1-F1c1_1-F2c1_1);
 
 	/* Adding to return vector */
 	res(i,0) = sc_u1;
@@ -1339,10 +1436,11 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 
 	/* Marginal dF1_1 */
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out1 = conMuSig(sigma, mu, rc1, rc5);
-	vec c_mu1 = out1.V;
-	mat c_sig1 = out1.M1;
-	mat c_sigX1 = out1.M2;
+	mat c_sig1 = condsigma.e1_1s;
+	mat ic_sig1 = condsigma.e1_1i; // the inverse
+	mat sigX1 = condsigma.e1_1x; // the sigx
+	vec a1 = mu.elem(rcu);
+	vec c_mu1 = sigX1*a1;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub1(n,1);
@@ -1356,10 +1454,11 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 
 	/* Conditional F1c1_2 */
 	/* Conditional mean and variance-covariance matrix, conditional on alph1_1, u1 and u2 */
-	vecmat out2 = conMuSig(sigma, mu, rc2, rc10);
-	vec c_mu2 = out2.V;
-	mat c_sig2 = out2.M1;
-	mat c_sigX2 = out2.M2;
+	mat c_sig2 = condsigma.e1c1_2s;
+	mat ic_sig2 = condsigma.e1c1_2i; // the inverse
+	mat sigX2 = condsigma.e1c1_2x; // the sigx
+	vec a2 = mu.elem(rc1_1u);
+	vec c_mu2 = sigX2*a2;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub2(n,1);
@@ -1381,15 +1480,16 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 	double pdf1c1_2 = 1/sq_twopi*1/sd2*exp(-0.5*inner2);
 
 	/* Score contribution from F1c1_1 */
-	double dF1c1_2_u1 = dpi1_2_u1(i)*p2+pi1_2(i)*pdf1c1_2*(-c_sigX2(1));
-	double dF1c1_2_u2 = dpi1_2_u2(i)*p2+pi1_2(i)*pdf1c1_2*(-c_sigX2(2));
+	double dF1c1_2_u1 = dpi1_2_u1(i)*p2+pi1_2(i)*pdf1c1_2*(-sigX2(1));
+	double dF1c1_2_u2 = dpi1_2_u2(i)*p2+pi1_2(i)*pdf1c1_2*(-sigX2(2));
 
 	/* Conditional F2c1_2 */
 	/* Conditional mean and variance-covariance matrix, conditional on alph1_1, u1 and u2 */
-	vecmat out3 = conMuSig(sigma, mu, rc4, rc10);
-	vec c_mu3 = out3.V;
-	mat c_sig3 = out3.M1;
-	mat c_sigX3 = out3.M2;
+	mat c_sig3 = condsigma.e2c1_2s;
+	mat ic_sig3 = condsigma.e2c1_2i; // the inverse
+	mat sigX3 = condsigma.e2c1_2x; // the sigx
+	vec a3 = mu.elem(rc1_1u);
+	vec c_mu3 = sigX3*a3;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub3(n,1);
@@ -1411,12 +1511,12 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 	double pdf2c1_2 = 1/sq_twopi*1/sd3*exp(-0.5*inner3);
 
 	/* Score contribution from F2c1_1 */
-	double dF2c1_2_u1 = dpi2_2_u1(i)*p3+pi2_2(i)*pdf2c1_2*(-c_sigX3(1));
-	double dF2c1_2_u2 = dpi2_2_u2(i)*p3+pi2_2(i)*pdf2c1_2*(-c_sigX3(2));
+	double dF2c1_2_u1 = dpi2_2_u1(i)*p3+pi2_2(i)*pdf2c1_2*(-sigX3(1));
+	double dF2c1_2_u2 = dpi2_2_u2(i)*p3+pi2_2(i)*pdf2c1_2*(-sigX3(2));
 
 	/* Score contributions from dF01 wrt. u1 and u2 */
-	double sc_u1 = (dpi1_1_u1(i)+pi1_1(i)*1/(2*c_sig1[0])*2*alph_c1[0]*c_sigX1(0))/pi1_1(i)-(dF1c1_2_u1+dF2c1_2_u1)/(1-F1c1_2-F2c1_2);
-	double sc_u2 = (dpi1_1_u2(i)+pi1_1(i)*1/(2*c_sig1[0])*2*alph_c1[0]*c_sigX1(1))/pi1_1(i)-(dF1c1_2_u2+dF2c1_2_u2)/(1-F1c1_2-F2c1_2);
+	double sc_u1 = (dpi1_1_u1(i)+pi1_1(i)*1/(2*c_sig1[0])*2*alph_c1[0]*sigX1(0))/pi1_1(i)-(dF1c1_2_u1+dF2c1_2_u1)/(1-F1c1_2-F2c1_2);
+	double sc_u2 = (dpi1_1_u2(i)+pi1_1(i)*1/(2*c_sig1[0])*2*alph_c1[0]*sigX1(1))/pi1_1(i)-(dF1c1_2_u2+dF2c1_2_u2)/(1-F1c1_2-F2c1_2);
 
 	/* Adding to return vector */
 	res(i,0) = sc_u1;
@@ -1427,10 +1527,11 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 
 	/* Marginal dF2_2 */
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out1 = conMuSig(sigma, mu, rc4, rc5);
-	vec c_mu1 = out1.V;
-	mat c_sig1 = out1.M1;
-	mat c_sigX1 = out1.M2;
+	mat c_sig1 = condsigma.e2_2s;
+	mat ic_sig1 = condsigma.e2_2i; // the inverse
+	mat sigX1 = condsigma.e2_2x; // the sigx
+	vec a1 = mu.elem(rcu);
+	vec c_mu1 = sigX1*a1;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub1(n,1);
@@ -1444,10 +1545,11 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 
 	/* Conditional F1c2_1 */
 	/* Conditional mean and variance-covariance matrix, conditional on alph2_2, u1 and u2 */
-	vecmat out2 = conMuSig(sigma, mu, rc1, rc13);
-	vec c_mu2 = out2.V;
-	mat c_sig2 = out2.M1;
-	mat c_sigX2 = out2.M2;
+	mat c_sig2 = condsigma.e1c2_1s;
+	mat ic_sig2 = condsigma.e1c2_1i; // the inverse
+	mat sigX2 = condsigma.e1c2_1x; // the sigx
+	vec a2 = mu.elem(rc2_2u);
+	vec c_mu2 = sigX2*a2;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub2(n,1);
@@ -1469,15 +1571,16 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 	double pdf1c2_1 = 1/sq_twopi*1/sd2*exp(-0.5*inner2);
 
 	/* Score contribution from F1c2_1 */
-	double dF1c2_1_u1 = dpi1_1_u1(i)*p2+pi1_1(i)*pdf1c2_1*(-c_sigX2(1));
-	double dF1c2_1_u2 = dpi1_1_u2(i)*p2+pi1_1(i)*pdf1c2_1*(-c_sigX2(2));
+	double dF1c2_1_u1 = dpi1_1_u1(i)*p2+pi1_1(i)*pdf1c2_1*(-sigX2(1));
+	double dF1c2_1_u2 = dpi1_1_u2(i)*p2+pi1_1(i)*pdf1c2_1*(-sigX2(2));
 
 	/* Conditional F2c2_1 */
 	/* Conditional mean and variance-covariance matrix, conditional on alph2_2, u1 and u2 */
-	vecmat out3 = conMuSig(sigma, mu, rc3, rc13);
-	vec c_mu3 = out3.V;
-	mat c_sig3 = out3.M1;
-	mat c_sigX3 = out3.M2;
+	mat c_sig3 = condsigma.e2c2_1s;
+	mat ic_sig3 = condsigma.e2c2_1i; // the inverse
+	mat sigX3 = condsigma.e2c2_1x; // the sigx
+	vec a3 = mu.elem(rc2_2u);
+	vec c_mu3 = sigX3*a3;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub3(n,1);
@@ -1499,12 +1602,12 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 	double pdf2c2_1 = 1/sq_twopi*1/sd3*exp(-0.5*inner3);
 
 	/* Score contribution from F2c2_1 */
-	double dF2c2_1_u1 = dpi2_1_u1(i)*p3+pi2_1(i)*pdf2c2_1*(-c_sigX3(1));
-	double dF2c2_1_u2 = dpi2_1_u2(i)*p3+pi2_1(i)*pdf2c2_1*(-c_sigX3(2));
+	double dF2c2_1_u1 = dpi2_1_u1(i)*p3+pi2_1(i)*pdf2c2_1*(-sigX3(1));
+	double dF2c2_1_u2 = dpi2_1_u2(i)*p3+pi2_1(i)*pdf2c2_1*(-sigX3(2));
 
 	/* Score contributions from dF01 wrt. u1 and u2 */
-	double sc_u1 = (dpi2_2_u1(i)+pi2_2(i)*1/(2*c_sig1[0])*2*alph_c1[0]*c_sigX1(0))/pi2_2(i)-(dF1c2_1_u1+dF2c2_1_u1)/(1-F1c2_1-F2c2_1);
-	double sc_u2 = (dpi2_2_u2(i)+pi2_2(i)*1/(2*c_sig1[0])*2*alph_c1[0]*c_sigX1(1))/pi2_2(i)-(dF1c2_1_u2+dF2c2_1_u2)/(1-F1c2_1-F2c2_1);
+	double sc_u1 = (dpi2_2_u1(i)+pi2_2(i)*1/(2*c_sig1[0])*2*alph_c1[0]*sigX1(0))/pi2_2(i)-(dF1c2_1_u1+dF2c2_1_u1)/(1-F1c2_1-F2c2_1);
+	double sc_u2 = (dpi2_2_u2(i)+pi2_2(i)*1/(2*c_sig1[0])*2*alph_c1[0]*sigX1(1))/pi2_2(i)-(dF1c2_1_u2+dF2c2_1_u2)/(1-F1c2_1-F2c2_1);
 
 	/* Adding to return vector */
 	res(i,0) = sc_u1;
@@ -1515,10 +1618,11 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 
 	/* Marginal dF2_1 */
 	/* Conditional mean and variance-covariance matrix, conditional on u1 and u2 */
-	vecmat out1 = conMuSig(sigma, mu, rc3, rc5);
-	vec c_mu1 = out1.V;
-	mat c_sig1 = out1.M1;
-	mat c_sigX1 = out1.M2;
+	mat c_sig1 = condsigma.e2_1s;
+	mat ic_sig1 = condsigma.e2_1i; // the inverse
+	mat sigX1 = condsigma.e2_1x; // the sigx
+	vec a1 = mu.elem(rcu);
+	vec c_mu1 = sigX1*a1;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub1(n,1);
@@ -1532,10 +1636,11 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 
 	/* Conditional F1c2_2 */
 	/* Conditional mean and variance-covariance matrix, conditional on alph2_1, u1 and u2 */
-	vecmat out2 = conMuSig(sigma, mu, rc2, rc12);
-	vec c_mu2 = out2.V;
-	mat c_sig2 = out2.M1;
-	mat c_sigX2 = out2.M2;
+	mat c_sig2 = condsigma.e1c2_2s;
+	mat ic_sig2 = condsigma.e1c2_2i; // the inverse
+	mat sigX2 = condsigma.e1c2_2x; // the sigx
+	vec a2 = mu.elem(rc2_1u);
+	vec c_mu2 = sigX2*a2;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub2(n,1);
@@ -1557,15 +1662,16 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 	double pdf1c2_2 = 1/sq_twopi*1/sd2*exp(-0.5*inner2);
 
 	/* Score contribution from F1c2_2 */
-	double dF1c2_2_u1 = dpi1_2_u1(i)*p2+pi1_2(i)*pdf1c2_2*(-c_sigX2(1));
-	double dF1c2_2_u2 = dpi1_2_u2(i)*p2+pi1_2(i)*pdf1c2_2*(-c_sigX2(2));
+	double dF1c2_2_u1 = dpi1_2_u1(i)*p2+pi1_2(i)*pdf1c2_2*(-sigX2(1));
+	double dF1c2_2_u2 = dpi1_2_u2(i)*p2+pi1_2(i)*pdf1c2_2*(-sigX2(2));
 
 	/* Conditional F2c2_2 */
 	/* Conditional mean and variance-covariance matrix, conditional on alph2_1, u1 and u2 */
-	vecmat out3 = conMuSig(sigma, mu, rc4, rc12);
-	vec c_mu3 = out3.V;
-	mat c_sig3 = out3.M1;
-	mat c_sigX3 = out3.M2;
+	mat c_sig3 = condsigma.e2c2_2s;
+	mat ic_sig3 = condsigma.e2c2_2i; // the inverse
+	mat sigX3 = condsigma.e2c2_2x; // the sigx
+	vec a3 = mu.elem(rc2_1u);
+	vec c_mu3 = sigX3*a3;
 
 	/* Pulling out the appropriate alpha from alph */
 	mat alph_sub3(n,1);
@@ -1587,12 +1693,12 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 	double pdf2c2_2 = 1/sq_twopi*1/sd3*exp(-0.5*inner3);
 
 	/* Score contribution from F2c2_2 */
-	double dF2c2_2_u1 = dpi2_2_u1(i)*p3+pi2_2(i)*pdf2c2_2*(-c_sigX3(1));
-	double dF2c2_2_u2 = dpi2_2_u2(i)*p3+pi2_2(i)*pdf2c2_2*(-c_sigX3(2));
+	double dF2c2_2_u1 = dpi2_2_u1(i)*p3+pi2_2(i)*pdf2c2_2*(-sigX3(1));
+	double dF2c2_2_u2 = dpi2_2_u2(i)*p3+pi2_2(i)*pdf2c2_2*(-sigX3(2));
 
 	/* Score contributions from dF01 wrt. u1 and u2 */
-	double sc_u1 = (dpi2_1_u1(i)+pi2_1(i)*1/(2*c_sig1[0])*2*alph_c1[0]*c_sigX1(0))/pi2_1(i)-(dF1c2_2_u1+dF2c2_2_u1)/(1-F1c2_2-F2c2_2);
-	double sc_u2 = (dpi2_1_u2(i)+pi2_1(i)*1/(2*c_sig1[0])*2*alph_c1[0]*c_sigX1(1))/pi2_1(i)-(dF1c2_2_u2+dF2c2_2_u2)/(1-F1c2_2-F2c2_2);
+	double sc_u1 = (dpi2_1_u1(i)+pi2_1(i)*1/(2*c_sig1[0])*2*alph_c1[0]*sigX1(0))/pi2_1(i)-(dF1c2_2_u1+dF2c2_2_u1)/(1-F1c2_2-F2c2_2);
+	double sc_u2 = (dpi2_1_u2(i)+pi2_1(i)*1/(2*c_sig1[0])*2*alph_c1[0]*sigX1(1))/pi2_1(i)-(dF1c2_2_u2+dF2c2_2_u2)/(1-F1c2_2-F2c2_2);
 
 	/* Adding to return vector */
 	res(i,0) = sc_u1;
@@ -1603,28 +1709,32 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 
 	/* Marginal F1_1, F1_2, F2_1 and F2_2 */
 	/* Conditional mean and variance-covariance matrices, conditional on u1 and u2 */
-	vecmat out1 = conMuSig(sigma, mu, rc1, rc5);
-	vec c_mu1 = out1.V;
-	mat c_sig1 = out1.M1;
-	mat c_sigX1 = out1.M2;
+	mat c_sig1 = condsigma.e1_1s;
+	mat ic_sig1 = condsigma.e1_1i; // the inverse
+	mat sigX1 = condsigma.e1_1x; // the sigx
+	vec a1 = mu.elem(rcu);
+	vec c_mu1 = sigX1*a1;
 	double sd1 = sqrt(c_sig1[0]);
 
-	vecmat out2 = conMuSig(sigma, mu, rc2, rc5);
-	vec c_mu2 = out2.V;
-	mat c_sig2 = out2.M1;
-	mat c_sigX2 = out2.M2;
+	mat c_sig2 = condsigma.e1_2s;
+	mat ic_sig2 = condsigma.e1_2i; // the inverse
+	mat sigX2 = condsigma.e1_2x; // the sigx
+	vec a2 = mu.elem(rcu);
+	vec c_mu2 = sigX2*a2;
 	double sd2 = sqrt(c_sig2[0]);
 
-	vecmat out3 = conMuSig(sigma, mu, rc3, rc5);
-	vec c_mu3 = out3.V;
-	mat c_sig3 = out3.M1;
-	mat c_sigX3 = out3.M2;
+	mat c_sig3 = condsigma.e2_1s;
+	mat ic_sig3 = condsigma.e2_1i; // the inverse
+	mat sigX3 = condsigma.e2_1x; // the sigx
+	vec a3 = mu.elem(rcu);
+	vec c_mu3 = sigX3*a3;
 	double sd3 = sqrt(c_sig3[0]);
 
-	vecmat out4 = conMuSig(sigma, mu, rc4, rc5);
-	vec c_mu4 = out4.V;
-	mat c_sig4 = out4.M1;
-	mat c_sigX4 = out4.M2;
+	mat c_sig4 = condsigma.e2_2s;
+	mat ic_sig4 = condsigma.e2_2i; // the inverse
+	mat sigX4 = condsigma.e2_2x; // the sigx
+	vec a4 = mu.elem(rcu);
+	vec c_mu4 = sigX4*a4;
 	double sd4 = sqrt(c_sig4[0]);
 
 	/* Pulling out the appropriate alphas from alph */
@@ -1672,41 +1782,41 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 	double pdf2_2 = 1/sq_twopi*1/sd4*exp(-0.5*inner4);
 
 	/* Score contributions from F1_1, F1_2, F2_1 and F2_2 */
-	double dF1_1_u1 = dpi1_1_u1(i)*p1+pi1_1(i)*pdf1_1*(-c_sigX1(0));
-	double dF1_2_u1 = dpi1_2_u1(i)*p2+pi1_2(i)*pdf1_2*(-c_sigX2(0));
-	double dF2_1_u1 = dpi2_1_u1(i)*p3+pi2_1(i)*pdf2_1*(-c_sigX3(0));
-	double dF2_2_u1 = dpi2_2_u1(i)*p4+pi2_2(i)*pdf2_2*(-c_sigX4(0));
+	double dF1_1_u1 = dpi1_1_u1(i)*p1+pi1_1(i)*pdf1_1*(-sigX1(0));
+	double dF1_2_u1 = dpi1_2_u1(i)*p2+pi1_2(i)*pdf1_2*(-sigX2(0));
+	double dF2_1_u1 = dpi2_1_u1(i)*p3+pi2_1(i)*pdf2_1*(-sigX3(0));
+	double dF2_2_u1 = dpi2_2_u1(i)*p4+pi2_2(i)*pdf2_2*(-sigX4(0));
 
-	double dF1_1_u2 = dpi1_1_u2(i)*p1+pi1_1(i)*pdf1_1*(-c_sigX1(1));
-	double dF1_2_u2 = dpi1_2_u2(i)*p2+pi1_2(i)*pdf1_2*(-c_sigX2(1));
-	double dF2_1_u2 = dpi2_1_u2(i)*p3+pi2_1(i)*pdf2_1*(-c_sigX3(1));
-	double dF2_2_u2 = dpi2_2_u2(i)*p4+pi2_2(i)*pdf2_2*(-c_sigX4(1));
+	double dF1_1_u2 = dpi1_1_u2(i)*p1+pi1_1(i)*pdf1_1*(-sigX1(1));
+	double dF1_2_u2 = dpi1_2_u2(i)*p2+pi1_2(i)*pdf1_2*(-sigX2(1));
+	double dF2_1_u2 = dpi2_1_u2(i)*p3+pi2_1(i)*pdf2_1*(-sigX3(1));
+	double dF2_2_u2 = dpi2_2_u2(i)*p4+pi2_2(i)*pdf2_2*(-sigX4(1));
 
 	/* Joint probabilities F11, F12, F21 and F22 */
 	/* Conditional mean and variance-covariance matrices, conditional on u1 and u2 */
-	vecmat out5 = conMuSig(sigma, mu, rc6, rc5);
-	vec c_mu5 = out5.V;
-	mat c_sig5 = out5.M1;
-	mat c_sigX5 = out5.M2;
-	mat ic_sig5 = c_sig5.i(); // the inverse
+	mat c_sig5 = condsigma.e11s;
+	mat ic_sig5 = condsigma.e11i; // the inverse
+	mat sigX5 = condsigma.e11x; // the sigx
+	vec a5 = mu.elem(rcu);
+	vec c_mu5 = sigX5*a5;
 
-	vecmat out6 = conMuSig(sigma, mu, rc7, rc5);
-	vec c_mu6 = out6.V;
-	mat c_sig6 = out6.M1;
-	mat c_sigX6 = out6.M2;
-	mat ic_sig6 = c_sig6.i(); // the inverse
+	mat c_sig6 = condsigma.e12s;
+	mat ic_sig6 = condsigma.e12i; // the inverse
+	mat sigX6 = condsigma.e12x; // the sigx
+	vec a6 = mu.elem(rcu);
+	vec c_mu6 = sigX6*a6;
 
-	vecmat out7 = conMuSig(sigma, mu, rc8, rc5);
-	vec c_mu7 = out7.V;
-	mat c_sig7 = out7.M1;
-	mat c_sigX7 = out7.M2;
-	mat ic_sig7 = c_sig7.i(); // the inverse
+	mat c_sig7 = condsigma.e21s;
+	mat ic_sig7 = condsigma.e21i; // the inverse
+	mat sigX7 = condsigma.e21x; // the sigx
+	vec a7 = mu.elem(rcu);
+	vec c_mu7 = sigX7*a7;
 
-	vecmat out8 = conMuSig(sigma, mu, rc9, rc5);
-	vec c_mu8 = out8.V;
-	mat c_sig8 = out8.M1;
-	mat c_sigX8 = out8.M2;
-	mat ic_sig8 = c_sig8.i(); // the inverse
+	mat c_sig8 = condsigma.e22s;
+	mat ic_sig8 = condsigma.e22i; // the inverse
+	mat sigX8 = condsigma.e22x; // the sigx
+	vec a8 = mu.elem(rcu);
+	vec c_mu8 = sigX8*a8;
 
 	/* Pulling out the appropriate alphas from alph */
 	mat alph_sub11(n,2);
@@ -1743,16 +1853,18 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 	double F22 = pi2_1(i)*pi2_2(i)*cdf22;
 
 	/* Conditional mean and variance-covariance matrix for F1c1_1 and F1c1_2 */
-	vecmat out9 = conMuSig(sigma, mu, rc1, rc11);
-	vec c_mu9 = out9.V;
-	mat c_sig9 = out9.M1;
-	mat c_sigX9 = out9.M2;
+	mat c_sig9 = condsigma.e1c1_1s;
+	mat ic_sig9 = condsigma.e1c1_1i; // the inverse
+	mat sigX9 = condsigma.e1c1_1x; // the sigx
+	vec a9 = mu.elem(rc2_1u);
+	vec c_mu9 = sigX9*a9;
 	double sd9 = sqrt(c_sig9[0]);
 
-	vecmat out10 = conMuSig(sigma, mu, rc2, rc10);
-	vec c_mu10 = out10.V;
-	mat c_sig10 = out10.M1;
-	mat c_sigX10 = out10.M2;
+	mat c_sig10 = condsigma.e1c1_2s;
+	mat ic_sig10 = condsigma.e1c1_2i; // the inverse
+	mat sigX10 = condsigma.e1c1_2x; // the sigx
+	vec a10 = mu.elem(rc1_1u);
+	vec c_mu10 = sigX10*a10;
 	double sd10 = sqrt(c_sig10[0]);
 
 	/* Centering the alphas */
@@ -1764,20 +1876,22 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 	double cdf1c1_2 = pn(alph_c10,0.0,sd10*sd10);
 
 	/* Score contributions */
-	double dcdf11_u1 = cdf1c1_1*pdf1_2*(-c_sigX5(1,0)) + cdf1c1_2*pdf1_1*(-c_sigX5(0,0));
-	double dcdf11_u2 = cdf1c1_1*pdf1_2*(-c_sigX5(1,1)) + cdf1c1_2*pdf1_1*(-c_sigX5(0,1));
+	double dcdf11_u1 = cdf1c1_1*pdf1_2*(-sigX5(1,0)) + cdf1c1_2*pdf1_1*(-sigX5(0,0));
+	double dcdf11_u2 = cdf1c1_1*pdf1_2*(-sigX5(1,1)) + cdf1c1_2*pdf1_1*(-sigX5(0,1));
 
 	/* Conditional mean and variance-covariance matrix for F1c2_1 and F2c1_2 */
-	vecmat out11 = conMuSig(sigma, mu, rc1, rc13);
-	vec c_mu11 = out11.V;
-	mat c_sig11 = out11.M1;
-	mat c_sigX11 = out11.M2;
+	mat c_sig11 = condsigma.e1c2_1s;
+	mat ic_sig11 = condsigma.e1c2_1i; // the inverse
+	mat sigX11 = condsigma.e1c2_1x; // the sigx
+	vec a11 = mu.elem(rc2_2u);
+	vec c_mu11 = sigX11*a11;
 	double sd11 = sqrt(c_sig11[0]);
 
-	vecmat out12 = conMuSig(sigma, mu, rc4, rc10);
-	vec c_mu12 = out12.V;
-	mat c_sig12 = out12.M1;
-	mat c_sigX12 = out12.M2;
+	mat c_sig12 = condsigma.e2c1_2s;
+	mat ic_sig12 = condsigma.e2c1_2i; // the inverse
+	mat sigX12 = condsigma.e2c1_2x; // the sigx
+	vec a12 = mu.elem(rc1_1u);
+	vec c_mu12 = sigX12*a12;
 	double sd12 = sqrt(c_sig12[0]);
 
 	/* Centering the alphas */
@@ -1789,20 +1903,22 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 	double cdf2c1_2 = pn(alph_c12_n,0.0,sd12*sd12);
 
 	/* Score contributions */
-	double dcdf12_u1 = cdf1c2_1*pdf2_2*(-c_sigX6(1,0)) + cdf2c1_2*pdf1_1*(-c_sigX6(0,0));
-	double dcdf12_u2 = cdf1c2_1*pdf2_2*(-c_sigX6(1,1)) + cdf2c1_2*pdf1_1*(-c_sigX6(0,1));
+	double dcdf12_u1 = cdf1c2_1*pdf2_2*(-sigX6(1,0)) + cdf2c1_2*pdf1_1*(-sigX6(0,0));
+	double dcdf12_u2 = cdf1c2_1*pdf2_2*(-sigX6(1,1)) + cdf2c1_2*pdf1_1*(-sigX6(0,1));
 
 	/* Conditional mean and variance-covariance matrix for F2c1_1 and F1c2_2 */
-	vecmat out13 = conMuSig(sigma, mu, rc3, rc11);
-	vec c_mu13 = out13.V;
-	mat c_sig13 = out13.M1;
-	mat c_sigX13 = out13.M2;
+	mat c_sig13 = condsigma.e2c1_1s;
+	mat ic_sig13 = condsigma.e2c1_1i; // the inverse
+	mat sigX13 = condsigma.e2c1_1x; // the sigx
+	vec a13 = mu.elem(rc1_2u);
+	vec c_mu13 = sigX13*a13;
 	double sd13 = sqrt(c_sig13[0]);
 
-	vecmat out14 = conMuSig(sigma, mu, rc2, rc12);
-	vec c_mu14 = out14.V;
-	mat c_sig14 = out14.M1;
-	mat c_sigX14 = out14.M2;
+	mat c_sig14 = condsigma.e1c2_2s;
+	mat ic_sig14 = condsigma.e1c2_2i; // the inverse
+	mat sigX14 = condsigma.e1c2_2x; // the sigx
+	vec a14 = mu.elem(rc2_1u);
+	vec c_mu14 = sigX14*a14;
 	double sd14 = sqrt(c_sig14[0]);
 
 	/* Centering the alphas */
@@ -1814,20 +1930,22 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 	double cdf1c2_2 = pn(alph_c14,0.0,sd14*sd14);
 
 	/* Score contributions */
-	double dcdf21_u1 = cdf2c1_1*pdf1_2*(-c_sigX7(1,0)) + cdf1c2_2*pdf2_1*(-c_sigX7(0,0));
-	double dcdf21_u2 = cdf2c1_1*pdf1_2*(-c_sigX7(1,1)) + cdf1c2_2*pdf2_1*(-c_sigX7(0,1));
+	double dcdf21_u1 = cdf2c1_1*pdf1_2*(-sigX7(1,0)) + cdf1c2_2*pdf2_1*(-sigX7(0,0));
+	double dcdf21_u2 = cdf2c1_1*pdf1_2*(-sigX7(1,1)) + cdf1c2_2*pdf2_1*(-sigX7(0,1));
 
 	/* Conditional mean and variance-covariance matrix for F2c2_1 and F2c2_2 */
-	vecmat out15 = conMuSig(sigma, mu, rc3, rc13);
-	vec c_mu15 = out15.V;
-	mat c_sig15 = out15.M1;
-	mat c_sigX15 = out15.M2;
+	mat c_sig15 = condsigma.e2c2_1s;
+	mat ic_sig15 = condsigma.e2c2_1i; // the inverse
+	mat sigX15 = condsigma.e2c2_1x; // the sigx
+	vec a15 = mu.elem(rc2_2u);
+	vec c_mu15 = sigX15*a15;
 	double sd15 = sqrt(c_sig15[0]);
 
-	vecmat out16 = conMuSig(sigma, mu, rc4, rc12);
-	vec c_mu16 = out16.V;
-	mat c_sig16 = out16.M1;
-	mat c_sigX16 = out16.M2;
+	mat c_sig16 = condsigma.e2c2_2s;
+	mat ic_sig16 = condsigma.e2c2_2i; // the inverse
+	mat sigX16 = condsigma.e2c2_2x; // the sigx
+	vec a16 = mu.elem(rc2_1u);
+	vec c_mu16 = sigX16*a16;
 	double sd16 = sqrt(c_sig16[0]);
 
 	/* Centering the alphas */
@@ -1839,8 +1957,8 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 	double cdf2c2_2 = pn(alph_c16,0.0,sd16*sd16);
 
 	/* Score contributions */
-	double dcdf22_u1 = cdf2c2_1*pdf2_2*(-c_sigX8(1,0)) + cdf2c2_2*pdf2_1*(-c_sigX8(0,0));
-	double dcdf22_u2 = cdf2c2_1*pdf2_2*(-c_sigX8(1,1)) + cdf2c2_2*pdf2_1*(-c_sigX8(0,1));
+	double dcdf22_u1 = cdf2c2_1*pdf2_2*(-sigX8(1,0)) + cdf2c2_2*pdf2_1*(-sigX8(0,0));
+	double dcdf22_u2 = cdf2c2_1*pdf2_2*(-sigX8(1,1)) + cdf2c2_2*pdf2_1*(-sigX8(0,1));
 
 	/* Score contributions from F11, F12, F21 and F22 */
 	double dF11_u1 = dpi11_u1(i)*cdf11+pi1_1(i)*pi1_2(i)*dcdf11_u1;
@@ -1867,9 +1985,8 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
     }
     if (full) {
       /* u */
-      uvec rc(2); rc(0) = 4; rc(1) = 5;
-      mat sigu = sigma.submat(rc,rc);
-      mat isigu = sigu.i();
+      mat sigu = condsigma.us;
+      mat isigu = condsigma.ui;
       mat pu = u.row(i);
 
       /* Derivative of the pdf of the u's wrt u1 and u2 */
@@ -1888,8 +2005,8 @@ mat Dloglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bo
 /*
 Hessian matrix of full loglikelihood
 */
-// [[Rcpp::export]]
-mat D2loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, bool full=1){
+/*// [[Rcpp::export]]*/
+mat D2loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, bool full=1){
   /* y: 1x2 matrix with event type (0, 1 or 2) of family member 1 and 2
      b: 1x4 matrix with XB for event type 1 and 2 (b1 and b2) for family member 1 and 2
         the order is b1_1, b1_2, b2_1 and b2_2
@@ -1909,8 +2026,8 @@ mat D2loglikfull(mat y, mat b, mat u, mat sigma, mat alph, mat dalph, mat tau, b
   mat u2_m(1,2); u2_m(0,0) = u(0,0); u2_m(0,1) = u(0,1)-h;
 
   /* Central difference */
-  res.row(0) = (Dloglikfull(y, b, u1_p, sigma, alph, dalph, tau, full)-Dloglikfull(y, b, u1_m, sigma, alph, dalph, tau, full))/(2*h);
-  res.row(1) = (Dloglikfull(y, b, u2_p, sigma, alph, dalph, tau, full)-Dloglikfull(y, b, u2_m, sigma, alph, dalph, tau, full))/(2*h);
+  res.row(0) = (Dloglikfull(y, b, u1_p, condsigma, alph, dalph, tau, full)-Dloglikfull(y, b, u1_m, condsigma, alph, dalph, tau, full))/(2*h);
+  res.row(1) = (Dloglikfull(y, b, u2_p, condsigma, alph, dalph, tau, full)-Dloglikfull(y, b, u2_m, condsigma, alph, dalph, tau, full))/(2*h);
 
   /* Return */
   return(res);
@@ -1928,6 +2045,138 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, int n
   int n = y.n_rows;
   vec warn(n); warn.fill(1);
   vec res(n); res.fill(0);
+
+  /* Specifying components of sigma */
+  uvec rc1(1); rc1(0) = 0;
+  uvec rc2(1); rc2(0) = 1;
+  uvec rc3(1); rc3(0) = 2;
+  uvec rc4(1); rc4(0) = 3;
+  
+  uvec rc5(2); rc5(0) = 4; rc5(1) = 5;
+  
+  uvec rc6(2); rc6(0) = 0; rc6(1) = 1;
+  uvec rc7(2); rc7(0) = 0; rc7(1) = 3;
+  uvec rc8(2); rc8(0) = 2; rc8(1) = 1;
+  uvec rc9(2); rc9(0) = 2; rc9(1) = 3;
+  
+  uvec rc10(3); rc10(0) = 0; rc10(1) = 4; rc10(2) = 5;
+  uvec rc11(3); rc11(0) = 1; rc11(1) = 4; rc11(2) = 5;
+  uvec rc12(3); rc12(0) = 2; rc12(1) = 4; rc12(2) = 5;
+  uvec rc13(3); rc13(0) = 3; rc13(1) = 4; rc13(2) = 5;
+  
+  /* Estimation conditional sigmas etc */
+  matfour e1_1 = condsig(sigma,rc1,rc5);
+  matfour e1_2 = condsig(sigma,rc2,rc5);
+  matfour e2_1 = condsig(sigma,rc3,rc5);
+  matfour e2_2 = condsig(sigma,rc4,rc5);
+
+  matfour e1c1_1 = condsig(sigma,rc1,rc11);
+  matfour e2c1_1 = condsig(sigma,rc3,rc11);
+
+  matfour e1c1_2 = condsig(sigma,rc2,rc10);
+  matfour e2c1_2 = condsig(sigma,rc4,rc10);
+
+  matfour e1c2_1 = condsig(sigma,rc1,rc13);
+  matfour e2c2_1 = condsig(sigma,rc3,rc13);
+
+  matfour e1c2_2 = condsig(sigma,rc2,rc12);
+  matfour e2c2_2 = condsig(sigma,rc4,rc12);
+
+  matfour e11 = condsig(sigma,rc6,rc5);
+  matfour e12 = condsig(sigma,rc7,rc5);
+  matfour e21 = condsig(sigma,rc8,rc5);
+  matfour e22 = condsig(sigma,rc9,rc5);
+
+  mat sigu = sigma.submat(rc5,rc5);
+  mat isigu = sigu.i();
+  double dsigu = det(sigu);
+  double sq_dsigu = sqrt(dsigu);
+
+  ss condsigma;
+  condsigma.e1_1s = e1_1.M1;
+  condsigma.e2_1s = e2_1.M1;
+  condsigma.e1_2s = e1_2.M1;
+  condsigma.e2_2s = e2_2.M1;
+
+  condsigma.e1_1i = e1_1.M2;
+  condsigma.e2_1i = e2_1.M2;
+  condsigma.e1_2i = e1_2.M2;
+  condsigma.e2_2i = e2_2.M2;
+
+  condsigma.e1_1d = e1_1.M3;
+  condsigma.e2_1d = e2_1.M3;
+  condsigma.e1_2d = e1_2.M3;
+  condsigma.e2_2d = e2_2.M3;
+
+  condsigma.e1_1x = e1_1.M4;
+  condsigma.e2_1x = e2_1.M4;
+  condsigma.e1_2x = e1_2.M4;
+  condsigma.e2_2x = e2_2.M4;
+
+  condsigma.e1c1_1s = e1c1_1.M1;
+  condsigma.e2c1_1s = e2c1_1.M1;
+  condsigma.e1c1_2s = e1c1_2.M1;
+  condsigma.e2c1_2s = e2c1_2.M1;
+
+  condsigma.e1c1_1i = e1c1_1.M2;
+  condsigma.e2c1_1i = e2c1_1.M2;
+  condsigma.e1c1_2i = e1c1_2.M2;
+  condsigma.e2c1_2i = e2c1_2.M2;
+
+  condsigma.e1c1_1d = e1c1_1.M3;
+  condsigma.e2c1_1d = e2c1_1.M3;
+  condsigma.e1c1_2d = e1c1_2.M3;
+  condsigma.e2c1_2d = e2c1_2.M3;
+
+  condsigma.e1c1_1x = e1c1_1.M4;
+  condsigma.e2c1_1x = e2c1_1.M4;
+  condsigma.e1c1_2x = e1c1_2.M4;
+  condsigma.e2c1_2x = e2c1_2.M4;
+
+  condsigma.e1c2_1s = e1c2_1.M1;
+  condsigma.e2c2_1s = e2c2_1.M1;
+  condsigma.e1c2_2s = e1c2_2.M1;
+  condsigma.e2c2_2s = e2c2_2.M1;
+
+  condsigma.e1c2_1i = e1c2_1.M2;
+  condsigma.e2c2_1i = e2c2_1.M2;
+  condsigma.e1c2_2i = e1c2_2.M2;
+  condsigma.e2c2_2i = e2c2_2.M2;
+
+  condsigma.e1c2_1d = e1c2_1.M3;
+  condsigma.e2c2_1d = e2c2_1.M3;
+  condsigma.e1c2_2d = e1c2_2.M3;
+  condsigma.e2c2_2d = e2c2_2.M3;
+
+  condsigma.e1c2_1x = e1c2_1.M4;
+  condsigma.e2c2_1x = e2c2_1.M4;
+  condsigma.e1c2_2x = e1c2_2.M4;
+  condsigma.e2c2_2x = e2c2_2.M4;
+
+  condsigma.e11s = e11.M1; 
+  condsigma.e12s = e12.M1; 
+  condsigma.e21s = e21.M1; 
+  condsigma.e22s = e22.M1; 
+
+  condsigma.e11i = e11.M2; 
+  condsigma.e12i = e12.M2; 
+  condsigma.e21i = e21.M2; 
+  condsigma.e22i = e22.M2; 
+
+  condsigma.e11d = e11.M3; 
+  condsigma.e12d = e12.M3; 
+  condsigma.e21d = e21.M3; 
+  condsigma.e22d = e22.M3; 
+
+  condsigma.e11x = e11.M4; 
+  condsigma.e12x = e12.M4; 
+  condsigma.e21x = e21.M4; 
+  condsigma.e22x = e22.M4; 
+    
+  condsigma.us = sigu;
+  condsigma.ui = isigu;
+  condsigma.squd = sq_dsigu;
+
   for (int i=0; i<n; i++) {
     mat y0 = y.row(i);
     mat b0 = b.row(i);
@@ -1941,8 +2190,8 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, int n
     /* Newton Raphson */
     unsigned j;
     for (j=0; j<iter; j++) {
-      U = Dloglikfull(y0,b0,u0,sigma,alph0,dalph0,tau0);
-      H = D2loglikfull(y0,b0,u0,sigma,alph0,dalph0,tau0);
+      U = Dloglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
+      H = D2loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
       conv = (U(0)*U(0)+U(1)*U(1))/2;
       if (conv<_inner_NR_abseps) {
 	warn(i) = 0;
@@ -1951,8 +2200,8 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, int n
       u0 = u0-stepsize*U*H.i();
     }
     if (debug) {
-      U = Dloglikfull(y0,b0,u0,sigma,alph0,dalph0,tau0);
-      vec L = loglikfull(y0,b0,u0,sigma,alph0,dalph0,tau0);
+      U = Dloglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
+      vec L = loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
       Rcpp::Rcout << "iter: " << j <<std::endl;
       Rcpp::Rcout << "conv: " << conv <<std::endl;
       Rcpp::Rcout << "L: " << L <<std::endl;
@@ -1961,7 +2210,7 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, int n
     }
     /* Laplace approximation */
     if (nq==0) {
-      vec logf = loglikfull(y0,b0,u0,sigma,alph0,dalph0,tau0);
+      vec logf = loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
       double lapl = log(twopi)-0.5*log(det(H))+logf(0);
       res(i) = lapl;
     } else {
@@ -1996,7 +2245,7 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, int n
       	  z0(0) = z[k]; z0(1) = z[l];
       	  mat a0 = u0.t()+K*Bi*z0;
 	  double w0 = w[k]*w[l]*exp(z0[0]*z0[0]+z0[1]*z0[1]);
-	  double ll0 = loglikfull(y0,b0,a0.t(),sigma,alph0,dalph0,tau0)[0];
+	  double ll0 = loglikfull(y0,b0,a0.t(),condsigma,alph0,dalph0,tau0)[0];
 	  Sum += exp(ll0)*w0;
       	}
       }
@@ -2024,11 +2273,143 @@ mat EB(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, double stepsize=0.
     double conv = 1;
     mat H(2,2);
     mat U(1,2);
+
+    /* Specifying components of sigma */
+    uvec rc1(1); rc1(0) = 0;
+    uvec rc2(1); rc2(0) = 1;
+    uvec rc3(1); rc3(0) = 2;
+    uvec rc4(1); rc4(0) = 3;
+  
+    uvec rc5(2); rc5(0) = 4; rc5(1) = 5;
+  
+    uvec rc6(2); rc6(0) = 0; rc6(1) = 1;
+    uvec rc7(2); rc7(0) = 0; rc7(1) = 3;
+    uvec rc8(2); rc8(0) = 2; rc8(1) = 1;
+    uvec rc9(2); rc9(0) = 2; rc9(1) = 3;
+  
+    uvec rc10(3); rc10(0) = 0; rc10(1) = 4; rc10(2) = 5;
+    uvec rc11(3); rc11(0) = 1; rc11(1) = 4; rc11(2) = 5;
+    uvec rc12(3); rc12(0) = 2; rc12(1) = 4; rc12(2) = 5;
+    uvec rc13(3); rc13(0) = 3; rc13(1) = 4; rc13(2) = 5;
+  
+    /* Estimation conditional sigmas etc */
+    matfour e1_1 = condsig(sigma,rc1,rc5);
+    matfour e1_2 = condsig(sigma,rc2,rc5);
+    matfour e2_1 = condsig(sigma,rc3,rc5);
+    matfour e2_2 = condsig(sigma,rc4,rc5);
+
+    matfour e1c1_1 = condsig(sigma,rc1,rc11);
+    matfour e2c1_1 = condsig(sigma,rc3,rc11);
+
+    matfour e1c1_2 = condsig(sigma,rc2,rc10);
+    matfour e2c1_2 = condsig(sigma,rc4,rc10);
+
+    matfour e1c2_1 = condsig(sigma,rc1,rc13);
+    matfour e2c2_1 = condsig(sigma,rc3,rc13);
+
+    matfour e1c2_2 = condsig(sigma,rc2,rc12);
+    matfour e2c2_2 = condsig(sigma,rc4,rc12);
+
+    matfour e11 = condsig(sigma,rc6,rc5);
+    matfour e12 = condsig(sigma,rc7,rc5);
+    matfour e21 = condsig(sigma,rc8,rc5);
+    matfour e22 = condsig(sigma,rc9,rc5);
+
+    mat sigu = sigma.submat(rc5,rc5);
+    mat isigu = sigu.i();
+    double dsigu = det(sigu);
+    double sq_dsigu = sqrt(dsigu);
+
+    ss condsigma;
+    condsigma.e1_1s = e1_1.M1;
+    condsigma.e2_1s = e2_1.M1;
+    condsigma.e1_2s = e1_2.M1;
+    condsigma.e2_2s = e2_2.M1;
+
+    condsigma.e1_1i = e1_1.M2;
+    condsigma.e2_1i = e2_1.M2;
+    condsigma.e1_2i = e1_2.M2;
+    condsigma.e2_2i = e2_2.M2;
+
+    condsigma.e1_1d = e1_1.M3;
+    condsigma.e2_1d = e2_1.M3;
+    condsigma.e1_2d = e1_2.M3;
+    condsigma.e2_2d = e2_2.M3;
+
+    condsigma.e1_1x = e1_1.M4;
+    condsigma.e2_1x = e2_1.M4;
+    condsigma.e1_2x = e1_2.M4;
+    condsigma.e2_2x = e2_2.M4;
+
+    condsigma.e1c1_1s = e1c1_1.M1;
+    condsigma.e2c1_1s = e2c1_1.M1;
+    condsigma.e1c1_2s = e1c1_2.M1;
+    condsigma.e2c1_2s = e2c1_2.M1;
+
+    condsigma.e1c1_1i = e1c1_1.M2;
+    condsigma.e2c1_1i = e2c1_1.M2;
+    condsigma.e1c1_2i = e1c1_2.M2;
+    condsigma.e2c1_2i = e2c1_2.M2;
+
+    condsigma.e1c1_1d = e1c1_1.M3;
+    condsigma.e2c1_1d = e2c1_1.M3;
+    condsigma.e1c1_2d = e1c1_2.M3;
+    condsigma.e2c1_2d = e2c1_2.M3;
+
+    condsigma.e1c1_1x = e1c1_1.M4;
+    condsigma.e2c1_1x = e2c1_1.M4;
+    condsigma.e1c1_2x = e1c1_2.M4;
+    condsigma.e2c1_2x = e2c1_2.M4;
+
+    condsigma.e1c2_1s = e1c2_1.M1;
+    condsigma.e2c2_1s = e2c2_1.M1;
+    condsigma.e1c2_2s = e1c2_2.M1;
+    condsigma.e2c2_2s = e2c2_2.M1;
+
+    condsigma.e1c2_1i = e1c2_1.M2;
+    condsigma.e2c2_1i = e2c2_1.M2;
+    condsigma.e1c2_2i = e1c2_2.M2;
+    condsigma.e2c2_2i = e2c2_2.M2;
+
+    condsigma.e1c2_1d = e1c2_1.M3;
+    condsigma.e2c2_1d = e2c2_1.M3;
+    condsigma.e1c2_2d = e1c2_2.M3;
+    condsigma.e2c2_2d = e2c2_2.M3;
+
+    condsigma.e1c2_1x = e1c2_1.M4;
+    condsigma.e2c2_1x = e2c2_1.M4;
+    condsigma.e1c2_2x = e1c2_2.M4;
+    condsigma.e2c2_2x = e2c2_2.M4;
+
+    condsigma.e11s = e11.M1; 
+    condsigma.e12s = e12.M1; 
+    condsigma.e21s = e21.M1; 
+    condsigma.e22s = e22.M1; 
+
+    condsigma.e11i = e11.M2; 
+    condsigma.e12i = e12.M2; 
+    condsigma.e21i = e21.M2; 
+    condsigma.e22i = e22.M2; 
+
+    condsigma.e11d = e11.M3; 
+    condsigma.e12d = e12.M3; 
+    condsigma.e21d = e21.M3; 
+    condsigma.e22d = e22.M3; 
+
+    condsigma.e11x = e11.M4; 
+    condsigma.e12x = e12.M4; 
+    condsigma.e21x = e21.M4; 
+    condsigma.e22x = e22.M4; 
+    
+    condsigma.us = sigu;
+    condsigma.ui = isigu;
+    condsigma.squd = sq_dsigu;
+
     /* Newton Raphson */
     unsigned j;
     for (j=0; j<iter; j++) {
-      U = Dloglikfull(y0,b0,u0,sigma,alph0,dalph0,tau0);
-      H = D2loglikfull(y0,b0,u0,sigma,alph0,dalph0,tau0);
+      U = Dloglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
+      H = D2loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
       conv = (U(0)*U(0)+U(1)*U(1))/2;
       if (conv<_inner_NR_abseps) {
 	warn(i) = 0;
@@ -2037,8 +2418,8 @@ mat EB(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, double stepsize=0.
       u0 = u0-stepsize*U*H.i();
     }
     if (debug) {
-      U = Dloglikfull(y0,b0,u0,sigma,alph0,dalph0,tau0);
-      vec L = loglikfull(y0,b0,u0,sigma,alph0,dalph0,tau0);
+      U = Dloglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
+      vec L = loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
       Rcpp::Rcout << "iter: " << j <<std::endl;
       Rcpp::Rcout << "conv: " << conv <<std::endl;
       Rcpp::Rcout << "L: " << L <<std::endl;
