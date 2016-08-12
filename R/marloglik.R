@@ -14,7 +14,7 @@ dg <- function(t){
     return(dgt)
 }
 
-loglik <- function(x,pi1,pi2,tau){
+loglikmarg <- function(x,pi1,pi2,tau){
     if (x[1]==1){
         l <- log(pi1*x[4]*dnorm(x[2]))
     }
