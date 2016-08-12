@@ -5,23 +5,11 @@ pn <- function(y, mu, sigma) {
     .Call('mcif_pn', PACKAGE = 'mcif', y, mu, sigma)
 }
 
-loglikfull <- function(y, b, u, sigma, alph, dalph, full = 1L) {
-    .Call('mcif_loglikfull', PACKAGE = 'mcif', y, b, u, sigma, alph, dalph, full)
+loglik <- function(y, b, sigma, alph, dalph, tau, eb0, nq = 1L, stepsize = 0.7, iter = 20L, debug = FALSE) {
+    .Call('mcif_loglik', PACKAGE = 'mcif', y, b, sigma, alph, dalph, tau, eb0, nq, stepsize, iter, debug)
 }
 
-Dloglikfull <- function(y, b, u, sigma, alph, dalph, full = 1L) {
-    .Call('mcif_Dloglikfull', PACKAGE = 'mcif', y, b, u, sigma, alph, dalph, full)
-}
-
-D2loglikfull <- function(y, b, u, sigma, alph, dalph, full = 1L) {
-    .Call('mcif_D2loglikfull', PACKAGE = 'mcif', y, b, u, sigma, alph, dalph, full)
-}
-
-loglik <- function(y, b, sigma, alph, dalph, eb0, nq = 1L, stepsize = 0.7, iter = 20L, debug = FALSE) {
-    .Call('mcif_loglik', PACKAGE = 'mcif', y, b, sigma, alph, dalph, eb0, nq, stepsize, iter, debug)
-}
-
-EB <- function(y, b, sigma, alph, dalph, stepsize = 0.7, iter = 20L, debug = TRUE) {
-    .Call('mcif_EB', PACKAGE = 'mcif', y, b, sigma, alph, dalph, stepsize, iter, debug)
+EB <- function(y, b, sigma, alph, dalph, tau, stepsize = 0.7, iter = 20L, debug = FALSE) {
+    .Call('mcif_EB', PACKAGE = 'mcif', y, b, sigma, alph, dalph, tau, stepsize, iter, debug)
 }
 

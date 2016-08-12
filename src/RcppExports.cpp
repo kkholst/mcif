@@ -5,7 +5,6 @@
 #include <Rcpp.h>
 
 using namespace Rcpp;
-using namespace arma;
 
 // pn
 double pn(mat y, mat mu, mat sigma);
