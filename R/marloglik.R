@@ -118,12 +118,11 @@ cif.margloglik <- function(par, data, time, status, lin=TRUE){
 #-----------------------------------------------------------------------
 # Data
 #-----------------------------------------------------------------------
-load("P:/PhD/Scripts/simM2/simJUL1/data/data-1.Rdata")
-data <- unique(refres3)
+#data <- unique(refres3)
 tau <- 55
 
 # Checking
-head(data)
+#head(data)
 
 # Censoring at tau
 data$out1 <- ifelse(data$time1 >= tau, tau, data$time1)
