@@ -2203,14 +2203,13 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, vec c
     ivec posvec = Pos[i];
     mat H(2,2);
     mat U(1,2);
-    H.fill(0); U.fill(0);
-
-    mat u0(1,2); u0 = eb0.row(i);    
+    mat u0(1,2); u0 = eb0.row(i);
     double conv = 1;
 
     /* Newton Raphson */
     unsigned j;
     for (j=0; j<iter; j++) { // Iterate NR
+      H.fill(0); U.fill(0);
       for (unsigned k=0; k<posvec.n_elem; k++) { // Add all cluster elements together
 	mat y0 = y.row(posvec[k]);
 	mat b0 = b.row(posvec[k]);
