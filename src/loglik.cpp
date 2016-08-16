@@ -2037,7 +2037,7 @@ mat D2loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau
 Marginal likelihood via AGQ
 */
 // [[Rcpp::export]]
-vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, int nq=1, double stepsize=0.7, unsigned iter=20, bool debug=false) {
+vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, vec cluster, int nq=1, double stepsize=0.7, unsigned iter=20, bool debug=false) {
   QuadRule gh(nq);
   double K = sqrt(2);
   vec z = gh.Abscissa();
@@ -2177,15 +2177,8 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, int n
   condsigma.ui = isigu;
   condsigma.squd = sq_dsigu;
 
-  int ncluster=1; // ...
-  lastclust=0;
-  for (int i=0; i<n; i++) {
-    if (cluster[i]!=lastclust) ncluster++;
-    lastclust = cluster[i];
-  }
-    
-  int lastclust = cluster[0];
-  // cluster 0:(K-1)
+  int ncluster = eb0.n_rows;
+  int lastclust = cluster[0]; // cluster 0:(K-1)
   int pos = 0; // Index 0:(n-1)
   std::vector <arma::ivec> Pos;  
   for (int i=0; i<ncluster; i++) {
@@ -2206,18 +2199,25 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, int n
     lastclust = cluster[pos];
   }
 
-
   for (int i=0; i<ncluster; i++) {
     ivec posvec = Pos[i];
     mat H(2,2);
     mat U(1,2);
     H.fill(0); U.fill(0);
-    
+
+    mat u0(1,2); u0 = eb0.row(i);    
+    double conv = 1;
+
+    /* Newton Raphson */
+    unsigned j;
     for (j=0; j<iter; j++) { // Iterate NR
-      for (k=0; k<posvec.n_elem; k++) { // Add all cluster elements together
+      for (unsigned k=0; k<posvec.n_elem; k++) { // Add all cluster elements together
 	mat y0 = y.row(posvec[k]);
 	mat b0 = b.row(posvec[k]);
-	...
+	mat alph0 = alph.row(posvec[k]);
+	mat dalph0 = dalph.row(posvec[k]);
+	mat tau0 = tau.row(posvec[k]);
+
 	U = U+Dloglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
 	H = H+D2loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
       }      
@@ -2227,56 +2227,26 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, int n
 	break;
       }
       u0 = u0-stepsize*U*H.i();
-    }
-    double logf = 0;
-    for (k=0; k<posvec.n_elem; k++) { // Add all cluster elements together
-      	mat y0 = y.row(posvec[k]);
-	mat b0 = b.row(posvec[k]);
-	...
-	  logf = logf+arma::as_scalar(loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0));
-    }
-    double lapl = log(twopi)-0.5*log(det(H))+logf;
-    res(i) = lapl;    
-  }
-
-  
-  for (int i=0; i<n; i++) {
-    mat y0 = y.row(i);
-    mat b0 = b.row(i);
-    mat alph0 = alph.row(i);
-    mat dalph0 = dalph.row(i);
-    mat tau0 = tau.row(i);
-    mat u0(1,2); u0 = eb0.row(i);
-    double conv = 1;
-    mat H(2,2);
-    mat U(1,2);
-    /* Newton Raphson */
-    unsigned j;
-    for (j=0; j<iter; j++) {
-      U = Dloglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
-      H = D2loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
-      conv = (U(0)*U(0)+U(1)*U(1))/2;
-      if (conv<_inner_NR_abseps) {
-	warn(i) = 0;
-	break;
+      if (debug){
+	Rcout << "j" << j << std::endl;   
+	Rcout << "conv" << conv << std::endl;   
+	Rcout << "u0" << u0 << std::endl;   
       }
-      u0 = u0-stepsize*U*H.i();
     }
-    if (debug) {
-      U = Dloglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
-      vec L = loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
-      Rcpp::Rcout << "iter: " << j <<std::endl;
-      Rcpp::Rcout << "conv: " << conv <<std::endl;
-      Rcpp::Rcout << "L: " << L <<std::endl;
-      Rcpp::Rcout << "U: " << U <<std::endl;
-      Rcpp::Rcout << "i: " << i <<std::endl;
-    }
-    /* Laplace approximation */
     if (nq==0) {
-      vec logf = loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
-      double lapl = log(twopi)-0.5*log(det(H))+logf(0);
-      res(i) = lapl;
-    } else {
+      double logf = 0;
+      for (unsigned k=0; k<posvec.n_elem; k++) { // Add all cluster elements together
+	mat y0 = y.row(posvec[k]);
+	mat b0 = b.row(posvec[k]);
+	mat alph0 = alph.row(posvec[k]);
+	mat dalph0 = dalph.row(posvec[k]);
+	mat tau0 = tau.row(posvec[k]);
+	
+	logf = logf+arma::as_scalar(loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0));
+      }
+      double lapl = log(twopi)-0.5*log(det(H))+logf;
+      res(i) = lapl;    
+    }  else {
       /* Adaptive Gaussian quadrature */
       bool useSVD = true;
       mat G = -H;
@@ -2302,15 +2272,24 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, int n
 	logdetG = log(det(G));
       }
       double Sum = 0;
-      for (unsigned k=0; k<z.n_elem; k++) {
-      	for (unsigned l=0; l<z.n_elem; l++) {
-      	  mat z0(2,1);
-      	  z0(0) = z[k]; z0(1) = z[l];
-      	  mat a0 = u0.t()+K*Bi*z0;
-	  double w0 = w[k]*w[l]*exp(z0[0]*z0[0]+z0[1]*z0[1]);
-	  double ll0 = loglikfull(y0,b0,a0.t(),condsigma,alph0,dalph0,tau0)[0];
-	  Sum += exp(ll0)*w0;
-      	}
+      for (j=0; j<posvec.n_elem; j++) { // Add all cluster elements together
+	for (unsigned k=0; k<z.n_elem; k++) {
+	  for (unsigned l=0; l<z.n_elem; l++) {
+	    
+	    mat y0 = y.row(posvec[j]);
+	    mat b0 = b.row(posvec[j]);
+	    mat alph0 = alph.row(posvec[j]);
+	    mat dalph0 = dalph.row(posvec[j]);
+	    mat tau0 = tau.row(posvec[j]);
+	    
+	    mat z0(2,1);
+	    z0(0) = z[k]; z0(1) = z[l];
+	    mat a0 = u0.t()+K*Bi*z0;
+	    double w0 = w[k]*w[l]*exp(z0[0]*z0[0]+z0[1]*z0[1]);
+	    double ll0 = loglikfull(y0,b0,a0.t(),condsigma,alph0,dalph0,tau0)[0];
+	    Sum += exp(ll0)*w0;
+	  }
+	}
       }
       res(i) = 2*log(K)-0.5*logdetG+log(Sum);
     }
