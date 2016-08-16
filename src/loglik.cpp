@@ -2177,6 +2177,69 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, int n
   condsigma.ui = isigu;
   condsigma.squd = sq_dsigu;
 
+  int ncluster=1; // ...
+  lastclust=0;
+  for (int i=0; i<n; i++) {
+    if (cluster[i]!=lastclust) ncluster++;
+    lastclust = cluster[i];
+  }
+    
+  int lastclust = cluster[0];
+  // cluster 0:(K-1)
+  int pos = 0; // Index 0:(n-1)
+  std::vector <arma::ivec> Pos;  
+  for (int i=0; i<ncluster; i++) {
+    int ncur=0;
+    int pos0 = pos;
+    while (pos0<n && cluster[pos0]==lastclust) {
+      ncur++;
+      pos0++;
+    }
+    ivec posvec(ncur);
+    int j=0;    
+    while (pos<n && cluster[pos]==lastclust) {      
+      posvec(j) = pos;
+      j++;
+      pos++;
+    }
+    Pos.push_back(posvec);    
+    lastclust = cluster[pos];
+  }
+
+
+  for (int i=0; i<ncluster; i++) {
+    ivec posvec = Pos[i];
+    mat H(2,2);
+    mat U(1,2);
+    H.fill(0); U.fill(0);
+    
+    for (j=0; j<iter; j++) { // Iterate NR
+      for (k=0; k<posvec.n_elem; k++) { // Add all cluster elements together
+	mat y0 = y.row(posvec[k]);
+	mat b0 = b.row(posvec[k]);
+	...
+	U = U+Dloglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
+	H = H+D2loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
+      }      
+      conv = (U(0)*U(0)+U(1)*U(1))/2;
+      if (conv<_inner_NR_abseps) {
+	warn(i) = 0;
+	break;
+      }
+      u0 = u0-stepsize*U*H.i();
+    }
+    double logf = 0;
+    for (k=0; k<posvec.n_elem; k++) { // Add all cluster elements together
+      	mat y0 = y.row(posvec[k]);
+	mat b0 = b.row(posvec[k]);
+	...
+	  logf = logf+arma::as_scalar(loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0));
+    }
+    double lapl = log(twopi)-0.5*log(det(H))+logf;
+    res(i) = lapl;    
+  }
+
+  
   for (int i=0; i<n; i++) {
     mat y0 = y.row(i);
     mat b0 = b.row(i);
