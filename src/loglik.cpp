@@ -177,13 +177,13 @@ matfour condsig(mat sigma, uvec rc1, uvec rc2) {
   mat sig12 = sigma.submat(rc1,rc2);
   mat sig21 = sigma.submat(rc2,rc1);
   mat sig22 = sigma.submat(rc2,rc2);
-  
+
   mat isig22 = sig22.i();
   mat xc_sig = sig12*isig22;
-  
+
   /* Conditional variance-covariance matrix */
   mat c_sig = sig11-xc_sig*sig21;
-  
+
   /* Inverse */
   mat ic_sig = c_sig.i();
 
@@ -203,15 +203,19 @@ matfour condsig(mat sigma, uvec rc1, uvec rc2) {
 Full loglikelihood
 */
 /*// [[Rcpp::export]]*/
-vec loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, bool full=1){
+vec loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, int pred=0, bool full=1){
   /* y: nx2 matrix with event type (0, 1 or 2) of family member 1 and 2
      b: nx4 matrix with XB for event type 1 and 2 (b1 and b2) for family member 1 and 2
-        the order is b1_1, b1_2, b2_1 and b2_2
+     the order is b1_1, b1_2, b2_1 and b2_2
      u: nx2 matrix with the random effects u1 and u2 affecting pi1 and pi2 (cluster-specific risk levels)
-        the random effects are shared by family member 1 and 2
-     sigma: 6x6 matrix. variance-covariance matrix, order: event1_1, event1_2, event2_1, event2_2, u1, u2
+     the random effects are shared by family member 1 and 2
+     condsigma: list of all possible variance-covariance matrices needed
      alph: nx4 matrix, inside the Probit link, order a1_1, a1_2, a2_1, a2_2
      dalph: nx4 matrix, derivative of alph wrt. t, order da1_1, da1_2, da2_1, da2_2
+     tau: nx2 matrix, 1 if t equals delta, can only happen for event type 0, order family member 1 and 2
+     pred: if predictions which. must be accompanied by a y matrix that consists of zeros. Bivariate; 1: F11, 
+     2:F12, 3:F21, 4:F22. Marginal: 5:F1_1 (event 1 member 1), 6:F1_2 (event 1 member 2), 
+     7:F2_1 (event 2 member 1), 8: F2_2 (event 2 member 2)
   */
 
   /* No. of pairs */
@@ -229,8 +233,8 @@ vec loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, 
   uvec rc2_1u(3); rc2_1u(0)=2; rc2_1u(1)=4; rc2_1u(2)=5;
   uvec rc2_2u(3); rc2_2u(0)=3; rc2_2u(1)=4; rc2_2u(2)=5;
   uvec rcu(2); rcu(0)=4; rcu(1)=5;
-  
-  /* Initialising loglik vector */
+
+  /* Initialising loglik vector or pred vector */
   vec res(n);
 
   for (int i=0; i<n; i++) {
@@ -245,7 +249,33 @@ vec loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, 
     mu(5) = u(i,1);
 
     if ((tau(i,0) == 1) & (tau(i,1) == 1)){
-      res(i) = log(1-pi1_1(i)-pi2_1(i))+log(1-pi1_2(i)-pi2_2(i));
+      if (pred==0){
+	res(i) = log(1-pi1_1(i)-pi2_1(i))+log(1-pi1_2(i)-pi2_2(i));
+      }
+      else if (pred==1){
+	res(i) = log(pi1_1(i))+log(pi1_2(i));
+      }
+      else if (pred==2){
+	res(i) = log(pi1_1(i))+log(pi2_2(i));
+      }
+      else if (pred==3){
+	res(i) = log(pi2_1(i))+log(pi1_2(i));
+      }
+      else if (pred==4){
+	res(i) = log(pi2_1(i))+log(pi2_2(i));
+      }
+      else if (pred==5){
+	res(i) = log(pi1_1(i));
+      }
+      else if (pred==6){
+	res(i) = log(pi1_2(i));
+      }
+      else if (pred==7){
+	res(i) = log(pi2_1(i));
+      }
+      else{
+	res(i) = log(pi2_2(i));
+      }    
     }
     else if ((tau(i,0) == 1) & (tau(i,1) == 0)){
       /* Family member 1 experience event 0, family member 2 experience event 1, estimating dF01 */
@@ -797,7 +827,6 @@ vec loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, 
       }
       /* Family member 1 experience event 0, family member 2 experience event 0, estimating F00 */
       else{
-
 	/* Marginal F1_1, F1_2, F2_1 and F2_2 */
 	/* Conditional mean and variance-covariance matrices, conditional on u1 and u2 */
 	mat c_sig1 = condsigma.e1_1s;
@@ -901,7 +930,33 @@ vec loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, 
 
 	/* Loglikelihood contribution */
 	double F00 = (1-F1_1-F1_2-F2_1-F2_2+F11+F12+F21+F22);
-	res(i) = log(F00);
+	if (pred==0){
+	  res(i) = log(F00);
+	}
+	else if (pred==1){
+	  res(i) = log(F11);
+	}
+	else if (pred==2){
+	  res(i) = log(F12);
+	}
+	else if (pred==3){
+	  res(i) = log(F21);
+	}
+	else if (pred==4){
+	  res(i) = log(F22);
+	}
+	else if (pred==5){
+	  res(i) = log(F1_1);
+	}
+	else if (pred==6){
+	  res(i) = log(F1_2);
+	}
+	else if (pred==7){
+	  res(i) = log(F2_1);
+	}
+	else {
+	  res(i) = log(F2_2);
+	}
       }
     }
     if (full) {
@@ -922,19 +977,23 @@ vec loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, 
   return(res);
 }
 
-/*
-Score function of full loglikelihood
-*/
-/*// [[Rcpp::export]]*/
-mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, bool full=1){
+  /*
+    Score function of full loglikelihood
+  */
+  /*// [[Rcpp::export]]*/
+mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, int pred=0, bool full=1){
   /* y: nx2 matrix with event type (0, 1 or 2) of family member 1 and 2
      b: nx4 matrix with XB for event type 1 and 2 (b1 and b2) for family member 1 and 2
      the order is b1_1, b1_2, b2_1 and b2_2
      u: nx2 matrix with the random effects u1 and u2 affecting pi1 and pi2 (cluster-specific risk levels)
      the random effects are shared by family member 1 and 2
-     sigma: 6x6 matrix. variance-covariance matrix, order: event1_1, event1_2, event2_1, event2_2, u1, u2
+     condsigma: list of all possible variance-covariance matrices needed
      alph: nx4 matrix, inside the Probit link, order a1_1, a1_2, a2_1, a2_2
      dalph: nx4 matrix, derivative of alph wrt. t, order da1_1, da1_2, da2_1, da2_2
+     tau: nx2 matrix, 1 if t equals delta, can only happen for event type 0, order family member 1 and 2
+     pred: if predictions which. must be accompanied by a y matrix that consists of zeros. Bivariate; 1: F11, 
+     2:F12, 3:F21, 4:F22. Marginal: 5:F1_1 (event 1 member 1), 6:F1_2 (event 1 member 2), 
+     7:F2_1 (event 2 member 1), 8: F2_2 (event 2 member 2)
   */
 
   /* No. of pairs */
@@ -983,7 +1042,6 @@ mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau,
   mat res(n,2);
 
   for (int i=0; i<n; i++) {
-
     /* Mean vector (used for estimation of conditional mean) */
     vec mu(6) ;
     mu(0) = alph(i,0);
@@ -1002,9 +1060,42 @@ mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau,
       double sc_u1 = (1/F00)*(-dpi1_1_u1(i)-dpi1_2_u1(i)-dpi2_1_u1(i)-dpi2_2_u1(i)+dpi11_u1(i)+dpi12_u1(i)+dpi21_u1(i)+dpi22_u1(i));
       double sc_u2 = (1/F00)*(-dpi1_1_u2(i)-dpi1_2_u2(i)-dpi2_1_u2(i)-dpi2_2_u2(i)+dpi11_u2(i)+dpi12_u2(i)+dpi21_u2(i)+dpi22_u2(i));
 
-      /* Adding to return vector */
-      res(i,0) = sc_u1;
-      res(i,1) = sc_u2;
+      if (pred==0){
+	res(i,0) = sc_u1;
+	res(i,1) = sc_u2;
+      }
+      else if (pred==1){
+	res(i,0) = (1/pi1_1(i))*dpi1_1_u1(i)+(1/pi1_2(i))*dpi1_2_u1(i);
+	res(i,1) = (1/pi1_1(i))*dpi1_1_u2(i)+(1/pi1_2(i))*dpi1_2_u2(i);
+      }
+      else if (pred==2){
+	res(i,0) = (1/pi1_1(i))*dpi1_1_u1(i)+(1/pi2_2(i))*dpi2_2_u1(i);
+	res(i,1) = (1/pi1_1(i))*dpi1_1_u2(i)+(1/pi2_2(i))*dpi2_2_u2(i);
+      }
+      else if (pred==3){
+	res(i,0) = (1/pi2_1(i))*dpi2_1_u1(i)+(1/pi1_2(i))*dpi1_2_u1(i);
+	res(i,1) = (1/pi2_1(i))*dpi2_1_u2(i)+(1/pi1_2(i))*dpi1_2_u2(i);
+      }
+      else if (pred==4){
+	res(i,0) = (1/pi2_1(i))*dpi2_1_u1(i)+(1/pi2_2(i))*dpi2_2_u1(i);
+	res(i,1) = (1/pi2_1(i))*dpi2_1_u2(i)+(1/pi2_2(i))*dpi2_2_u2(i);
+      }
+      else if (pred==5){
+	res(i,0) = (1/pi1_1(i))*dpi1_1_u1(i);
+	res(i,1) = (1/pi1_1(i))*dpi1_1_u2(i);
+      }
+      else if (pred==6){
+	res(i,0) = (1/pi1_2(i))*dpi1_2_u1(i);
+	res(i,1) = (1/pi1_2(i))*dpi1_2_u2(i);
+      }
+      else if (pred==7){
+	res(i,0) = (1/pi2_1(i))*dpi2_1_u1(i);
+	res(i,1) = (1/pi2_1(i))*dpi2_1_u2(i);
+      }
+      else{
+	res(i,0) = (1/pi2_2(i))*dpi2_2_u1(i);
+	res(i,1) = (1/pi2_2(i))*dpi2_2_u2(i);
+      }    
     }
     else if ((tau(i,0) == 1) & (tau(i,1) == 0)){
       /* Family member 1 experience event 0, family member 2 experience event 1, estimating score contribution from dF01 */
@@ -1979,8 +2070,42 @@ mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau,
 	double sc_u2 = (1/F00)*(-dF1_1_u2-dF1_2_u2-dF2_1_u2-dF2_2_u2+dF11_u2+dF12_u2+dF21_u2+dF22_u2);
 
 	/* Adding to return vector */
-	res(i,0) = sc_u1;
-	res(i,1) = sc_u2;
+	if (pred==0){
+	  res(i,0) = sc_u1;
+	  res(i,1) = sc_u2;
+	}
+	else if (pred==1){
+	  res(i,0) = (1/F11)*dF11_u1;
+	  res(i,1) = (1/F11)*dF11_u2;
+	}
+	else if (pred==2){
+	  res(i,0) = (1/F12)*dF12_u1;
+	  res(i,1) = (1/F12)*dF12_u2;
+	}
+	else if (pred==3){
+	  res(i,0) = (1/F21)*dF21_u1;
+	  res(i,1) = (1/F21)*dF21_u2;
+	}
+	else if (pred==4){
+	  res(i,0) = (1/F22)*dF22_u1;
+	  res(i,1) = (1/F22)*dF22_u2;
+	}
+	else if (pred==5){
+	  res(i,0) = (1/F1_1)*dF1_1_u1;
+	  res(i,1) = (1/F1_1)*dF1_1_u2;
+	}
+	else if (pred==6){
+	  res(i,0) = (1/F1_2)*dF1_2_u1;
+	  res(i,1) = (1/F1_2)*dF1_2_u2;
+	}
+	else if (pred==7){
+	  res(i,0) = (1/F2_1)*dF2_1_u1;
+	  res(i,1) = (1/F2_1)*dF2_1_u2;
+	}
+	else{
+	  res(i,0) = (1/F2_2)*dF2_2_u1;
+	  res(i,1) = (1/F2_2)*dF2_2_u1;
+	}
       }
     }
     if (full) {
@@ -2002,16 +2127,16 @@ mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau,
   return(res);
 }
 
-/*
-Hessian matrix of full loglikelihood
-*/
-/*// [[Rcpp::export]]*/
-mat D2loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, bool full=1){
+  /*
+    Hessian matrix of full loglikelihood
+  */
+  /*// [[Rcpp::export]]*/
+mat D2loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, int pred, bool full=1){
   /* y: 1x2 matrix with event type (0, 1 or 2) of family member 1 and 2
      b: 1x4 matrix with XB for event type 1 and 2 (b1 and b2) for family member 1 and 2
-        the order is b1_1, b1_2, b2_1 and b2_2
+     the order is b1_1, b1_2, b2_1 and b2_2
      u: 1x2 matrix with the random effects u1 and u2 affecting pi1 and pi2 (cluster-specific risk levels)
-        the random effects are shared by family member 1 and 2
+     the random effects are shared by family member 1 and 2
      sigma: 6x6 matrix. variance-covariance matrix, order: event1_1, event1_2, event2_1, event2_2, u1, u2
      alph: 1x4 matrix, inside the Probit link, order a1_1, a1_2, a2_1, a2_2
      dalph: 1x4 matrix, derivative of alph wrt. t, order da1_1, da1_2, da2_1, da2_2
@@ -2026,18 +2151,35 @@ mat D2loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau
   mat u2_m(1,2); u2_m(0,0) = u(0,0); u2_m(0,1) = u(0,1)-h;
 
   /* Central difference */
-  res.row(0) = (Dloglikfull(y, b, u1_p, condsigma, alph, dalph, tau, full)-Dloglikfull(y, b, u1_m, condsigma, alph, dalph, tau, full))/(2*h);
-  res.row(1) = (Dloglikfull(y, b, u2_p, condsigma, alph, dalph, tau, full)-Dloglikfull(y, b, u2_m, condsigma, alph, dalph, tau, full))/(2*h);
+  res.row(0) = (Dloglikfull(y, b, u1_p, condsigma, alph, dalph, tau, pred, full)-Dloglikfull(y, b, u1_m, condsigma, alph, dalph, tau, pred, full))/(2*h);
+  res.row(1) = (Dloglikfull(y, b, u2_p, condsigma, alph, dalph, tau, pred, full)-Dloglikfull(y, b, u2_m, condsigma, alph, dalph, tau, pred, full))/(2*h);
 
   /* Return */
   return(res);
 }
 
-/*
-Marginal likelihood via AGQ
-*/
-// [[Rcpp::export]]
-vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, vec cluster, int nq=1, double stepsize=0.7, unsigned iter=20, bool debug=false) {
+  /*
+    Marginal likelihood via AGQ
+  */
+  // [[Rcpp::export]]
+vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, int pred, int nq=1, double stepsize=0.7, unsigned iter=20, bool debug=false) {
+  /* y: nx2 matrix with event type (0, 1 or 2) of family member 1 and 2
+     b: nx4 matrix with XB for event type 1 and 2 (b1 and b2) for family member 1 and 2
+     the order is b1_1, b1_2, b2_1 and b2_2
+     u: nx2 matrix with the random effects u1 and u2 affecting pi1 and pi2 (cluster-specific risk levels)
+     the random effects are shared by family member 1 and 2
+     sigma: 6x6 matrix, variance covariance matrix of random effects
+     alph: nx4 matrix, inside the Probit link, order a1_1, a1_2, a2_1, a2_2
+     dalph: nx4 matrix, derivative of alph wrt. t, order da1_1, da1_2, da2_1, da2_2
+     tau: nx2 matrix, 1 if t equals delta, can only happen for event type 0, order family member 1 and 2
+     en0: potential start values for Newton-Raphson
+     pred: default 0:no prediction. if different must be accompanied by a y matrix that consists of zeros. Bivariate; 1: F11, 
+     2:F12, 3:F21, 4:F22. Marginal: 5:F1_1 (event 1 member 1), 6:F1_2 (event 1 member 2), 
+     7:F2_1 (event 2 member 1), 8: F2_2 (event 2 member 2)
+     nq: number of quadrature points
+     stepsize: stepsize for Newton-Raphson
+     iter: maximum iterations in Newton-Raphson
+  */
   QuadRule gh(nq);
   double K = sqrt(2);
   vec z = gh.Abscissa();
@@ -2051,19 +2193,19 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, vec c
   uvec rc2(1); rc2(0) = 1;
   uvec rc3(1); rc3(0) = 2;
   uvec rc4(1); rc4(0) = 3;
-  
+
   uvec rc5(2); rc5(0) = 4; rc5(1) = 5;
-  
+
   uvec rc6(2); rc6(0) = 0; rc6(1) = 1;
   uvec rc7(2); rc7(0) = 0; rc7(1) = 3;
   uvec rc8(2); rc8(0) = 2; rc8(1) = 1;
   uvec rc9(2); rc9(0) = 2; rc9(1) = 3;
-  
+
   uvec rc10(3); rc10(0) = 0; rc10(1) = 4; rc10(2) = 5;
   uvec rc11(3); rc11(0) = 1; rc11(1) = 4; rc11(2) = 5;
   uvec rc12(3); rc12(0) = 2; rc12(1) = 4; rc12(2) = 5;
   uvec rc13(3); rc13(0) = 3; rc13(1) = 4; rc13(2) = 5;
-  
+
   /* Estimation conditional sigmas etc */
   matfour e1_1 = condsig(sigma,rc1,rc5);
   matfour e1_2 = condsig(sigma,rc2,rc5);
@@ -2153,99 +2295,67 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, vec c
   condsigma.e1c2_2x = e1c2_2.M4;
   condsigma.e2c2_2x = e2c2_2.M4;
 
-  condsigma.e11s = e11.M1; 
-  condsigma.e12s = e12.M1; 
-  condsigma.e21s = e21.M1; 
-  condsigma.e22s = e22.M1; 
+  condsigma.e11s = e11.M1;
+  condsigma.e12s = e12.M1;
+  condsigma.e21s = e21.M1;
+  condsigma.e22s = e22.M1;
 
-  condsigma.e11i = e11.M2; 
-  condsigma.e12i = e12.M2; 
-  condsigma.e21i = e21.M2; 
-  condsigma.e22i = e22.M2; 
+  condsigma.e11i = e11.M2;
+  condsigma.e12i = e12.M2;
+  condsigma.e21i = e21.M2;
+  condsigma.e22i = e22.M2;
 
-  condsigma.e11d = e11.M3; 
-  condsigma.e12d = e12.M3; 
-  condsigma.e21d = e21.M3; 
-  condsigma.e22d = e22.M3; 
+  condsigma.e11d = e11.M3;
+  condsigma.e12d = e12.M3;
+  condsigma.e21d = e21.M3;
+  condsigma.e22d = e22.M3;
 
-  condsigma.e11x = e11.M4; 
-  condsigma.e12x = e12.M4; 
-  condsigma.e21x = e21.M4; 
-  condsigma.e22x = e22.M4; 
-    
+  condsigma.e11x = e11.M4;
+  condsigma.e12x = e12.M4;
+  condsigma.e21x = e21.M4;
+  condsigma.e22x = e22.M4;
+
   condsigma.us = sigu;
   condsigma.ui = isigu;
   condsigma.squd = sq_dsigu;
 
-  int ncluster = eb0.n_rows;
-  int lastclust = cluster[0]; // cluster 0:(K-1)
-  int pos = 0; // Index 0:(n-1)
-  std::vector <arma::ivec> Pos;  
-  for (int i=0; i<ncluster; i++) {
-    int ncur=0;
-    int pos0 = pos;
-    while (pos0<n && cluster[pos0]==lastclust) {
-      ncur++;
-      pos0++;
-    }
-    ivec posvec(ncur);
-    int j=0;    
-    while (pos<n && cluster[pos]==lastclust) {      
-      posvec(j) = pos;
-      j++;
-      pos++;
-    }
-    Pos.push_back(posvec);    
-    lastclust = cluster[pos];
-  }
-
-  for (int i=0; i<ncluster; i++) {
-    ivec posvec = Pos[i];
-    mat H(2,2);
-    mat U(1,2);
+  for (int i=0; i<n; i++) {
+    mat y0 = y.row(i);
+    mat b0 = b.row(i);
+    mat alph0 = alph.row(i);
+    mat dalph0 = dalph.row(i);
+    mat tau0 = tau.row(i);
     mat u0(1,2); u0 = eb0.row(i);
     double conv = 1;
-
+    mat H(2,2);
+    mat U(1,2);
     /* Newton Raphson */
     unsigned j;
-    for (j=0; j<iter; j++) { // Iterate NR
-      H.fill(0); U.fill(0);
-      for (unsigned k=0; k<posvec.n_elem; k++) { // Add all cluster elements together
-	mat y0 = y.row(posvec[k]);
-	mat b0 = b.row(posvec[k]);
-	mat alph0 = alph.row(posvec[k]);
-	mat dalph0 = dalph.row(posvec[k]);
-	mat tau0 = tau.row(posvec[k]);
-
-	U = U+Dloglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
-	H = H+D2loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
-      }      
+    for (j=0; j<iter; j++) {
+      U = Dloglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0,pred);
+      H = D2loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0,pred);
       conv = (U(0)*U(0)+U(1)*U(1))/2;
       if (conv<_inner_NR_abseps) {
 	warn(i) = 0;
 	break;
       }
       u0 = u0-stepsize*U*H.i();
-      if (debug){
-	Rcout << "j" << j << std::endl;   
-	Rcout << "conv" << conv << std::endl;   
-	Rcout << "u0" << u0 << std::endl;   
-      }
     }
+    if (debug) {
+      U = Dloglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0,pred);
+      vec L = loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0,pred);
+      Rcpp::Rcout << "iter: " << j <<std::endl;
+      Rcpp::Rcout << "conv: " << conv <<std::endl;
+      Rcpp::Rcout << "L: " << L <<std::endl;
+      Rcpp::Rcout << "U: " << U <<std::endl;
+      Rcpp::Rcout << "i: " << i <<std::endl;
+    }
+    /* Laplace approximation */
     if (nq==0) {
-      double logf = 0;
-      for (unsigned k=0; k<posvec.n_elem; k++) { // Add all cluster elements together
-	mat y0 = y.row(posvec[k]);
-	mat b0 = b.row(posvec[k]);
-	mat alph0 = alph.row(posvec[k]);
-	mat dalph0 = dalph.row(posvec[k]);
-	mat tau0 = tau.row(posvec[k]);
-	
-	logf = logf+arma::as_scalar(loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0));
-      }
-      double lapl = log(twopi)-0.5*log(det(H))+logf;
-      res(i) = lapl;    
-    }  else {
+      vec logf = loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0,pred);
+      double lapl = log(twopi)-0.5*log(det(H))+logf(0);
+      res(i) = lapl;
+    } else {
       /* Adaptive Gaussian quadrature */
       bool useSVD = true;
       mat G = -H;
@@ -2271,23 +2381,14 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, vec c
 	logdetG = log(det(G));
       }
       double Sum = 0;
-      for (j=0; j<posvec.n_elem; j++) { // Add all cluster elements together
-	for (unsigned k=0; k<z.n_elem; k++) {
-	  for (unsigned l=0; l<z.n_elem; l++) {
-	    
-	    mat y0 = y.row(posvec[j]);
-	    mat b0 = b.row(posvec[j]);
-	    mat alph0 = alph.row(posvec[j]);
-	    mat dalph0 = dalph.row(posvec[j]);
-	    mat tau0 = tau.row(posvec[j]);
-	    
-	    mat z0(2,1);
-	    z0(0) = z[k]; z0(1) = z[l];
-	    mat a0 = u0.t()+K*Bi*z0;
-	    double w0 = w[k]*w[l]*exp(z0[0]*z0[0]+z0[1]*z0[1]);
-	    double ll0 = loglikfull(y0,b0,a0.t(),condsigma,alph0,dalph0,tau0)[0];
-	    Sum += exp(ll0)*w0;
-	  }
+      for (unsigned k=0; k<z.n_elem; k++) {
+	for (unsigned l=0; l<z.n_elem; l++) {
+	  mat z0(2,1);
+	  z0(0) = z[k]; z0(1) = z[l];
+	  mat a0 = u0.t()+K*Bi*z0;
+	  double w0 = w[k]*w[l]*exp(z0[0]*z0[0]+z0[1]*z0[1]);
+	  double ll0 = loglikfull(y0,b0,a0.t(),condsigma,alph0,dalph0,tau0,pred)[0];
+	  Sum += exp(ll0)*w0;
 	}
       }
       res(i) = 2*log(K)-0.5*logdetG+log(Sum);
@@ -2296,178 +2397,178 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, vec c
   return(res);
 }
 
-/*
-EB - Empirical Bayes, intelligent starting values of u0 (for estimation of score and Hessian)
-*/
-// [[Rcpp::export]]
-mat EB(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, double stepsize=0.7, unsigned iter=20, bool debug=false) {
-  int n = y.n_rows;
-  vec warn(n); warn.fill(1);
-  mat eb0(n,2);
-  for (int i=0; i<n; i++) {
-    mat y0 = y.row(i);
-    mat b0 = b.row(i);
-    mat alph0 = alph.row(i);
-    mat dalph0 = dalph.row(i);
-    mat tau0 = tau.row(i);
-    mat u0(1,2); u0.fill(0);
-    double conv = 1;
-    mat H(2,2);
-    mat U(1,2);
+  /*
+    EB - Empirical Bayes, intelligent starting values of u0 (for estimation of score and Hessian)
+  */
+  // [[Rcpp::export]]
+mat EB(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, int pred, double stepsize=0.7, unsigned iter=20, bool debug=false) {
+    int n = y.n_rows;
+    vec warn(n); warn.fill(1);
+    mat eb0(n,2);
+    for (int i=0; i<n; i++) {
+      mat y0 = y.row(i);
+      mat b0 = b.row(i);
+      mat alph0 = alph.row(i);
+      mat dalph0 = dalph.row(i);
+      mat tau0 = tau.row(i);
+      mat u0(1,2); u0.fill(0);
+      double conv = 1;
+      mat H(2,2);
+      mat U(1,2);
 
-    /* Specifying components of sigma */
-    uvec rc1(1); rc1(0) = 0;
-    uvec rc2(1); rc2(0) = 1;
-    uvec rc3(1); rc3(0) = 2;
-    uvec rc4(1); rc4(0) = 3;
-  
-    uvec rc5(2); rc5(0) = 4; rc5(1) = 5;
-  
-    uvec rc6(2); rc6(0) = 0; rc6(1) = 1;
-    uvec rc7(2); rc7(0) = 0; rc7(1) = 3;
-    uvec rc8(2); rc8(0) = 2; rc8(1) = 1;
-    uvec rc9(2); rc9(0) = 2; rc9(1) = 3;
-  
-    uvec rc10(3); rc10(0) = 0; rc10(1) = 4; rc10(2) = 5;
-    uvec rc11(3); rc11(0) = 1; rc11(1) = 4; rc11(2) = 5;
-    uvec rc12(3); rc12(0) = 2; rc12(1) = 4; rc12(2) = 5;
-    uvec rc13(3); rc13(0) = 3; rc13(1) = 4; rc13(2) = 5;
-  
-    /* Estimation conditional sigmas etc */
-    matfour e1_1 = condsig(sigma,rc1,rc5);
-    matfour e1_2 = condsig(sigma,rc2,rc5);
-    matfour e2_1 = condsig(sigma,rc3,rc5);
-    matfour e2_2 = condsig(sigma,rc4,rc5);
+      /* Specifying components of sigma */
+      uvec rc1(1); rc1(0) = 0;
+      uvec rc2(1); rc2(0) = 1;
+      uvec rc3(1); rc3(0) = 2;
+      uvec rc4(1); rc4(0) = 3;
 
-    matfour e1c1_1 = condsig(sigma,rc1,rc11);
-    matfour e2c1_1 = condsig(sigma,rc3,rc11);
+      uvec rc5(2); rc5(0) = 4; rc5(1) = 5;
 
-    matfour e1c1_2 = condsig(sigma,rc2,rc10);
-    matfour e2c1_2 = condsig(sigma,rc4,rc10);
+      uvec rc6(2); rc6(0) = 0; rc6(1) = 1;
+      uvec rc7(2); rc7(0) = 0; rc7(1) = 3;
+      uvec rc8(2); rc8(0) = 2; rc8(1) = 1;
+      uvec rc9(2); rc9(0) = 2; rc9(1) = 3;
 
-    matfour e1c2_1 = condsig(sigma,rc1,rc13);
-    matfour e2c2_1 = condsig(sigma,rc3,rc13);
+      uvec rc10(3); rc10(0) = 0; rc10(1) = 4; rc10(2) = 5;
+      uvec rc11(3); rc11(0) = 1; rc11(1) = 4; rc11(2) = 5;
+      uvec rc12(3); rc12(0) = 2; rc12(1) = 4; rc12(2) = 5;
+      uvec rc13(3); rc13(0) = 3; rc13(1) = 4; rc13(2) = 5;
 
-    matfour e1c2_2 = condsig(sigma,rc2,rc12);
-    matfour e2c2_2 = condsig(sigma,rc4,rc12);
+      /* Estimation conditional sigmas etc */
+      matfour e1_1 = condsig(sigma,rc1,rc5);
+      matfour e1_2 = condsig(sigma,rc2,rc5);
+      matfour e2_1 = condsig(sigma,rc3,rc5);
+      matfour e2_2 = condsig(sigma,rc4,rc5);
 
-    matfour e11 = condsig(sigma,rc6,rc5);
-    matfour e12 = condsig(sigma,rc7,rc5);
-    matfour e21 = condsig(sigma,rc8,rc5);
-    matfour e22 = condsig(sigma,rc9,rc5);
+      matfour e1c1_1 = condsig(sigma,rc1,rc11);
+      matfour e2c1_1 = condsig(sigma,rc3,rc11);
 
-    mat sigu = sigma.submat(rc5,rc5);
-    mat isigu = sigu.i();
-    double dsigu = det(sigu);
-    double sq_dsigu = sqrt(dsigu);
+      matfour e1c1_2 = condsig(sigma,rc2,rc10);
+      matfour e2c1_2 = condsig(sigma,rc4,rc10);
 
-    ss condsigma;
-    condsigma.e1_1s = e1_1.M1;
-    condsigma.e2_1s = e2_1.M1;
-    condsigma.e1_2s = e1_2.M1;
-    condsigma.e2_2s = e2_2.M1;
+      matfour e1c2_1 = condsig(sigma,rc1,rc13);
+      matfour e2c2_1 = condsig(sigma,rc3,rc13);
 
-    condsigma.e1_1i = e1_1.M2;
-    condsigma.e2_1i = e2_1.M2;
-    condsigma.e1_2i = e1_2.M2;
-    condsigma.e2_2i = e2_2.M2;
+      matfour e1c2_2 = condsig(sigma,rc2,rc12);
+      matfour e2c2_2 = condsig(sigma,rc4,rc12);
 
-    condsigma.e1_1d = e1_1.M3;
-    condsigma.e2_1d = e2_1.M3;
-    condsigma.e1_2d = e1_2.M3;
-    condsigma.e2_2d = e2_2.M3;
+      matfour e11 = condsig(sigma,rc6,rc5);
+      matfour e12 = condsig(sigma,rc7,rc5);
+      matfour e21 = condsig(sigma,rc8,rc5);
+      matfour e22 = condsig(sigma,rc9,rc5);
 
-    condsigma.e1_1x = e1_1.M4;
-    condsigma.e2_1x = e2_1.M4;
-    condsigma.e1_2x = e1_2.M4;
-    condsigma.e2_2x = e2_2.M4;
+      mat sigu = sigma.submat(rc5,rc5);
+      mat isigu = sigu.i();
+      double dsigu = det(sigu);
+      double sq_dsigu = sqrt(dsigu);
 
-    condsigma.e1c1_1s = e1c1_1.M1;
-    condsigma.e2c1_1s = e2c1_1.M1;
-    condsigma.e1c1_2s = e1c1_2.M1;
-    condsigma.e2c1_2s = e2c1_2.M1;
+      ss condsigma;
+      condsigma.e1_1s = e1_1.M1;
+      condsigma.e2_1s = e2_1.M1;
+      condsigma.e1_2s = e1_2.M1;
+      condsigma.e2_2s = e2_2.M1;
 
-    condsigma.e1c1_1i = e1c1_1.M2;
-    condsigma.e2c1_1i = e2c1_1.M2;
-    condsigma.e1c1_2i = e1c1_2.M2;
-    condsigma.e2c1_2i = e2c1_2.M2;
+      condsigma.e1_1i = e1_1.M2;
+      condsigma.e2_1i = e2_1.M2;
+      condsigma.e1_2i = e1_2.M2;
+      condsigma.e2_2i = e2_2.M2;
 
-    condsigma.e1c1_1d = e1c1_1.M3;
-    condsigma.e2c1_1d = e2c1_1.M3;
-    condsigma.e1c1_2d = e1c1_2.M3;
-    condsigma.e2c1_2d = e2c1_2.M3;
+      condsigma.e1_1d = e1_1.M3;
+      condsigma.e2_1d = e2_1.M3;
+      condsigma.e1_2d = e1_2.M3;
+      condsigma.e2_2d = e2_2.M3;
 
-    condsigma.e1c1_1x = e1c1_1.M4;
-    condsigma.e2c1_1x = e2c1_1.M4;
-    condsigma.e1c1_2x = e1c1_2.M4;
-    condsigma.e2c1_2x = e2c1_2.M4;
+      condsigma.e1_1x = e1_1.M4;
+      condsigma.e2_1x = e2_1.M4;
+      condsigma.e1_2x = e1_2.M4;
+      condsigma.e2_2x = e2_2.M4;
 
-    condsigma.e1c2_1s = e1c2_1.M1;
-    condsigma.e2c2_1s = e2c2_1.M1;
-    condsigma.e1c2_2s = e1c2_2.M1;
-    condsigma.e2c2_2s = e2c2_2.M1;
+      condsigma.e1c1_1s = e1c1_1.M1;
+      condsigma.e2c1_1s = e2c1_1.M1;
+      condsigma.e1c1_2s = e1c1_2.M1;
+      condsigma.e2c1_2s = e2c1_2.M1;
 
-    condsigma.e1c2_1i = e1c2_1.M2;
-    condsigma.e2c2_1i = e2c2_1.M2;
-    condsigma.e1c2_2i = e1c2_2.M2;
-    condsigma.e2c2_2i = e2c2_2.M2;
+      condsigma.e1c1_1i = e1c1_1.M2;
+      condsigma.e2c1_1i = e2c1_1.M2;
+      condsigma.e1c1_2i = e1c1_2.M2;
+      condsigma.e2c1_2i = e2c1_2.M2;
 
-    condsigma.e1c2_1d = e1c2_1.M3;
-    condsigma.e2c2_1d = e2c2_1.M3;
-    condsigma.e1c2_2d = e1c2_2.M3;
-    condsigma.e2c2_2d = e2c2_2.M3;
+      condsigma.e1c1_1d = e1c1_1.M3;
+      condsigma.e2c1_1d = e2c1_1.M3;
+      condsigma.e1c1_2d = e1c1_2.M3;
+      condsigma.e2c1_2d = e2c1_2.M3;
 
-    condsigma.e1c2_1x = e1c2_1.M4;
-    condsigma.e2c2_1x = e2c2_1.M4;
-    condsigma.e1c2_2x = e1c2_2.M4;
-    condsigma.e2c2_2x = e2c2_2.M4;
+      condsigma.e1c1_1x = e1c1_1.M4;
+      condsigma.e2c1_1x = e2c1_1.M4;
+      condsigma.e1c1_2x = e1c1_2.M4;
+      condsigma.e2c1_2x = e2c1_2.M4;
 
-    condsigma.e11s = e11.M1; 
-    condsigma.e12s = e12.M1; 
-    condsigma.e21s = e21.M1; 
-    condsigma.e22s = e22.M1; 
+      condsigma.e1c2_1s = e1c2_1.M1;
+      condsigma.e2c2_1s = e2c2_1.M1;
+      condsigma.e1c2_2s = e1c2_2.M1;
+      condsigma.e2c2_2s = e2c2_2.M1;
 
-    condsigma.e11i = e11.M2; 
-    condsigma.e12i = e12.M2; 
-    condsigma.e21i = e21.M2; 
-    condsigma.e22i = e22.M2; 
+      condsigma.e1c2_1i = e1c2_1.M2;
+      condsigma.e2c2_1i = e2c2_1.M2;
+      condsigma.e1c2_2i = e1c2_2.M2;
+      condsigma.e2c2_2i = e2c2_2.M2;
 
-    condsigma.e11d = e11.M3; 
-    condsigma.e12d = e12.M3; 
-    condsigma.e21d = e21.M3; 
-    condsigma.e22d = e22.M3; 
+      condsigma.e1c2_1d = e1c2_1.M3;
+      condsigma.e2c2_1d = e2c2_1.M3;
+      condsigma.e1c2_2d = e1c2_2.M3;
+      condsigma.e2c2_2d = e2c2_2.M3;
 
-    condsigma.e11x = e11.M4; 
-    condsigma.e12x = e12.M4; 
-    condsigma.e21x = e21.M4; 
-    condsigma.e22x = e22.M4; 
-    
-    condsigma.us = sigu;
-    condsigma.ui = isigu;
-    condsigma.squd = sq_dsigu;
+      condsigma.e1c2_1x = e1c2_1.M4;
+      condsigma.e2c2_1x = e2c2_1.M4;
+      condsigma.e1c2_2x = e1c2_2.M4;
+      condsigma.e2c2_2x = e2c2_2.M4;
 
-    /* Newton Raphson */
-    unsigned j;
-    for (j=0; j<iter; j++) {
-      U = Dloglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
-      H = D2loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
-      conv = (U(0)*U(0)+U(1)*U(1))/2;
-      if (conv<_inner_NR_abseps) {
-	warn(i) = 0;
-	break;
+      condsigma.e11s = e11.M1;
+      condsigma.e12s = e12.M1;
+      condsigma.e21s = e21.M1;
+      condsigma.e22s = e22.M1;
+
+      condsigma.e11i = e11.M2;
+      condsigma.e12i = e12.M2;
+      condsigma.e21i = e21.M2;
+      condsigma.e22i = e22.M2;
+
+      condsigma.e11d = e11.M3;
+      condsigma.e12d = e12.M3;
+      condsigma.e21d = e21.M3;
+      condsigma.e22d = e22.M3;
+
+      condsigma.e11x = e11.M4;
+      condsigma.e12x = e12.M4;
+      condsigma.e21x = e21.M4;
+      condsigma.e22x = e22.M4;
+
+      condsigma.us = sigu;
+      condsigma.ui = isigu;
+      condsigma.squd = sq_dsigu;
+
+      /* Newton Raphson */
+      unsigned j;
+      for (j=0; j<iter; j++) {
+	U = Dloglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0,pred);
+	H = D2loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0,pred);
+	conv = (U(0)*U(0)+U(1)*U(1))/2;
+	if (conv<_inner_NR_abseps) {
+	  warn(i) = 0;
+	  break;
+	}
+	u0 = u0-stepsize*U*H.i();
       }
-      u0 = u0-stepsize*U*H.i();
+      if (debug) {
+	U = Dloglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0,pred);
+	vec L = loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0,pred);
+	Rcpp::Rcout << "iter: " << j <<std::endl;
+	Rcpp::Rcout << "conv: " << conv <<std::endl;
+	Rcpp::Rcout << "L: " << L <<std::endl;
+	Rcpp::Rcout << "U: " << U <<std::endl;
+	Rcpp::Rcout << "i: " << i <<std::endl;
+      }
+      eb0.row(i) = u0;
     }
-    if (debug) {
-      U = Dloglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
-      vec L = loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
-      Rcpp::Rcout << "iter: " << j <<std::endl;
-      Rcpp::Rcout << "conv: " << conv <<std::endl;
-      Rcpp::Rcout << "L: " << L <<std::endl;
-      Rcpp::Rcout << "U: " << U <<std::endl;
-      Rcpp::Rcout << "i: " << i <<std::endl;
-    }
-    eb0.row(i) = u0;
+    return(eb0);
   }
-  return(eb0);
-}
