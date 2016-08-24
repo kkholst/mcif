@@ -2474,6 +2474,138 @@ mat EB(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, double stepsize=0.
   int n = y.n_rows;
   vec warn(n); warn.fill(1);
   mat eb0(n,2);
+
+  /* Specifying components of sigma */
+  uvec rc1(1); rc1(0) = 0;
+  uvec rc2(1); rc2(0) = 1;
+  uvec rc3(1); rc3(0) = 2;
+  uvec rc4(1); rc4(0) = 3;
+
+  uvec rc5(2); rc5(0) = 4; rc5(1) = 5;
+
+  uvec rc6(2); rc6(0) = 0; rc6(1) = 1;
+  uvec rc7(2); rc7(0) = 0; rc7(1) = 3;
+  uvec rc8(2); rc8(0) = 2; rc8(1) = 1;
+  uvec rc9(2); rc9(0) = 2; rc9(1) = 3;
+
+  uvec rc10(3); rc10(0) = 0; rc10(1) = 4; rc10(2) = 5;
+  uvec rc11(3); rc11(0) = 1; rc11(1) = 4; rc11(2) = 5;
+  uvec rc12(3); rc12(0) = 2; rc12(1) = 4; rc12(2) = 5;
+  uvec rc13(3); rc13(0) = 3; rc13(1) = 4; rc13(2) = 5;
+
+  /* Estimation conditional sigmas etc */
+  matfour e1_1 = condsig(sigma,rc1,rc5);
+  matfour e1_2 = condsig(sigma,rc2,rc5);
+  matfour e2_1 = condsig(sigma,rc3,rc5);
+  matfour e2_2 = condsig(sigma,rc4,rc5);
+
+  matfour e1c1_1 = condsig(sigma,rc1,rc11);
+  matfour e2c1_1 = condsig(sigma,rc3,rc11);
+
+  matfour e1c1_2 = condsig(sigma,rc2,rc10);
+  matfour e2c1_2 = condsig(sigma,rc4,rc10);
+
+  matfour e1c2_1 = condsig(sigma,rc1,rc13);
+  matfour e2c2_1 = condsig(sigma,rc3,rc13);
+
+  matfour e1c2_2 = condsig(sigma,rc2,rc12);
+  matfour e2c2_2 = condsig(sigma,rc4,rc12);
+
+  matfour e11 = condsig(sigma,rc6,rc5);
+  matfour e12 = condsig(sigma,rc7,rc5);
+  matfour e21 = condsig(sigma,rc8,rc5);
+  matfour e22 = condsig(sigma,rc9,rc5);
+
+  mat sigu = sigma.submat(rc5,rc5);
+  mat isigu = sigu.i();
+  double dsigu = det(sigu);
+  double sq_dsigu = sqrt(dsigu);
+
+  ss condsigma;
+  condsigma.e1_1s = e1_1.M1;
+  condsigma.e2_1s = e2_1.M1;
+  condsigma.e1_2s = e1_2.M1;
+  condsigma.e2_2s = e2_2.M1;
+
+  condsigma.e1_1i = e1_1.M2;
+  condsigma.e2_1i = e2_1.M2;
+  condsigma.e1_2i = e1_2.M2;
+  condsigma.e2_2i = e2_2.M2;
+
+  condsigma.e1_1d = e1_1.M3;
+  condsigma.e2_1d = e2_1.M3;
+  condsigma.e1_2d = e1_2.M3;
+  condsigma.e2_2d = e2_2.M3;
+
+  condsigma.e1_1x = e1_1.M4;
+  condsigma.e2_1x = e2_1.M4;
+  condsigma.e1_2x = e1_2.M4;
+  condsigma.e2_2x = e2_2.M4;
+
+  condsigma.e1c1_1s = e1c1_1.M1;
+  condsigma.e2c1_1s = e2c1_1.M1;
+  condsigma.e1c1_2s = e1c1_2.M1;
+  condsigma.e2c1_2s = e2c1_2.M1;
+
+  condsigma.e1c1_1i = e1c1_1.M2;
+  condsigma.e2c1_1i = e2c1_1.M2;
+  condsigma.e1c1_2i = e1c1_2.M2;
+  condsigma.e2c1_2i = e2c1_2.M2;
+
+  condsigma.e1c1_1d = e1c1_1.M3;
+  condsigma.e2c1_1d = e2c1_1.M3;
+  condsigma.e1c1_2d = e1c1_2.M3;
+  condsigma.e2c1_2d = e2c1_2.M3;
+
+  condsigma.e1c1_1x = e1c1_1.M4;
+  condsigma.e2c1_1x = e2c1_1.M4;
+  condsigma.e1c1_2x = e1c1_2.M4;
+  condsigma.e2c1_2x = e2c1_2.M4;
+
+  condsigma.e1c2_1s = e1c2_1.M1;
+  condsigma.e2c2_1s = e2c2_1.M1;
+  condsigma.e1c2_2s = e1c2_2.M1;
+  condsigma.e2c2_2s = e2c2_2.M1;
+
+  condsigma.e1c2_1i = e1c2_1.M2;
+  condsigma.e2c2_1i = e2c2_1.M2;
+  condsigma.e1c2_2i = e1c2_2.M2;
+  condsigma.e2c2_2i = e2c2_2.M2;
+
+  condsigma.e1c2_1d = e1c2_1.M3;
+  condsigma.e2c2_1d = e2c2_1.M3;
+  condsigma.e1c2_2d = e1c2_2.M3;
+  condsigma.e2c2_2d = e2c2_2.M3;
+
+  condsigma.e1c2_1x = e1c2_1.M4;
+  condsigma.e2c2_1x = e2c2_1.M4;
+  condsigma.e1c2_2x = e1c2_2.M4;
+  condsigma.e2c2_2x = e2c2_2.M4;
+
+  condsigma.e11s = e11.M1;
+  condsigma.e12s = e12.M1;
+  condsigma.e21s = e21.M1;
+  condsigma.e22s = e22.M1;
+
+  condsigma.e11i = e11.M2;
+  condsigma.e12i = e12.M2;
+  condsigma.e21i = e21.M2;
+  condsigma.e22i = e22.M2;
+
+  condsigma.e11d = e11.M3;
+  condsigma.e12d = e12.M3;
+  condsigma.e21d = e21.M3;
+  condsigma.e22d = e22.M3;
+
+  condsigma.e11x = e11.M4;
+  condsigma.e12x = e12.M4;
+  condsigma.e21x = e21.M4;
+  condsigma.e22x = e22.M4;
+
+  condsigma.us = sigu;
+  condsigma.ui = isigu;
+  condsigma.squd = sq_dsigu;
+
   for (int i=0; i<n; i++) {
     mat y0 = y.row(i);
     mat b0 = b.row(i);
@@ -2484,137 +2616,6 @@ mat EB(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, double stepsize=0.
     double conv = 1;
     mat H(2,2);
     mat U(1,2);
-
-    /* Specifying components of sigma */
-    uvec rc1(1); rc1(0) = 0;
-    uvec rc2(1); rc2(0) = 1;
-    uvec rc3(1); rc3(0) = 2;
-    uvec rc4(1); rc4(0) = 3;
-
-    uvec rc5(2); rc5(0) = 4; rc5(1) = 5;
-
-    uvec rc6(2); rc6(0) = 0; rc6(1) = 1;
-    uvec rc7(2); rc7(0) = 0; rc7(1) = 3;
-    uvec rc8(2); rc8(0) = 2; rc8(1) = 1;
-    uvec rc9(2); rc9(0) = 2; rc9(1) = 3;
-
-    uvec rc10(3); rc10(0) = 0; rc10(1) = 4; rc10(2) = 5;
-    uvec rc11(3); rc11(0) = 1; rc11(1) = 4; rc11(2) = 5;
-    uvec rc12(3); rc12(0) = 2; rc12(1) = 4; rc12(2) = 5;
-    uvec rc13(3); rc13(0) = 3; rc13(1) = 4; rc13(2) = 5;
-
-    /* Estimation conditional sigmas etc */
-    matfour e1_1 = condsig(sigma,rc1,rc5);
-    matfour e1_2 = condsig(sigma,rc2,rc5);
-    matfour e2_1 = condsig(sigma,rc3,rc5);
-    matfour e2_2 = condsig(sigma,rc4,rc5);
-
-    matfour e1c1_1 = condsig(sigma,rc1,rc11);
-    matfour e2c1_1 = condsig(sigma,rc3,rc11);
-
-    matfour e1c1_2 = condsig(sigma,rc2,rc10);
-    matfour e2c1_2 = condsig(sigma,rc4,rc10);
-
-    matfour e1c2_1 = condsig(sigma,rc1,rc13);
-    matfour e2c2_1 = condsig(sigma,rc3,rc13);
-
-    matfour e1c2_2 = condsig(sigma,rc2,rc12);
-    matfour e2c2_2 = condsig(sigma,rc4,rc12);
-
-    matfour e11 = condsig(sigma,rc6,rc5);
-    matfour e12 = condsig(sigma,rc7,rc5);
-    matfour e21 = condsig(sigma,rc8,rc5);
-    matfour e22 = condsig(sigma,rc9,rc5);
-
-    mat sigu = sigma.submat(rc5,rc5);
-    mat isigu = sigu.i();
-    double dsigu = det(sigu);
-    double sq_dsigu = sqrt(dsigu);
-
-    ss condsigma;
-    condsigma.e1_1s = e1_1.M1;
-    condsigma.e2_1s = e2_1.M1;
-    condsigma.e1_2s = e1_2.M1;
-    condsigma.e2_2s = e2_2.M1;
-
-    condsigma.e1_1i = e1_1.M2;
-    condsigma.e2_1i = e2_1.M2;
-    condsigma.e1_2i = e1_2.M2;
-    condsigma.e2_2i = e2_2.M2;
-
-    condsigma.e1_1d = e1_1.M3;
-    condsigma.e2_1d = e2_1.M3;
-    condsigma.e1_2d = e1_2.M3;
-    condsigma.e2_2d = e2_2.M3;
-
-    condsigma.e1_1x = e1_1.M4;
-    condsigma.e2_1x = e2_1.M4;
-    condsigma.e1_2x = e1_2.M4;
-    condsigma.e2_2x = e2_2.M4;
-
-    condsigma.e1c1_1s = e1c1_1.M1;
-    condsigma.e2c1_1s = e2c1_1.M1;
-    condsigma.e1c1_2s = e1c1_2.M1;
-    condsigma.e2c1_2s = e2c1_2.M1;
-
-    condsigma.e1c1_1i = e1c1_1.M2;
-    condsigma.e2c1_1i = e2c1_1.M2;
-    condsigma.e1c1_2i = e1c1_2.M2;
-    condsigma.e2c1_2i = e2c1_2.M2;
-
-    condsigma.e1c1_1d = e1c1_1.M3;
-    condsigma.e2c1_1d = e2c1_1.M3;
-    condsigma.e1c1_2d = e1c1_2.M3;
-    condsigma.e2c1_2d = e2c1_2.M3;
-
-    condsigma.e1c1_1x = e1c1_1.M4;
-    condsigma.e2c1_1x = e2c1_1.M4;
-    condsigma.e1c1_2x = e1c1_2.M4;
-    condsigma.e2c1_2x = e2c1_2.M4;
-
-    condsigma.e1c2_1s = e1c2_1.M1;
-    condsigma.e2c2_1s = e2c2_1.M1;
-    condsigma.e1c2_2s = e1c2_2.M1;
-    condsigma.e2c2_2s = e2c2_2.M1;
-
-    condsigma.e1c2_1i = e1c2_1.M2;
-    condsigma.e2c2_1i = e2c2_1.M2;
-    condsigma.e1c2_2i = e1c2_2.M2;
-    condsigma.e2c2_2i = e2c2_2.M2;
-
-    condsigma.e1c2_1d = e1c2_1.M3;
-    condsigma.e2c2_1d = e2c2_1.M3;
-    condsigma.e1c2_2d = e1c2_2.M3;
-    condsigma.e2c2_2d = e2c2_2.M3;
-
-    condsigma.e1c2_1x = e1c2_1.M4;
-    condsigma.e2c2_1x = e2c2_1.M4;
-    condsigma.e1c2_2x = e1c2_2.M4;
-    condsigma.e2c2_2x = e2c2_2.M4;
-
-    condsigma.e11s = e11.M1;
-    condsigma.e12s = e12.M1;
-    condsigma.e21s = e21.M1;
-    condsigma.e22s = e22.M1;
-
-    condsigma.e11i = e11.M2;
-    condsigma.e12i = e12.M2;
-    condsigma.e21i = e21.M2;
-    condsigma.e22i = e22.M2;
-
-    condsigma.e11d = e11.M3;
-    condsigma.e12d = e12.M3;
-    condsigma.e21d = e21.M3;
-    condsigma.e22d = e22.M3;
-
-    condsigma.e11x = e11.M4;
-    condsigma.e12x = e12.M4;
-    condsigma.e21x = e21.M4;
-    condsigma.e22x = e22.M4;
-
-    condsigma.us = sigu;
-    condsigma.ui = isigu;
-    condsigma.squd = sq_dsigu;
 
     /* Newton Raphson */
     unsigned j;
