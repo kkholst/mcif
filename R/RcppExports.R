@@ -13,23 +13,3 @@ EB <- function(y, b, sigma, alph, dalph, tau, stepsize = 0.7, iter = 20L, debug 
     .Call('mcif_EB', PACKAGE = 'mcif', y, b, sigma, alph, dalph, tau, stepsize, iter, debug)
 }
 
-pn <- function(y, mu, sigma) {
-    .Call('mcif_pn', PACKAGE = 'mcif', y, mu, sigma)
-}
-
-loglikmarg <- function(y, b, sigma, alph, dalph, tau) {
-    .Call('mcif_loglikmarg', PACKAGE = 'mcif', y, b, sigma, alph, dalph, tau)
-}
-
-pn <- function(y, mu, sigma) {
-    .Call('mcif_pn', PACKAGE = 'mcif', y, mu, sigma)
-}
-
-loglik <- function(y, b, sigma, alph, dalph, tau, eb0, pred, nq = 1L, stepsize = 0.7, iter = 20L, debug = FALSE) {
-    .Call('mcif_loglik', PACKAGE = 'mcif', y, b, sigma, alph, dalph, tau, eb0, pred, nq, stepsize, iter, debug)
-}
-
-EB <- function(y, b, sigma, alph, dalph, tau, pred, stepsize = 0.7, iter = 20L, debug = FALSE) {
-    .Call('mcif_EB', PACKAGE = 'mcif', y, b, sigma, alph, dalph, tau, pred, stepsize, iter, debug)
-}
-
