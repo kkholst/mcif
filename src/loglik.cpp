@@ -1,24 +1,16 @@
-// [[Rcpp::depends(RcppArmadillo,mvtnorm)]]
+// [[Rcpp::depends(RcppArmadillo)]]
 
 #include <RcppArmadillo.h>
 #include <Rmath.h>
-#include <mvtnormAPI.h>
 #include "quadrule.h"
+#include "pn.h"
 
 using namespace Rcpp;
 using namespace arma;
 
-static int _mvt_df = 0;
-static double _mvt_abseps=0.00001;
-static double _mvt_releps=0;
-static int _mvt_maxpts=20000;
-static int _mvt_inform;
-static double _mvt_error[3];
-
 const double twopi = 2*datum::pi;
 const double sq_twopi = sqrt(twopi);
 const double h = 1e-8;
-
 const double _inner_NR_abseps=0.0001;
 
 class matfour {
@@ -116,57 +108,6 @@ public:
   double squd;
 };
 
-/*
-Funtion that calculates normal cumulative distribution function
- */
-double pn(mat y, double mu, double sigma) {
-  return(Rf_pnorm5(y[0],mu,sqrt(sigma),1,0));
-}
-
-// [[Rcpp::export]]
-double pn(mat y, mat mu, mat sigma) {
-  /*int n = y.n_rows;*/
-  int k = y.n_elem;
-  double res;
-  if (k==1) {
-    res = Rf_pnorm5(y[0],mu[0],sqrt(sigma[0]),1,0);
-    return(res);
-  }
-
-  mat L = mat(2,2); L.fill(0.0);
-  L(0,0) = 1/sqrt(sigma(0,0));
-  L(1,1) = 1/sqrt(sigma(1,1));
-  y = L*(y-mu);
-  double r = sigma(0,1)/(sqrt(sigma(0,0)*sigma(1,1)));
-
-  int rand = 1;
-  IntegerVector infin(k); // Infinity argument (all 0 since CDF)
-  NumericVector _mvt_delta(k); // non-centrality parameter
-
-  for (int i=0; i<k; i++) {
-    infin[i]=0;
-    _mvt_delta[i]=0;
-  }
-
-  double val;
-  mvtnorm_C_mvtdst(
-		   &k,            // dim
-		   &_mvt_df,      // df
-		   &y[0],        // lower
-		   &y[0],        // upper
-		   &infin[0],     // integration type
-		   &r,            // correlation
-		   &_mvt_delta[0],// non-centrality
-		   &_mvt_maxpts,
-		   &_mvt_abseps,
-		   &_mvt_releps,
-		   &_mvt_error[0],
-		   &val,
-		   &_mvt_inform,
-		   &rand);
-  res = val;
-  return(res);
-}
 
 /*
 Miscellaneous things related to the conditional variance-covariance matrix
@@ -203,7 +144,7 @@ matfour condsig(mat sigma, uvec rc1, uvec rc2) {
 Full loglikelihood
 */
 /*// [[Rcpp::export]]*/
-vec loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, bool full=1){
+vec loglikfull0(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, bool full=1){
   /* y: nx2 matrix with event type (0, 1 or 2) of family member 1 and 2
      b: nx4 matrix with XB for event type 1 and 2 (b1 and b2) for family member 1 and 2
         the order is b1_1, b1_2, b2_1 and b2_2
@@ -341,8 +282,8 @@ vec loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, 
 	mat alph_c2_2 = alph_f2_2.col(i)-c_mu2;
 
 	/* Estimation of F1_2 and F2_2 */
-	double F1_2 = pi1_2(i)*pn(alph_c1_2,0.0,c_sig1[0]);
-	double F2_2 = pi2_2(i)*pn(alph_c2_2,0.0,c_sig2[0]);
+	double F1_2 = pi1_2(i)*pn(alph_c1_2[0],0.0,c_sig1[0]);
+	double F2_2 = pi2_2(i)*pn(alph_c2_2[0],0.0,c_sig2[0]);
 
 	/* Loglikelihood contribution */
 	double logF00 = log(1-pi1_1(i)-pi2_1(i))+log(1-F1_2-F2_2);
@@ -443,8 +384,8 @@ vec loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, 
 	mat alph_c2_1 = alph_f2_1.col(i)-c_mu2;
 
 	/* Estimation of F1_1, F1_2, F2_1 and F2_2 */
-	double F1_1 = pi1_1(i)*pn(alph_c1_1,0.0,c_sig1[0]);
-	double F2_1 = pi2_1(i)*pn(alph_c2_1,0.0,c_sig2[0]);
+	double F1_1 = pi1_1(i)*pn(alph_c1_1[0],0.0,c_sig1[0]);
+	double F2_1 = pi2_1(i)*pn(alph_c2_1[0],0.0,c_sig2[0]);
 
 	/* Loglikelihood contribution */
 	double logF00 = log(1-pi1_2(i)-pi2_2(i))+log(1-F1_1-F2_1);
@@ -618,7 +559,7 @@ vec loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, 
 	mat alph_c2 = alph_f2.col(i)-c_mu2;
 
 	/* Estimation of F1c1_1 */
-	double F1c1_1 = pi1_1(i)*pn(alph_c2,0.0,c_sig2[0]);
+	double F1c1_1 = pi1_1(i)*pn(alph_c2[0],0.0,c_sig2[0]);
 
 	/* Conditional F2c1_1 */
 	/* Conditional mean and variance-covariance matrix, conditional on alph1_2, u1 and u2 */
@@ -638,7 +579,7 @@ vec loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, 
 	mat alph_c3 = alph_f3.col(i)-c_mu3;
 
 	/* Estimation of F2c1_1 */
-	double F2c1_1 = pi2_1(i)*pn(alph_c3,0.0,c_sig3[0]);
+	double F2c1_1 = pi2_1(i)*pn(alph_c3[0],0.0,c_sig3[0]);
 
 	/* Loglikelihood contribution */
 	double logdF01 = logdF1_2+log(1-F1c1_1-F2c1_1);
@@ -691,7 +632,7 @@ vec loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, 
 	mat alph_c2 = alph_f2.col(i)-c_mu2;
 
 	/* Estimation of F1c1_2 */
-	double F1c1_2 = pi1_2(i)*pn(alph_c2,0.0,c_sig2[0]);
+	double F1c1_2 = pi1_2(i)*pn(alph_c2[0],0.0,c_sig2[0]);
 
 	/* Conditional F2c1_2 */
 	/* Conditional mean and variance-covariance matrix, conditional on alph1_1, u1 and u2 */
@@ -711,7 +652,7 @@ vec loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, 
 	mat alph_c3 = alph_f3.col(i)-c_mu3;
 
 	/* Estimation of F2c1_2 */
-	double F2c1_2 = pi2_2(i)*pn(alph_c3,0.0,c_sig3[0]);
+	double F2c1_2 = pi2_2(i)*pn(alph_c3[0],0.0,c_sig3[0]);
 
 	/* Loglikelihood contribution */
 	double logdF10 = logdF1_1+log(1-F1c1_2-F2c1_2);
@@ -764,7 +705,7 @@ vec loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, 
 	mat alph_c2 = alph_f2.col(i)-c_mu2;
 
 	/* Estimation of F1c2_1 */
-	double F1c2_1 = pi1_1(i)*pn(alph_c2,0.0,c_sig2[0]);
+	double F1c2_1 = pi1_1(i)*pn(alph_c2[0],0.0,c_sig2[0]);
 
 	/* Conditional F2c2_1 */
 	/* Conditional mean and variance-covariance matrix, conditional on alph2_2, u1 and u2 */
@@ -784,7 +725,7 @@ vec loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, 
 	mat alph_c3 = alph_f3.col(i)-c_mu3;
 
 	/* Estimation of F2c2_1 */
-	double F2c2_1 = pi2_1(i)*pn(alph_c3,0.0,c_sig3[0]);
+	double F2c2_1 = pi2_1(i)*pn(alph_c3[0],0.0,c_sig3[0]);
 
 	/* Loglikelihood contribution */
 	double logdF02 = logdF2_2+log(1-F1c2_1-F2c2_1);
@@ -837,7 +778,7 @@ vec loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, 
 	mat alph_c2 = alph_f2.col(i)-c_mu2;
 
 	/* Estimation of F1c2_2 */
-	double F1c2_2 = pi1_2(i)*pn(alph_c2,0.0,c_sig2[0]);
+	double F1c2_2 = pi1_2(i)*pn(alph_c2[0],0.0,c_sig2[0]);
 
 	/* Conditional F2c2_2 */
 	/* Conditional mean and variance-covariance matrix, conditional on alph2_1, u1 and u2 */
@@ -857,7 +798,7 @@ vec loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, 
 	mat alph_c3 = alph_f3.col(i)-c_mu3;
 
 	/* Estimation of F2c2_2 */
-	double F2c2_2 = pi2_2(i)*pn(alph_c3,0.0,c_sig3[0]);
+	double F2c2_2 = pi2_2(i)*pn(alph_c3[0],0.0,c_sig3[0]);
 
 	/* Loglikelihood contribution */
 	double logdF20 = logdF2_1+log(1-F1c2_2-F2c2_2);
@@ -910,10 +851,10 @@ vec loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, 
 	mat alph_c2_2 = alph_f2_2.col(i)-c_mu4;
 
 	/* Estimation of F1_1, F1_2, F2_1 and F2_2 */
-	double F1_1 = pi1_1(i)*pn(alph_c1_1,0.0,c_sig1[0]);
-	double F1_2 = pi1_2(i)*pn(alph_c1_2,0.0,c_sig2[0]);
-	double F2_1 = pi2_1(i)*pn(alph_c2_1,0.0,c_sig3[0]);
-	double F2_2 = pi2_2(i)*pn(alph_c2_2,0.0,c_sig4[0]);
+	double F1_1 = pi1_1(i)*pn(alph_c1_1[0],0.0,c_sig1[0]);
+	double F1_2 = pi1_2(i)*pn(alph_c1_2[0],0.0,c_sig2[0]);
+	double F2_1 = pi2_1(i)*pn(alph_c2_1[0],0.0,c_sig3[0]);
+	double F2_2 = pi2_2(i)*pn(alph_c2_2[0],0.0,c_sig4[0]);
 
 	/* Joint probabilities F11, F12, F21 and F22 */
 	/* Conditional mean and variance-covariance matrices, conditional on u1 and u2 */
@@ -993,7 +934,7 @@ vec loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, 
 Score function of full loglikelihood
 */
 /*// [[Rcpp::export]]*/
-mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, bool full=1){
+mat Dloglikfull0(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, bool full=1){
   /* y: nx2 matrix with event type (0, 1 or 2) of family member 1 and 2
      b: nx4 matrix with XB for event type 1 and 2 (b1 and b2) for family member 1 and 2
      the order is b1_1, b1_2, b2_1 and b2_2
@@ -1188,8 +1129,8 @@ mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau,
 	mat alph_c2_2 = alph_f2_2.col(i)-c_mu2;
 
 	/* Estimation of F1_2 and F2_2 */
-	double p1 = pn(alph_c1_2,0.0,sd1*sd1);
-	double p2 = pn(alph_c2_2,0.0,sd2*sd2);
+	double p1 = pn(alph_c1_2[0],0.0,sd1*sd1);
+	double p2 = pn(alph_c2_2[0],0.0,sd2*sd2);
 
 	double F1_2 = pi1_2(i)*p1;
 	double F2_2 = pi2_2(i)*p2;
@@ -1344,8 +1285,8 @@ mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau,
 	mat alph_c2_1 = alph_f2_1.col(i)-c_mu2;
 
 	/* Estimation of F1_1 and F2_1 */
-	double p1 = pn(alph_c1_1,0.0,sd1*sd1);
-	double p2 = pn(alph_c2_1,0.0,sd2*sd2);
+	double p1 = pn(alph_c1_1[0],0.0,sd1*sd1);
+	double p2 = pn(alph_c2_1[0],0.0,sd2*sd2);
 
 	double F1_1 = pi1_1(i)*p1;
 	double F2_1 = pi2_1(i)*p2;
@@ -1591,7 +1532,7 @@ mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau,
 	mat alph_c2 = alph_f2.col(i)-c_mu2;
 
 	/* Estimation of F1c1_1 */
-	double p1 = pn(alph_c2,0.0,c_sig2[0]);
+	double p1 = pn(alph_c2[0],0.0,c_sig2[0]);
 	double F1c1_1 = pi1_1(i)*p1;
 
 	/* Calculating the pdf */
@@ -1622,7 +1563,7 @@ mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau,
 	mat alph_c3 = alph_f3.col(i)-c_mu3;
 
 	/* Estimation of F2c1_1 */
-	double p3 = pn(alph_c3,0.0,c_sig3[0]);
+	double p3 = pn(alph_c3[0],0.0,c_sig3[0]);
 	double F2c1_1 = pi2_1(i)*p3;
 
 	/* Calculating the pdf */
@@ -1682,7 +1623,7 @@ mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau,
 	mat alph_c2 = alph_f2.col(i)-c_mu2;
 
 	/* Estimation of F1c1_2 */
-	double p2 = pn(alph_c2,0.0,c_sig2[0]);
+	double p2 = pn(alph_c2[0],0.0,c_sig2[0]);
 	double F1c1_2 = pi1_2(i)*p2;
 
 	/* Calculating the pdf */
@@ -1713,7 +1654,7 @@ mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau,
 	mat alph_c3 = alph_f3.col(i)-c_mu3;
 
 	/* Estimation of F2c1_2 */
-	double p3 = pn(alph_c3,0.0,c_sig3[0]);
+	double p3 = pn(alph_c3[0],0.0,c_sig3[0]);
 	double F2c1_2 = pi2_2(i)*p3;
 
 	/* Calculating the pdf */
@@ -1773,7 +1714,7 @@ mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau,
 	mat alph_c2 = alph_f2.col(i)-c_mu2;
 
 	/* Estimation of F1c2_1 */
-	double p2 = pn(alph_c2,0.0,c_sig2[0]);
+	double p2 = pn(alph_c2[0],0.0,c_sig2[0]);
 	double F1c2_1 = pi1_1(i)*p2;
 
 	/* Calculating the pdf */
@@ -1804,7 +1745,7 @@ mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau,
 	mat alph_c3 = alph_f3.col(i)-c_mu3;
 
 	/* Estimation of F2c2_1 */
-	double p3 = pn(alph_c3,0.0,c_sig3[0]);
+	double p3 = pn(alph_c3[0],0.0,c_sig3[0]);
 	double F2c2_1 = pi2_1(i)*p3;
 
 	/* Calculating the pdf */
@@ -1865,7 +1806,7 @@ mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau,
 
 	/* Estimation of F1c2_2 */
 	double sd2 = sqrt(c_sig2[0]);
-	double p2 = pn(alph_c2,0.0,c_sig2[0]);
+	double p2 = pn(alph_c2[0],0.0,c_sig2[0]);
 	double F1c2_2 = pi1_2(i)*p2;
 
 	/* Calculating the pdf */
@@ -1896,7 +1837,7 @@ mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau,
 
 	/* Estimation of F2c2_2 */
 	double sd3 = sqrt(c_sig3[0]);
-	double p3 = pn(alph_c3,0.0,c_sig3[0]);
+	double p3 = pn(alph_c3[0],0.0,c_sig3[0]);
 	double F2c2_2 = pi2_2(i)*p3;
 
 	/* Calculating the pdf */
@@ -1971,10 +1912,10 @@ mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau,
 	mat alph_c2_2 = alph_f2_2.col(i)-c_mu4;
 
 	/* Estimation of F1_1, F1_2, F2_1 and F2_2 */
-	double p1 = pn(alph_c1_1,0.0,sd1*sd1);
-	double p2 = pn(alph_c1_2,0.0,sd2*sd2);
-	double p3 = pn(alph_c2_1,0.0,sd3*sd3);
-	double p4 = pn(alph_c2_2,0.0,sd4*sd4);
+	double p1 = pn(alph_c1_1[0],0.0,sd1*sd1);
+	double p2 = pn(alph_c1_2[0],0.0,sd2*sd2);
+	double p3 = pn(alph_c2_1[0],0.0,sd3*sd3);
+	double p4 = pn(alph_c2_2[0],0.0,sd4*sd4);
 
 	double F1_1 = pi1_1(i)*p1;
 	double F1_2 = pi1_2(i)*p2;
@@ -2083,8 +2024,8 @@ mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau,
 	mat alph_c10 = alph_f1_2.col(i)-c_mu10;
 
 	/* Conditional CDF */
-	double cdf1c1_1 = pn(alph_c9,0.0,sd9*sd9);
-	double cdf1c1_2 = pn(alph_c10,0.0,sd10*sd10);
+	double cdf1c1_1 = pn(alph_c9[0],0.0,sd9*sd9);
+	double cdf1c1_2 = pn(alph_c10[0],0.0,sd10*sd10);
 
 	/* Score contributions */
 	double dcdf11_u1 = cdf1c1_1*pdf1_2*(-sigX5(1,0)) + cdf1c1_2*pdf1_1*(-sigX5(0,0));
@@ -2110,8 +2051,8 @@ mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau,
 	mat alph_c12_n = alph_f2_2.col(i)-c_mu12;
 
 	/* Conditional CDF */
-	double cdf1c2_1 = pn(alph_c11_n,0.0,sd11*sd11);
-	double cdf2c1_2 = pn(alph_c12_n,0.0,sd12*sd12);
+	double cdf1c2_1 = pn(alph_c11_n[0],0.0,sd11*sd11);
+	double cdf2c1_2 = pn(alph_c12_n[0],0.0,sd12*sd12);
 
 	/* Score contributions */
 	double dcdf12_u1 = cdf1c2_1*pdf2_2*(-sigX6(1,0)) + cdf2c1_2*pdf1_1*(-sigX6(0,0));
@@ -2137,8 +2078,8 @@ mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau,
 	mat alph_c14 = alph_f1_2.col(i)-c_mu14;
 
 	/* Conditional CDF */
-	double cdf2c1_1 = pn(alph_c13,0.0,sd13*sd13);
-	double cdf1c2_2 = pn(alph_c14,0.0,sd14*sd14);
+	double cdf2c1_1 = pn(alph_c13[0],0.0,sd13*sd13);
+	double cdf1c2_2 = pn(alph_c14[0],0.0,sd14*sd14);
 
 	/* Score contributions */
 	double dcdf21_u1 = cdf2c1_1*pdf1_2*(-sigX7(1,0)) + cdf1c2_2*pdf2_1*(-sigX7(0,0));
@@ -2164,8 +2105,8 @@ mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau,
 	mat alph_c16 = alph_f2_2.col(i)-c_mu16;
 
 	/* Conditional CDF */
-	double cdf2c2_1 = pn(alph_c15,0.0,sd15*sd15);
-	double cdf2c2_2 = pn(alph_c16,0.0,sd16*sd16);
+	double cdf2c2_1 = pn(alph_c15[0],0.0,sd15*sd15);
+	double cdf2c2_2 = pn(alph_c16[0],0.0,sd16*sd16);
 
 	/* Score contributions */
 	double dcdf22_u1 = cdf2c2_1*pdf2_2*(-sigX8(1,0)) + cdf2c2_2*pdf2_1*(-sigX8(0,0));
@@ -2217,7 +2158,7 @@ mat Dloglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau,
 Hessian matrix of full loglikelihood
 */
 /*// [[Rcpp::export]]*/
-mat D2loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, bool full=1){
+mat D2loglikfull0(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau, bool full=1){
   /* y: 1x2 matrix with event type (0, 1 or 2) of family member 1 and 2
      b: 1x4 matrix with XB for event type 1 and 2 (b1 and b2) for family member 1 and 2
         the order is b1_1, b1_2, b2_1 and b2_2
@@ -2237,8 +2178,8 @@ mat D2loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau
   mat u2_m(1,2); u2_m(0,0) = u(0,0); u2_m(0,1) = u(0,1)-h;
 
   /* Central difference */
-  res.row(0) = (Dloglikfull(y, b, u1_p, condsigma, alph, dalph, tau, full)-Dloglikfull(y, b, u1_m, condsigma, alph, dalph, tau, full))/(2*h);
-  res.row(1) = (Dloglikfull(y, b, u2_p, condsigma, alph, dalph, tau, full)-Dloglikfull(y, b, u2_m, condsigma, alph, dalph, tau, full))/(2*h);
+  res.row(0) = (Dloglikfull0(y, b, u1_p, condsigma, alph, dalph, tau, full)-Dloglikfull0(y, b, u1_m, condsigma, alph, dalph, tau, full))/(2*h);
+  res.row(1) = (Dloglikfull0(y, b, u2_p, condsigma, alph, dalph, tau, full)-Dloglikfull0(y, b, u2_m, condsigma, alph, dalph, tau, full))/(2*h);
 
   /* Return */
   return(res);
@@ -2248,32 +2189,32 @@ mat D2loglikfull(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat tau
 Marginal likelihood via AGQ
 */
 // [[Rcpp::export]]
-vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, int nq=1, double stepsize=0.7, unsigned iter=20, bool debug=false) {
+arma::vec loglik(arma::mat y, arma::mat b, arma::mat sigma, arma::mat alph, arma::mat dalph, arma::mat tau, arma::mat eb0, int nq=1, double stepsize=0.7, unsigned iter=20, bool debug=false) {
   QuadRule gh(nq);
   double K = sqrt(2);
-  vec z = gh.Abscissa();
-  vec w = gh.Weight();
+  arma::vec z = gh.Abscissa();
+  arma::vec w = gh.Weight();
   int n = y.n_rows;
-  vec warn(n); warn.fill(1);
-  vec res(n); res.fill(0);
+  arma::vec warn(n); warn.fill(1);
+  arma::vec res(n); res.fill(0);
 
   /* Specifying components of sigma */
-  uvec rc1(1); rc1(0) = 0;
-  uvec rc2(1); rc2(0) = 1;
-  uvec rc3(1); rc3(0) = 2;
-  uvec rc4(1); rc4(0) = 3;
+  arma::uvec rc1(1); rc1(0) = 0;
+  arma::uvec rc2(1); rc2(0) = 1;
+  arma::uvec rc3(1); rc3(0) = 2;
+  arma::uvec rc4(1); rc4(0) = 3;
 
-  uvec rc5(2); rc5(0) = 4; rc5(1) = 5;
+  arma::uvec rc5(2); rc5(0) = 4; rc5(1) = 5;
+  
+  arma::uvec rc6(2); rc6(0) = 0; rc6(1) = 1;
+  arma::uvec rc7(2); rc7(0) = 0; rc7(1) = 3;
+  arma::uvec rc8(2); rc8(0) = 2; rc8(1) = 1;
+  arma::uvec rc9(2); rc9(0) = 2; rc9(1) = 3;
 
-  uvec rc6(2); rc6(0) = 0; rc6(1) = 1;
-  uvec rc7(2); rc7(0) = 0; rc7(1) = 3;
-  uvec rc8(2); rc8(0) = 2; rc8(1) = 1;
-  uvec rc9(2); rc9(0) = 2; rc9(1) = 3;
-
-  uvec rc10(3); rc10(0) = 0; rc10(1) = 4; rc10(2) = 5;
-  uvec rc11(3); rc11(0) = 1; rc11(1) = 4; rc11(2) = 5;
-  uvec rc12(3); rc12(0) = 2; rc12(1) = 4; rc12(2) = 5;
-  uvec rc13(3); rc13(0) = 3; rc13(1) = 4; rc13(2) = 5;
+  arma::uvec rc10(3); rc10(0) = 0; rc10(1) = 4; rc10(2) = 5;
+  arma::uvec rc11(3); rc11(0) = 1; rc11(1) = 4; rc11(2) = 5;
+  arma::uvec rc12(3); rc12(0) = 2; rc12(1) = 4; rc12(2) = 5;
+  arma::uvec rc13(3); rc13(0) = 3; rc13(1) = 4; rc13(2) = 5;
 
   /* Estimation conditional sigmas etc */
   matfour e1_1 = condsig(sigma,rc1,rc5);
@@ -2298,9 +2239,9 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, int n
   matfour e21 = condsig(sigma,rc8,rc5);
   matfour e22 = condsig(sigma,rc9,rc5);
 
-  mat sigu = sigma.submat(rc5,rc5);
-  mat isigu = sigu.i();
-  double dsigu = det(sigu);
+  arma::mat sigu = sigma.submat(rc5,rc5);
+  arma::mat isigu = sigu.i();
+  double dsigu = arma::det(sigu);
   double sq_dsigu = sqrt(dsigu);
 
   ss condsigma;
@@ -2389,20 +2330,20 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, int n
   condsigma.squd = sq_dsigu;
 
   for (int i=0; i<n; i++) {
-    mat y0 = y.row(i);
-    mat b0 = b.row(i);
-    mat alph0 = alph.row(i);
-    mat dalph0 = dalph.row(i);
-    mat tau0 = tau.row(i);
-    mat u0(1,2); u0 = eb0.row(i);
+    arma::mat y0 = y.row(i);
+    arma::mat b0 = b.row(i);
+    arma::mat alph0 = alph.row(i);
+    arma::mat dalph0 = dalph.row(i);
+    arma::mat tau0 = tau.row(i);
+    arma::mat u0(1,2); u0 = eb0.row(i);
     double conv = 1;
-    mat H(2,2);
-    mat U(1,2);
+    arma::mat H(2,2);
+    arma::mat U(1,2);
     /* Newton Raphson */
     unsigned j;
     for (j=0; j<iter; j++) {
-      U = Dloglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
-      H = D2loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
+      U = Dloglikfull0(y0,b0,u0,condsigma,alph0,dalph0,tau0);
+      H = D2loglikfull0(y0,b0,u0,condsigma,alph0,dalph0,tau0);
       conv = (U(0)*U(0)+U(1)*U(1))/2;
       if (conv<_inner_NR_abseps) {
 	warn(i) = 0;
@@ -2411,8 +2352,8 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, int n
       u0 = u0-stepsize*U*H.i();
     }
     if (debug) {
-      U = Dloglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
-      vec L = loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
+      U = Dloglikfull0(y0,b0,u0,condsigma,alph0,dalph0,tau0);
+      vec L = loglikfull0(y0,b0,u0,condsigma,alph0,dalph0,tau0);
       Rcpp::Rcout << "iter: " << j <<std::endl;
       Rcpp::Rcout << "conv: " << conv <<std::endl;
       Rcpp::Rcout << "L: " << L <<std::endl;
@@ -2421,17 +2362,17 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, int n
     }
     /* Laplace approximation */
     if (nq==0) {
-      vec logf = loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
+      vec logf = loglikfull0(y0,b0,u0,condsigma,alph0,dalph0,tau0);
       double lapl = log(twopi)-0.5*log(det(H))+logf(0);
       res(i) = lapl;
     } else {
       /* Adaptive Gaussian quadrature */
       bool useSVD = true;
-      mat G = -H;
+      arma::mat G = -H;
       double logdetG = 0;
-      mat Bi;
+      arma::mat Bi;
       if (useSVD){
-	mat W; vec s; mat V;
+	arma::mat W; vec s; arma::mat V;
 	svd(W,s,V,G);
 	vec is=s;
 	for (unsigned m=0; m<s.n_elem; m++){
@@ -2445,18 +2386,18 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, int n
 	Bi = trans(W*diagmat(is)*V);
 	logdetG = sum(log(s));
       } else {
-	mat B = chol(G);
+	arma::mat B = chol(G);
 	Bi = B.i();
 	logdetG = log(det(G));
       }
       double Sum = 0;
       for (unsigned k=0; k<z.n_elem; k++) {
       	for (unsigned l=0; l<z.n_elem; l++) {
-      	  mat z0(2,1);
+      	  arma::mat z0(2,1);
       	  z0(0) = z[k]; z0(1) = z[l];
-      	  mat a0 = u0.t()+K*Bi*z0;
+      	  arma::mat a0 = u0.t()+K*Bi*z0;
 	  double w0 = w[k]*w[l]*exp(z0[0]*z0[0]+z0[1]*z0[1]);
-	  double ll0 = loglikfull(y0,b0,a0.t(),condsigma,alph0,dalph0,tau0)[0];
+	  double ll0 = loglikfull0(y0,b0,a0.t(),condsigma,alph0,dalph0,tau0)[0];
 	  Sum += exp(ll0)*w0;
       	}
       }
@@ -2470,20 +2411,20 @@ vec loglik(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, mat eb0, int n
 EB - Empirical Bayes, intelligent starting values of u0 (for estimation of score and Hessian)
 */
 // [[Rcpp::export]]
-mat EB(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, double stepsize=0.7, unsigned iter=20, bool debug=false) {
+arma::mat EB(arma::mat y, arma::mat b, arma::mat sigma, arma::mat alph, arma::mat dalph, arma::mat tau, double stepsize=0.7, unsigned iter=20, bool debug=false) {
   int n = y.n_rows;
   vec warn(n); warn.fill(1);
-  mat eb0(n,2);
+  arma::mat eb0(n,2);
   for (int i=0; i<n; i++) {
-    mat y0 = y.row(i);
-    mat b0 = b.row(i);
-    mat alph0 = alph.row(i);
-    mat dalph0 = dalph.row(i);
-    mat tau0 = tau.row(i);
-    mat u0(1,2); u0.fill(0);
+    arma::mat y0 = y.row(i);
+    arma::mat b0 = b.row(i);
+    arma::mat alph0 = alph.row(i);
+    arma::mat dalph0 = dalph.row(i);
+    arma::mat tau0 = tau.row(i);
+    arma::mat u0(1,2); u0.fill(0);
     double conv = 1;
-    mat H(2,2);
-    mat U(1,2);
+    arma::mat H(2,2);
+    arma::mat U(1,2);
 
     /* Specifying components of sigma */
     uvec rc1(1); rc1(0) = 0;
@@ -2503,7 +2444,7 @@ mat EB(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, double stepsize=0.
     uvec rc12(3); rc12(0) = 2; rc12(1) = 4; rc12(2) = 5;
     uvec rc13(3); rc13(0) = 3; rc13(1) = 4; rc13(2) = 5;
 
-    /* Estimation conditional sigmas etc */
+    /* Estimate conditional sigmas etc */
     matfour e1_1 = condsig(sigma,rc1,rc5);
     matfour e1_2 = condsig(sigma,rc2,rc5);
     matfour e2_1 = condsig(sigma,rc3,rc5);
@@ -2526,9 +2467,9 @@ mat EB(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, double stepsize=0.
     matfour e21 = condsig(sigma,rc8,rc5);
     matfour e22 = condsig(sigma,rc9,rc5);
 
-    mat sigu = sigma.submat(rc5,rc5);
-    mat isigu = sigu.i();
-    double dsigu = det(sigu);
+    arma::mat sigu = sigma.submat(rc5,rc5);
+    arma::mat isigu = sigu.i();
+    double dsigu = arma::det(sigu);
     double sq_dsigu = sqrt(dsigu);
 
     ss condsigma;
@@ -2619,8 +2560,8 @@ mat EB(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, double stepsize=0.
     /* Newton Raphson */
     unsigned j;
     for (j=0; j<iter; j++) {
-      U = Dloglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
-      H = D2loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
+      U = Dloglikfull0(y0,b0,u0,condsigma,alph0,dalph0,tau0);
+      H = D2loglikfull0(y0,b0,u0,condsigma,alph0,dalph0,tau0);
       conv = (U(0)*U(0)+U(1)*U(1))/2;
       if (conv<_inner_NR_abseps) {
 	warn(i) = 0;
@@ -2629,8 +2570,8 @@ mat EB(mat y, mat b, mat sigma, mat alph, mat dalph, mat tau, double stepsize=0.
       u0 = u0-stepsize*U*H.i();
     }
     if (debug) {
-      U = Dloglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
-      vec L = loglikfull(y0,b0,u0,condsigma,alph0,dalph0,tau0);
+      U = Dloglikfull0(y0,b0,u0,condsigma,alph0,dalph0,tau0);
+      vec L = loglikfull0(y0,b0,u0,condsigma,alph0,dalph0,tau0);
       Rcpp::Rcout << "iter: " << j <<std::endl;
       Rcpp::Rcout << "conv: " << conv <<std::endl;
       Rcpp::Rcout << "L: " << L <<std::endl;
