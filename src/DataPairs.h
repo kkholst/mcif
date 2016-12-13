@@ -17,6 +17,8 @@ public:
   mat beta;
   mat gamma;
   mat pi;
+  mat dpidu;
+  mat dlogpidu;
 
   // Constructors
   // Constructor checker at der er lige mange rækker i alle matricer...
@@ -42,7 +44,13 @@ public:
   rowvec pi_get(int i, ivec bothcauses) const;
   double piMarg_get(int i, int cause, int indiv) const;
 
+  double dpiduMarg_get(int i, int cause, int indiv, int dcause) const;
+
+  double dlogpiduMarg_get(int i, int cause, int indiv, int dcause) const;
+
   void pi_gen(int i, vec u);
+  void dpidu_gen(int i, vec u);
+  void dlogpidu_gen(int i, vec u);
 };
 
 #endif /* DATAPAIRS_H */
