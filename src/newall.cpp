@@ -17,8 +17,10 @@ using namespace Rcpp;
 using namespace arma;
 using namespace std;
 
-/////////////////////////////////////////////////////////////////////////////////////////////////
+const double twopi = 2*datum::pi;
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/* Full loglikelihood */
 double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gmat &sigmaJoint, const gmat &sigmaMargCond, vmat sigmaU, vec u, bool full=1){
 
   data.pi_gen(row, u); // Estimation of pi based on u
@@ -136,10 +138,7 @@ double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gm
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-
+/* Score function of full loglikelihood */
 vec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gmat &sigmaJoint, const gmat &sigmaMargCond, vmat sigmaU, vec u, bool full=1){
 
   data.pi_gen(row, u); // Estimation of pi based on u
