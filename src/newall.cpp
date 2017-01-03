@@ -122,8 +122,7 @@ double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gm
   }
   /* Contribution from u */
   if (full){
-
-    vmat sig = sigmaU; // Variance-covariance matrix etc. of u
+    vmat sig = sigmaU; // Variance-covariance matrix of u
     double inner = as_scalar(u*sig.inv*u.t());
 
     // PDF of u
@@ -141,10 +140,10 @@ double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gm
 /* Score function of full loglikelihood */
 vec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gmat &sigmaJoint, const gmat &sigmaMargCond, vmat sigmaU, vec u, bool full=1){
 
-  data.pi_gen(row, u); // Estimation of pi based on u
-
-  // Estimation of the derivative of pi and pi*pi
-
+  /* Estimation of pi, dpidu and dlogpidu */
+  data.pi_gen(row, u);
+  data.dpidu_get(row, u);
+  data.dlogpidu_get(row, u);
 
   irowvec causes = data.causes_get(row); // Failure causes for pair in question
 

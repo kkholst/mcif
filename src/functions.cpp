@@ -8,7 +8,7 @@ const double loginvsqtwopi = log(1/sq_twopi);
 /////////////////////////////////////////////////////////////////////////////////////////////////
 double logdF1(unsigned row, const unsigned &cause, const unsigned &indiv, const DataPairs &data, const gmat &sigma, vec u){
 
-  // Conditional mean (conditional on u)
+  // Attaining variance covariance matrix etc. (conditional on u)
   vmat cond_sig = sigma(cause);
   double cond_mean = as_scalar(cond_sig.proj*u);
 
@@ -23,10 +23,27 @@ double logdF1(unsigned row, const unsigned &cause, const unsigned &indiv, const 
   return(logdF1);
 };
 
+double dlogdF1du(unsigned row, const unsigned &cause, const unsigned &indiv, const DataPairs &data, const gmat &sigma, vec u){
+
+  // Attaining variance covariance matrix etc. (conditional on u)
+  vmat cond_sig = sigma(cause);
+  double cond_mean = as_scalar(cond_sig.proj*u);
+
+  double alp = data.alphaMarg_get(row, cause, indiv);
+  double gam = data.gammaMarg_get(row, cause, indiv);
+  double alpgam = alp - gam;
+  double inner = pow((alpgam-cond_mean),2)*as_scalar(cond_sig.inv);
+
+  double logpdf = loginvsqtwopi + cond_sig.loginvsqdet + log(data.dalphaMarg_get(row, cause, indiv)) - 0.5*inner;
+
+  double logdF1 = log(data.piMarg_get(row, cause, indiv)) + logpdf;
+  return(dlogdF1du);
+};
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 double logdF2(unsigned row, const irowvec &causes, const DataPairs &data, const gmat &sigma, vec u){
 
-  // Conditional mean (conditional on u)
+  // Attaining variance covariance matrix etc. (conditional on u)
   vmat cond_sig = sigma(causes);
   vec cond_mean = cond_sig.proj*u;
 
@@ -41,12 +58,28 @@ double logdF2(unsigned row, const irowvec &causes, const DataPairs &data, const 
   return(logdF2);
 };
 
+double dlogdF2du(unsigned row, const irowvec &causes, const DataPairs &data, const gmat &sigma, vec u){
+
+  // Attaining variance covariance matrix etc. (conditional on u)
+  vmat cond_sig = sigma(causes);
+  vec cond_mean = cond_sig.proj*u;
+
+  vec alp = data.alphaMarg_get(row, causes);
+  vec gam = data.gammaMarg_get(row, causes);
+  vec c_alpgam = (alp - gam) - cond_mean;
+
+  double dinnerdu = c_alpgam.t()*cond_sig.inv*cond_sig.proj;
+
+  double dlogdF2du = data.dlogpiduMarg_get(row, causes(0), 1)) + data.dlogpiduMarg_get(row, causes(1), 2)) + innerdu;
+  return(dlogdF2du);
+};
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /* Marginal */
 double F1(unsigned row, unsigned cause, unsigned indiv, const DataPairs &data, const gmat &sigma, vec u){
 
-  // Conditional mean and variance (conditional on u)
+  // Attaining variance covariance matrix etc. (conditional on u)
   vmat cond_sig = sigma(cause);
   double cond_mean = as_scalar(cond_sig.proj*u);
 
@@ -86,7 +119,7 @@ double F1(unsigned row, unsigned cause, unsigned indiv, unsigned cond_cause, con
   // Joining u vector and alpgam from other individual
   vec alpgamu = join_cols(vcond_alpgam, u);
 
-  // Conditional mean and variance (conditional on u and the other individual)
+  // Attaining variance covariance matrix etc. (conditional on u and other individual)
   vmat cond_sig = sigma(cause,cond_cause);
   double cond_mean = as_scalar(cond_sig.proj*alpgamu);
 
@@ -101,7 +134,7 @@ double F1(unsigned row, unsigned cause, unsigned indiv, unsigned cond_cause, con
 /////////////////////////////////////////////////////////////////////////////////////////////////
 double F2(unsigned row, irowvec causes, const DataPairs &data, const gmat &sigma, vec u){
 
-  // Conditional mean and variance (conditional on u)
+  // Attaining variance covariance matrix etc. (conditional on u)
   vmat cond_sig = sigma(causes);
   vec cond_mean = cond_sig.proj*u;
 
