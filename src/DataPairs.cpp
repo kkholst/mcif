@@ -214,17 +214,18 @@ void DataPairs::dpidu_gen(int i, vec u){
   for (unsigned j=0; j<2; j++){
     for (unsigned k=1; k<=ncauses; k++){
       double num1 = exp(betaMarg_get(i, k, j)+u(k-1));
-      double denum = 1; 
+      double denum = 1;
       for (unsigned l=1; l<=ncauses; l++){
 	denum += exp(betaMarg_get(i, l, j)+u(l-1));
       };
       for (unsigned d=1; d<=ncauses; d++){
+	double dpidu = 0;
 	if (d==k){
-	  double dpidu = num1/denum-pow(num1,2)/pow(denum,2);
+	  dpidu = num1/denum-pow(num1,2)/pow(denum,2);
 	}
 	else {
 	  double num2 = exp(betaMarg_get(i, d, j)+u(d-1));
-	  double dpidu = -(num1*num2)/pow(denum,2);
+	  dpidu = -(num1*num2)/pow(denum,2);
 	};
 	if (j==0){
 	  unsigned pos = k-1;
@@ -243,7 +244,7 @@ void DataPairs::dpidu_gen(int i, vec u){
 void DataPairs::dlogpidu_gen(int i, vec u){
   for (unsigned j=0; j<2; j++){
     for (unsigned k=1; k<=ncauses; k++){
-      double denum = 1; 
+      double denum = 1;
       for (unsigned l=1; l<=ncauses; l++){
 	denum += exp(betaMarg_get(i, l, j)+u(l-1));
       };
