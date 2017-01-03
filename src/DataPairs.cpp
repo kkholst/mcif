@@ -249,13 +249,14 @@ void DataPairs::dlogpidu_gen(int i, vec u){
 	denum += exp(betaMarg_get(i, l, j)+u(l-1));
       };
       for (unsigned d=1; d<=ncauses; d++){
+	double dlogpidu = 0;
 	if (d==k){
 	  double num = exp(betaMarg_get(i, k, j)+u(k-1));
-	  double dlogpidu = 1-num/denum;
+	  dlogpidu = 1-num/denum;
 	}
 	else {
 	  double num = exp(betaMarg_get(i, d, j)+u(d-1));
-	  double dlogpidu = -num/denum;
+	  dlogpidu = -num/denum;
 	};
 	if (j==0){
 	  unsigned pos = k-1;
