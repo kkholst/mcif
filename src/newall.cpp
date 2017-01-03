@@ -11,6 +11,7 @@
 #include "DataPairs.h"
 #include "quadrule.h"
 #include "pn.h"
+#include "functions.h"
 
 using namespace Rcpp;
 using namespace arma;

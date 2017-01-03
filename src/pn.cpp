@@ -9,7 +9,7 @@ static int _mvt_inform;
 static double _mvt_error[3];
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-/* Funtion that calculates normal cumulative distribution function */
+/* Function that calculates normal cumulative distribution function */
 double pn(double y, double mu, double sigma) {
   return(Rf_pnorm5(y,mu,sqrt(sigma),1,0));
 }
