@@ -1,5 +1,10 @@
 #include "functions.h"
 
+const double twopi = 2*datum::pi;
+const double sq_twopi = sqrt(twopi);
+const double loginvtwopi = log(1/twopi);
+const double loginvsqtwopi = log(1/sq_twopi);
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 double logdF1(unsigned row, const unsigned &cause, const unsigned &indiv, const DataPairs &data, const gmat &sigma, vec u){
 

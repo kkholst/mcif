@@ -5,6 +5,7 @@
 #include "vmat.h"
 #include "gmat.h"
 #include "DataPairs.h"
+#include "pn.h"
 
 double logdF1(unsigned row, const unsigned &cause, const unsigned &indiv, const DataPairs &data, const gmat &sigma, vec u);
 double F1(unsigned row, unsigned cause, unsigned indiv, const DataPairs &data, const gmat &sigma, vec u); // Marginal
