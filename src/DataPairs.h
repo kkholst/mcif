@@ -45,9 +45,10 @@ public:
   double piMarg_get(int i, int cause, int indiv) const;
 
   double dpiduMarg_get(int i, int cause, int indiv, int dcause) const;
+  double dpiduMarg_get(int i, int cause, int indiv) const;
 
   double dlogpiduMarg_get(int i, int cause, int indiv, int dcause) const;
-  rowvec dlogpiduMargAll_get(int i, int cause, int indiv) const;
+  rowvec dlogpiduMarg_get(int i, int cause, int indiv) const;
 
   void pi_gen(int i, vec u);
   void dpidu_gen(int i, vec u);

@@ -139,6 +139,7 @@ double DataPairs::gammaMarg_get(int i, int cause, int indiv) const {
 
 // Member functions for class DataPairs object pi
 rowvec DataPairs::pi_get(int i, ivec bothcauses) const {
+  // Restriction: cause > 0
   uvec row(1); row(0) = i;
   int causefirst = bothcauses(0);
   int causesecond = bothcauses(1);
@@ -149,6 +150,7 @@ rowvec DataPairs::pi_get(int i, ivec bothcauses) const {
 };
 
 double DataPairs::piMarg_get(int i, int cause, int indiv) const {
+  // Restriction: cause > 0
   int pos;
     if (indiv==1){
       pos = cause-1;
@@ -161,6 +163,7 @@ double DataPairs::piMarg_get(int i, int cause, int indiv) const {
 
 // Member functions for class DataPairs object dpidu
 double DataPairs::dpiduMarg_get(int i, int cause, int indiv, int dcause) const {
+  // Restriction: cause > 0
   int pos1;
   int pos2;
   pos1 = dcause-1;
@@ -172,6 +175,20 @@ double DataPairs::dpiduMarg_get(int i, int cause, int indiv, int dcause) const {
     }
     return(dpidu(pos1,pos2));
 };
+
+rowvec DataPairs::dpiduMarg_get(int i, int cause, int indiv) const {
+  // Restriction: cause > 0
+  int cause_du;
+  if (indiv==1){
+    cause_du = cause-1;
+  }
+  else {
+    cause_du = ncauses+(cause-1);
+    }
+  colvec out = dpidu.col(cause_du);
+  return(out.t());
+};
+
 
 // Member functions for class DataPairs object dlogpidu
 double DataPairs::dlogpiduMarg_get(int i, int cause, int indiv, int dcause) const {
@@ -188,7 +205,7 @@ double DataPairs::dlogpiduMarg_get(int i, int cause, int indiv, int dcause) cons
     return(dlogpidu(pos1,pos2));
 };
 
-rowvec DataPairs::dlogpiduMargAll_get(int i, int cause, int indiv) const {
+rowvec DataPairs::dlogpiduMarg_get(int i, int cause, int indiv) const {
   // Restriction: cause > 0
   int cause_du;
   if (indiv==1){

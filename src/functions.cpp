@@ -2,6 +2,7 @@
 
 const double twopi = 2*datum::pi;
 const double sq_twopi = sqrt(twopi);
+const double invsqtwopi = 1/sq_twopi;
 const double loginvtwopi = log(1/twopi);
 const double loginvsqtwopi = log(1/sq_twopi);
 
@@ -34,7 +35,7 @@ rowvec dlogdF1du(unsigned row, const unsigned &cause, const unsigned &indiv, con
   double alpgam = (alp - gam);
   rowvec dinnerdu = (alpgam - cond_mean)*as_scalar(cond_sig.inv)*cond_sig.proj;
 
-  rowvec dlogdF1du = data.dlogpiduMargAll_get(row, cause, indiv) + dinnerdu;
+  rowvec dlogdF1du = data.dlogpiduMarg_get(row, cause, indiv) + dinnerdu;
   return(dlogdF1du);
 };
 
@@ -68,7 +69,7 @@ rowvec dlogdF2du(unsigned row, const irowvec &causes, const DataPairs &data, con
 
   rowvec dinnerdu = c_alpgam.t()*cond_sig.inv*cond_sig.proj;
 
-  rowvec dlogdF2du = data.dlogpiduMargAll_get(row, causes(0), 1) + data.dlogpiduMargAll_get(row, causes(1), 2) + innerdu;
+  rowvec dlogdF2du = data.dlogpiduMarg_get(row, causes(0), 1) + data.dlogpiduMarg_get(row, causes(1), 2) + dinnerdu;
   return(dlogdF2du);
 };
 
@@ -89,10 +90,26 @@ double F1(unsigned row, unsigned cause, unsigned indiv, const DataPairs &data, c
   return(F1);
 };
 
-/* Full follow-up */
-double F1(unsigned row, unsigned cause, unsigned indiv, const DataPairs &data){
-  double F1 = data.piMarg_get(row, cause, indiv);
-  return(F1);
+rowvec dF1du(unsigned row, unsigned cause, unsigned indiv, const DataPairs &data, const gmat &sigma, vec u){
+
+  // Attaining variance covariance matrix etc. (conditional on u)
+  vmat cond_sig = sigma(cause);
+  double cond_mean = as_scalar(cond_sig.proj*u);
+
+  double alp = data.alphaMarg_get(row, cause, indiv);
+  double gam = data.gammaMarg_get(row, cause, indiv);
+  double alpgam = alp - gam;
+  double c_alpgam = alpgam - cond_mean;
+
+  double inner = pow((c_alpgam),2)*as_scalar(cond_sig.inv);
+
+  double cdf = pn(alpgam, cond_mean, as_scalar(cond_sig.vcov));
+  double pdf = invsqtwopi*sqrt(cond_sig.vcov)*exp(-0.5*inner);
+
+  rowvec dcdfdu = pdf*(-cond_sig.proj);
+
+  rowvec dF1du = data.dpiduMarg_get(row, cause, indiv)*cdf + data.piMarg_get(row, cause, indiv)*dcdfdu;
+  return(dF1du);
 };
 
 /* Conditional on other individual */
@@ -127,6 +144,17 @@ double F1(unsigned row, unsigned cause, unsigned indiv, unsigned cond_cause, con
 
   double F1 = data.piMarg_get(row, cause, indiv)*pn(alpgam, cond_mean, as_scalar(cond_sig.vcov));
   return(F1);
+};
+
+/* Full follow-up */
+double F1(unsigned row, unsigned cause, unsigned indiv, const DataPairs &data){
+  double F1 = data.piMarg_get(row, cause, indiv);
+  return(F1);
+};
+
+rowvec dF1du(unsigned row, unsigned cause, unsigned indiv, const DataPairs &data){
+  rowvec dF1du = data.dpiduMarg_get(row, cause, indiv);
+  return(dF1du);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
