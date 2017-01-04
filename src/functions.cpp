@@ -34,7 +34,7 @@ rowvec dlogdF1du(unsigned row, const unsigned &cause, const unsigned &indiv, con
   double alpgam = (alp - gam);
   rowvec dinnerdu = (alpgam - cond_mean)*as_scalar(cond_sig.inv)*cond_sig.proj;
 
-  rowvec dlogdF1du = data.dlogpiduMargAll_get(row, cause, indiv)) + dinnerdu;
+  rowvec dlogdF1du = data.dlogpiduMargAll_get(row, cause, indiv) + dinnerdu;
   return(dlogdF1du);
 };
 
@@ -62,8 +62,8 @@ rowvec dlogdF2du(unsigned row, const irowvec &causes, const DataPairs &data, con
   vmat cond_sig = sigma(causes);
   vec cond_mean = cond_sig.proj*u;
 
-  vec alp = data.alphaMarg_get(row, causes);
-  vec gam = data.gammaMarg_get(row, causes);
+  vec alp = data.alpha_get(row, causes);
+  vec gam = data.gamma_get(row, causes);
   vec c_alpgam = (alp - gam) - cond_mean;
 
   rowvec dinnerdu = c_alpgam.t()*cond_sig.inv*cond_sig.proj;
