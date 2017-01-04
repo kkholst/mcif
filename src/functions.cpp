@@ -104,7 +104,7 @@ rowvec dF1du(unsigned row, unsigned cause, unsigned indiv, const DataPairs &data
   double inner = pow((c_alpgam),2)*as_scalar(cond_sig.inv);
 
   double cdf = pn(alpgam, cond_mean, as_scalar(cond_sig.vcov));
-  double pdf = invsqtwopi*sqrt(cond_sig.vcov)*exp(-0.5*inner);
+  double pdf = invsqtwopi*sqrt(as_scalar(cond_sig.vcov))*exp(-0.5*inner);
 
   rowvec dcdfdu = pdf*(-cond_sig.proj);
 
