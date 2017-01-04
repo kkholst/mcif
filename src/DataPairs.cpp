@@ -175,6 +175,7 @@ double DataPairs::dpiduMarg_get(int i, int cause, int indiv, int dcause) const {
 
 // Member functions for class DataPairs object dlogpidu
 double DataPairs::dlogpiduMarg_get(int i, int cause, int indiv, int dcause) const {
+  // Restriction: cause > 0
   int pos1;
   int pos2;
   pos1 = dcause-1;
@@ -185,6 +186,19 @@ double DataPairs::dlogpiduMarg_get(int i, int cause, int indiv, int dcause) cons
       pos2 = ncauses+(cause-1);
     }
     return(dlogpidu(pos1,pos2));
+};
+
+rowvec DataPairs::dlogpiduMargAll_get(int i, int cause, int indiv) const {
+  // Restriction: cause > 0
+  int cause_du;
+  if (indiv==1){
+    cause_du = cause-1;
+    }
+  else {
+    cause_du = ncauses+(cause-1);
+    }
+  colvec out = dlogpidu.col(cause_du);
+  return(out.t());
 };
 
 // Generating pi based on beta and u

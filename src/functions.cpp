@@ -34,12 +34,12 @@ double dlogdF1du(unsigned row, const unsigned &cause, const unsigned &indiv, con
   double alpgam = (alp - gam);
   double dinnerdu = (alpgam - cond_mean)*as_scalar(cond_sig.inv);
 
-  double dlogdF1du = data.dlogpiduMarg_get(row, cause, indiv)) + dinnerdu;
+  double dlogdF1du = data.dlogpiduMarg_get(row, cause, indiv)) ;
   return(dlogdF1du);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-double logdF2(unsigned row, const irowvec &causes, const DataPairs &data, const gmat &sigma, vec u){
+vec logdF2(unsigned row, const irowvec &causes, const DataPairs &data, const gmat &sigma, vec u){
 
   // Attaining variance covariance matrix etc. (conditional on u)
   vmat cond_sig = sigma(causes);
@@ -56,7 +56,7 @@ double logdF2(unsigned row, const irowvec &causes, const DataPairs &data, const 
   return(logdF2);
 };
 
-double dlogdF2du(unsigned row, const irowvec &causes, const DataPairs &data, const gmat &sigma, vec u){
+rowvec dlogdF2du(unsigned row, const irowvec &causes, const DataPairs &data, const gmat &sigma, vec u){
 
   // Attaining variance covariance matrix etc. (conditional on u)
   vmat cond_sig = sigma(causes);
@@ -66,9 +66,9 @@ double dlogdF2du(unsigned row, const irowvec &causes, const DataPairs &data, con
   vec gam = data.gammaMarg_get(row, causes);
   vec c_alpgam = (alp - gam) - cond_mean;
 
-  double dinnerdu = c_alpgam.t()*cond_sig.inv*cond_sig.proj;
+  rowvec dinnerdu = c_alpgam.t()*cond_sig.inv*cond_sig.proj;
 
-  double dlogdF2du = data.dlogpiduMarg_get(row, causes(0), 1)) + data.dlogpiduMarg_get(row, causes(1), 2)) + innerdu;
+  rowvec dlogdF2du = data.dlogpiduMarg_get(row, causes(0), 1)) + data.dlogpiduMarg_get(row, causes(1), 2)) + innerdu;
   return(dlogdF2du);
 };
 
