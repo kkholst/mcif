@@ -31,12 +31,10 @@ double dlogdF1du(unsigned row, const unsigned &cause, const unsigned &indiv, con
 
   double alp = data.alphaMarg_get(row, cause, indiv);
   double gam = data.gammaMarg_get(row, cause, indiv);
-  double alpgam = alp - gam;
-  double inner = pow((alpgam-cond_mean),2)*as_scalar(cond_sig.inv);
+  double alpgam = (alp - gam);
+  double dinnerdu = (alpgam - cond_mean)*as_scalar(cond_sig.inv);
 
-  double logpdf = loginvsqtwopi + cond_sig.loginvsqdet + log(data.dalphaMarg_get(row, cause, indiv)) - 0.5*inner;
-
-  double logdF1 = log(data.piMarg_get(row, cause, indiv)) + logpdf;
+  double dlogdF1du = data.dlogpiduMarg_get(row, cause, indiv)) + dinnerdu;
   return(dlogdF1du);
 };
 
