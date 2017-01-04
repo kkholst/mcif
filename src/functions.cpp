@@ -146,6 +146,48 @@ double F1(unsigned row, unsigned cause, unsigned indiv, unsigned cond_cause, con
   return(F1);
 };
 
+rowvec dF1du(unsigned row, unsigned cause, unsigned indiv, unsigned cond_cause, const DataPairs &data, const gmat &sigma, vec u){
+
+  // Other individual
+  unsigned cond_indiv;
+  if (indiv==1){
+    cond_indiv=2;
+  }
+  else {
+    cond_indiv=1;
+  }
+
+  // Alpgam of other individual
+  double cond_alp = data.alphaMarg_get(row, cond_cause, cond_indiv);
+  double cond_gam = data.gammaMarg_get(row, cond_cause, cond_indiv);
+  double cond_alpgam = cond_alp - cond_gam;
+
+  vec vcond_alpgam(1); vcond_alpgam(0) = cond_alpgam;
+
+  // Joining u vector and alpgam from other individual
+  vec alpgamu = join_cols(vcond_alpgam, u);
+
+  // Attaining variance covariance matrix etc. (conditional on u and other individual)
+  vmat cond_sig = sigma(cause,cond_cause);
+  double cond_mean = as_scalar(cond_sig.proj*alpgamu);
+
+  double alp = data.alphaMarg_get(row, cause, indiv);
+  double gam = data.gammaMarg_get(row, cause, indiv);
+  double alpgam = alp - gam;
+  double c_alpgam = alpgam - cond_mean;
+
+  double inner = pow((c_alpgam),2)*as_scalar(cond_sig.inv);
+
+  double cdf = pn(alpgam, cond_mean, as_scalar(cond_sig.vcov));
+  double pdf = invsqtwopi*sqrt(as_scalar(cond_sig.vcov))*exp(-0.5*inner);
+
+  rowvec dcdfdu = pdf*(-cond_sig.proj);
+
+  rowvec dF1du = data.dpiduMarg_get(row, cause, indiv)*cdf + data.piMarg_get(row, cause, indiv)*dcdfdu;
+  return(dF1du);
+};
+
+
 /* Full follow-up */
 double F1(unsigned row, unsigned cause, unsigned indiv, const DataPairs &data){
   double F1 = data.piMarg_get(row, cause, indiv);

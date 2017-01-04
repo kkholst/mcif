@@ -16,6 +16,7 @@ double F1(unsigned row, unsigned cause, unsigned indiv, const DataPairs &data); 
 rowvec dF1du(unsigned row, unsigned cause, unsigned indiv, const DataPairs &data);
 
 double F1(unsigned row, unsigned cause, unsigned indiv, unsigned cond_cause, const DataPairs &data, const gmat &sigma, vec u); // Conditional
+rowvec dF1du(unsigned row, unsigned cause, unsigned indiv, unsigned cond_cause, const DataPairs &data, const gmat &sigma, vec u); // Conditional
 
 double logdF2(unsigned row, const irowvec &causes, const DataPairs &data, const gmat &sigma, vec u);
 rowvec dlogdF2du(unsigned row, const irowvec &causes, const DataPairs &data, const gmat &sigma, vec u);
