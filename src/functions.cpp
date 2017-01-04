@@ -68,7 +68,7 @@ rowvec dlogdF2du(unsigned row, const irowvec &causes, const DataPairs &data, con
 
   rowvec dinnerdu = c_alpgam.t()*cond_sig.inv*cond_sig.proj;
 
-  rowvec dlogdF2du = data.dlogpiduMarg_get(row, causes(0), 1)) + data.dlogpiduMarg_get(row, causes(1), 2)) + innerdu;
+  rowvec dlogdF2du = data.dlogpiduMargAll_get(row, causes(0), 1) + data.dlogpiduMargAll_get(row, causes(1), 2) + innerdu;
   return(dlogdF2du);
 };
 
