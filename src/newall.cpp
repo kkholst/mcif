@@ -142,8 +142,8 @@ vec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gmat
 
   /* Estimation of pi, dpidu and dlogpidu */
   data.pi_gen(row, u);
-  data.dpidu_get(row, u);
-  data.dlogpidu_get(row, u);
+  data.dpidu_gen(row, u);
+  data.dlogpidu_gen(row, u);
 
   irowvec causes = data.causes_get(row); // Failure causes for pair in question
 
