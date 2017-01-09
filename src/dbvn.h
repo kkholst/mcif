@@ -4,6 +4,9 @@
 #include <RcppArmadillo.h>
 #include <math.h>
 
+using namespace Rcpp;
+using namespace arma;
+
 double dbvnorm(double y1, double y2, double R);
 vecmat Dbvn(double y1, double y2, double R);
 

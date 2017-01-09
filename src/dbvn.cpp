@@ -1,5 +1,9 @@
 #include "dbvn.h"
 #include <math.h>
+#include <RcppArmadillo.h>
+
+using namespace Rcpp;
+using namespace arma;
 
 struct vecmat
 {
