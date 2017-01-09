@@ -5,12 +5,6 @@
 using namespace Rcpp;
 using namespace arma;
 
-struct vecmat
-{
-arma::vec V;
-arma::mat M;
-};
-
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /* Function that calculates ... */
 double dbvnorm(double y1, double y2, double R) {
