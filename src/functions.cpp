@@ -187,7 +187,6 @@ rowvec dF1du(unsigned row, unsigned cause, unsigned indiv, unsigned cond_cause, 
   return(dF1du);
 };
 
-
 /* Full follow-up */
 double F1(unsigned row, unsigned cause, unsigned indiv, const DataPairs &data){
   double F1 = data.piMarg_get(row, cause, indiv);
@@ -213,3 +212,25 @@ double F2(unsigned row, irowvec causes, const DataPairs &data, const gmat &sigma
   double F2 = data.piMarg_get(row, causes(0), 1)*data.piMarg_get(row, causes(1), 2)*pn(alpgam, cond_mean,cond_sig.vcov);
   return(F2);
 };
+
+rowvec dF2du(unsigned row, irowvec causes, const DataPairs &data, const gmat &sigma, vec u){
+
+  // Attaining variance covariance matrix etc. (conditional on u)
+  vmat cond_sig = sigma(causes);
+  vec cond_mean = cond_sig.proj*u;
+
+  vec alp = data.alpha_get(row, causes);
+  vec gam = data.gamma_get(row, causes);
+  vec alpgam = alp - gam;
+
+  double cdf = pn(alpgam, cond_mean,cond_sig.vcov);
+  rowvec dcdfdu = ;
+
+  rowvec dF2du_1 = data.dpiduMarg_get(row, causes(0), 1)*data.piMarg_get(row, causes(1), 2)*cdf ;
+  rowvec dF2du_2 = data.dpiduMarg_get(row, causes(1), 2)*data.piMarg_get(row, causes(0), 1)*cdf;
+  rowvec dF2du_3 = data.piMarg_get(row, causes(0), 1)*data.piMarg_get(row, causes(1), 2)*dcdfdu;
+
+  rowvec dF2du = dF2du_1 + dF2du_2 + dF2du_3;
+  return(dF2du);
+};
+

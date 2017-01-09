@@ -22,6 +22,7 @@ double logdF2(unsigned row, const irowvec &causes, const DataPairs &data, const 
 rowvec dlogdF2du(unsigned row, const irowvec &causes, const DataPairs &data, const gmat &sigma, vec u);
 
 double F2(unsigned row, irowvec causes, const DataPairs &data, const gmat &sigma, vec u);
+rowvec dF2du(unsigned row, irowvec causes, const DataPairs &data, const gmat &sigma, vec u);
 
 
 #endif /* _FUNCTIONS_H_ */
