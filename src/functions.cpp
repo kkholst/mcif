@@ -223,8 +223,25 @@ rowvec dF2du(unsigned row, irowvec causes, const DataPairs &data, const gmat &si
   vec gam = data.gamma_get(row, causes);
   vec alpgam = alp - gam;
 
-  double cdf = pn(alpgam, cond_mean,cond_sig.vcov);
-  rowvec dcdfdu = ;
+  double cdf = pn(alpgam, cond_mean, cond_sig.vcov);
+
+  vec ll = sqrt(diagvec(cond_sig.vcov));
+  mat Lambda = diagmat(ll);
+  mat iLambda = diagmat(1/ll);
+  mat R = iLambda*cond_sig.vcov*iLambda;
+  mat LR = Lambda*R;
+
+  double r = R(0,1);
+  rowvec ytilde = iLambda*(alpgam - cond_mean);
+
+  vecmat D = Dbvn(ytilde(0),ytilde(1),r);
+  mat M = -LR*D.V;
+
+  /* Fra biprobit.cpp */
+  mat dmu = L*trans(reshape(x.row(i),x.n_cols/2,2));
+  mat d1 = trans(dmu)*cond_sig.inv*M/alpha;
+
+  rowvec dcdfdu = trans(d1);
 
   rowvec dF2du_1 = data.dpiduMarg_get(row, causes(0), 1)*data.piMarg_get(row, causes(1), 2)*cdf ;
   rowvec dF2du_2 = data.dpiduMarg_get(row, causes(1), 2)*data.piMarg_get(row, causes(0), 1)*cdf;

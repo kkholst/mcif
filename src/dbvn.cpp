@@ -1,6 +1,12 @@
 #include "dbvn.h"
 #include <math.h>
 
+struct vecmat
+{
+  vec V;
+  mat M;
+};
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /* Function that calculates ... */
 double dbvnorm(double y1, double y2, double R) {
