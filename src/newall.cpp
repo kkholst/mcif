@@ -138,7 +138,7 @@ double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gm
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /* Score function of full loglikelihood */
-vec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gmat &sigmaJoint, const gmat &sigmaMargCond, vmat sigmaU, vec u, bool full=1){
+rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gmat &sigmaJoint, const gmat &sigmaMargCond, vmat sigmaU, vec u, bool full=1){
 
   /* Estimation of pi, dpidu and dlogpidu */
   data.pi_gen(row, u);
@@ -147,11 +147,11 @@ vec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gmat
 
   irowvec causes = data.causes_get(row); // Failure causes for pair in question
 
-  vec res(data.ncauses); // Initialising output (score contribution)
+  rowvec res(data.ncauses); // Initialising output (score contribution)
 
   if ((causes(0) > 0) & (causes(1) > 0)){
     /* Both individuals experience failure */
-    res = logdF2(row, causes, data, sigmaJoint, u);
+    res = dlogdF2du(row, causes, data, sigmaJoint, u);
   }
   else if((causes(0) <= 0) & (causes(1) <= 0)){
     /* Neither individual experience failure */
@@ -250,6 +250,6 @@ vec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gmat
     // Adding to the loglik
     res += logpdfu;
   }
-
+  return(res);
 }
 
