@@ -237,11 +237,7 @@ rowvec dF2du(unsigned row, irowvec causes, const DataPairs &data, const gmat &si
   vecmat D = Dbvn(ytilde(0),ytilde(1),r);
   mat M = -LR*D.V;
 
-  /* Fra biprobit.cpp */
-  mat dmu = L*trans(reshape(x.row(i),x.n_cols/2,2));
-  mat d1 = trans(dmu)*cond_sig.inv*M/alpha;
-
-  rowvec dcdfdu = trans(d1);
+  rowvec dcdfdu = cond_sig.proj*cond_sig.inv*M;
 
   rowvec dF2du_1 = data.dpiduMarg_get(row, causes(0), 1)*data.piMarg_get(row, causes(1), 2)*cdf ;
   rowvec dF2du_2 = data.dpiduMarg_get(row, causes(1), 2)*data.piMarg_get(row, causes(0), 1)*cdf;
