@@ -212,7 +212,7 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
       unsigned cause = causes(i-1);
       if (cause > 0){
 	// Marginal probability of failure
-	res += logdF1(row, cause, i, data, sigmaMarg, u);
+	res += dlogdF1du(row, cause, i, data, sigmaMarg, u);
       }
       else {
 	// Marginal probability of no failure
