@@ -12,12 +12,13 @@ double logdF1(unsigned row, const unsigned &cause, const unsigned &indiv, const 
 rowvec dlogdF1du(unsigned row, const unsigned &cause, const unsigned &indiv, const DataPairs &data, const gmat &sigma, vec u);
 
 double F1(unsigned row, unsigned cause, unsigned indiv, const DataPairs &data, const gmat &sigma, vec u); // Marginal
+rowvec dF1du(unsigned row, unsigned cause, unsigned indiv, const DataPairs &data, const gmat &sigma, vec u);
 
 double F1(unsigned row, unsigned cause, unsigned indiv, const DataPairs &data); // Marginal, full follow-up
 rowvec dF1du(unsigned row, unsigned cause, unsigned indiv, const DataPairs &data);
 
 double F1(unsigned row, unsigned cause, unsigned indiv, unsigned cond_cause, const DataPairs &data, const gmat &sigma, vec u); // Conditional
-rowvec dF1du(unsigned row, unsigned cause, unsigned indiv, unsigned cond_cause, const DataPairs &data, const gmat &sigma, vec u); // Conditional
+rowvec dF1du(unsigned row, unsigned cause, unsigned indiv, unsigned cond_cause, const DataPairs &data, const gmat &sigma, vec u);
 
 double logdF2(unsigned row, const irowvec &causes, const DataPairs &data, const gmat &sigma, vec u);
 rowvec dlogdF2du(unsigned row, const irowvec &causes, const DataPairs &data, const gmat &sigma, vec u);
