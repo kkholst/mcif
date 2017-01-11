@@ -184,7 +184,7 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
 	  }
 	  else {
 	    double prob = F1(row, j, i, data, sigmaMarg, u);
-	    double probdu = dF1du(row, j, i, data, sigmaMarg, u);
+	    rowvec probdu = dF1du(row, j, i, data, sigmaMarg, u);
 	    lik -= prob;
 	    likdu -= probdu;
 	  }
@@ -262,7 +262,7 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
     vmat sig = sigmaU; // Variance-covariance matrix etc. of u
 
     // Adding to the score
-    rowvec res += -u.t()*sig.inv;
+    res += -u.t()*sig.inv;
   };
   return(res);
 }
