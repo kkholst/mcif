@@ -147,7 +147,7 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
 
   irowvec causes = data.causes_get(row); // Failure causes for pair in question
 
-  rowvec res = zeros<rowvec>(ncauses); // Initialising output (score contribution)
+  rowvec res = zeros<rowvec>(data.ncauses); // Initialising output (score contribution)
 
   if ((causes(0) > 0) & (causes(1) > 0)){
     /* Both individuals experience failure */
