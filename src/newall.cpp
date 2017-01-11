@@ -160,7 +160,7 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
       // Full follow-up for both individuals
       for (unsigned i=1; i<=2; i++){ // Over individuals
 	double lik = 1;
-	rowvec likdu = zeros<rowvec>(ncauses);
+	rowvec likdu = zeros<rowvec>(data.ncauses);
 	for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
 	  double prob = F1(row, j, i, data);
 	  rowvec probdu = dF1du(row, j, i, data);
@@ -174,7 +174,7 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
       // Full follow-up for only one individual
       for (unsigned i=1; i<=2; i++){ // Over individuals
 	double lik = 1;
-	rowvec likdu = zeros<rowvec>(ncauses);
+	rowvec likdu = zeros<rowvec>(data.ncauses);
 	for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
 	  if (causes(i-1) < 0){
 	    double prob = F1(row, j, i, data);
@@ -195,7 +195,7 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
     else {
       // Full follow-up for neither individual
       double lik = 1;
-      rowvec likdu = zeros<rowvec>(ncauses);
+      rowvec likdu = zeros<rowvec>(data.ncauses);
       // Marginal probabilities
       for (unsigned i=1; i<=2; i++){ // Over individuals
 	for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
@@ -238,7 +238,7 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
 	}
 	for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
 	  double lik = 1;
-	  rowvec likdu = zeros<rowvec>(ncauses);
+	  rowvec likdu = zeros<rowvec>(data.ncauses);
 	  if (cause < 0){ // Uncondtional
 	    double prob = F1(row, j, i, data);
 	    rowvec probdu = dF1du(row, j, i, data);
