@@ -308,7 +308,7 @@ double loglikout(unsigned row, mat sigma, vec u, int ncauses, imat causes, mat a
   };
 
   // vmat of the us
-  mat matU = sigma.submat(rcu,rcu);x
+  mat matU = sigma.submat(rcu,rcu);
   vmat sigmaU = vmat(matU);
 
   // Generating DataPairs
