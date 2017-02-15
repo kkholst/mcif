@@ -308,14 +308,14 @@ double loglikout(unsigned row, mat sigma, vec u, int ncauses, imat causes, mat a
   };
 
   // vmat of the us
-  mat matU = sigma.submat(rcu,rcu);
+  mat matU = sigma.submat(rcu,rcu);x
   vmat sigmaU = vmat(matU);
 
   // Generating DataPairs
-  DataPairs data = DataPairs(int ncauses, imat causes, mat alpha, mat dalpha, mat beta, mat gamma);
+  DataPairs data = DataPairs(ncauses, causes, alpha, dalpha, beta, gamma);
 
   // Estimating likelihood contribution
-  double loglik = loglikfull(unsigned row, DataPairs data, gmat sigmaJoint, gmat sigmaCond, vmat sigmaU, vec u, bool full=1);
+  double loglik = loglikfull(unsigned row, data, sigmaJoint, sigmaCond, sigmaU, u, bool full=1);
 
   // Return
   return loglik;
