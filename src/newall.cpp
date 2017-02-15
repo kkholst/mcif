@@ -280,7 +280,7 @@ double loglikout(unsigned row, mat sigma, vec u, int ncauses, imat causes, mat a
   uvec rc1(1); /* for conditional */
   uvec rc2(ncauses+1); /* for conditional */
   uvec rcu(ncauses);
-  for (unsigned h=0; h<ncauses; h++){
+  for (int h=0; h<ncauses; h++){
     rcu(h) = ncauses + h;
   };
 
