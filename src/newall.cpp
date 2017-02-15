@@ -20,7 +20,7 @@ const double twopi = 2*datum::pi;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /* Full loglikelihood */
-double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gmat &sigmaJoint, const gmat &sigmaMargCond, vmat sigmaU, vec u, bool full=1){
+double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gmat &sigmaJoint, const gmat &sigmaCond, vmat sigmaU, vec u, bool full=1){
 
   data.pi_gen(row, u); // Estimation of pi based on u
 
@@ -111,7 +111,7 @@ double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gm
 	  }
 	  else {
 	    // Conditional
-	    double prob = F1(row, j, i, cond_cause, data, sigmaMargCond, u);
+	    double prob = F1(row, j, i, cond_cause, data, sigmaCond, u);
 	    lik -= prob;
 	  }
 	  res += log(lik);
@@ -137,7 +137,7 @@ double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gm
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /* Score function of full loglikelihood */
-rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gmat &sigmaJoint, const gmat &sigmaMargCond, vmat sigmaU, vec u, bool full=1){
+rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gmat &sigmaJoint, const gmat &sigmaCond, vmat sigmaU, vec u, bool full=1){
 
   /* Estimation of pi, dpidu and dlogpidu */
   data.pi_gen(row, u);
@@ -245,8 +245,8 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
 	    likdu -= probdu;
 	  }
 	  else { // Conditional
-	    double prob = F1(row, j, i, cond_cause, data, sigmaMargCond, u);
-	    rowvec probdu = dF1du(row, j, i, cond_cause, data, sigmaMargCond, u);
+	    double prob = F1(row, j, i, cond_cause, data, sigmaCond, u);
+	    rowvec probdu = dF1du(row, j, i, cond_cause, data, sigmaCond, u);
 	    lik -= prob;
 	    likdu -= probdu;
 	  }
@@ -274,6 +274,7 @@ double loglikout(unsigned row, mat sigma, vec u, int ncauses, imat causes, mat a
   // Initialising gmats of sigma (Joint, Cond)
   gmat sigmaJoint = gmat(ncauses, ncauses);
   gmat sigmaCond = gmat(ncauses, ncauses);
+  gmat sigmaMarg = gmat(ncauses, 1);
 
   // Vectors for extracting rows and columns from sigma
   uvec rcJ(2); /* for joint */
@@ -315,7 +316,7 @@ double loglikout(unsigned row, mat sigma, vec u, int ncauses, imat causes, mat a
   DataPairs data = DataPairs(ncauses, causes, alpha, dalpha, beta, gamma);
 
   // Estimating likelihood contribution
-  double loglik = loglikfull(unsigned row, data, sigmaJoint, sigmaCond, sigmaU, u, bool full=1);
+  double loglik = loglikfull(unsigned row, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u, bool full=1);
 
   // Return
   return loglik;
