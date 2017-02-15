@@ -285,7 +285,7 @@ double loglikout(unsigned row, mat sigma, vec u, int ncauses, imat causes, mat a
     rcu(h) = ncauses + h;
   };
 
-  // Estimating and setting vmats sigmaJoint
+  // Calculating and setting sigmaJoint
   for (int h=0; h<ncauses; h++){
     for (int i=0; i<ncauses; i++){
       rcJ(0)=h;
@@ -295,7 +295,14 @@ double loglikout(unsigned row, mat sigma, vec u, int ncauses, imat causes, mat a
     };
   };
 
-  // Estimating and setting vmats of sigmaCond
+  // Extracting marginal from sigmaJoint and setting sigmaMarg
+  for (int h=0; h<ncauses; h++){
+    vmat Marg = vmat(1);
+
+    sigmaMarg.set(h,0,x);
+  };
+
+  // Calculating and setting sigmaCond
   for (int h=0; h<ncauses; h++){
     for (int i=0; i<ncauses; i++){
       rc1(1) = h;
