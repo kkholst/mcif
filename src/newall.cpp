@@ -285,8 +285,8 @@ double loglikout(unsigned row, mat sigma, vec u, int ncauses, imat causes, mat a
   };
 
   // Estimating and setting vmats sigmaJoint
-  for (unsigned h=0; h<ncauses; h++){
-    for (unsigned i=0; i<ncauses; i++){
+  for (int h=0; h<ncauses; h++){
+    for (int i=0; i<ncauses; i++){
       rcJ(0)=h;
       rcJ(1)=ncauses+i;
       vmat x = vmat(sigma, rcJ, rcu);
@@ -295,11 +295,11 @@ double loglikout(unsigned row, mat sigma, vec u, int ncauses, imat causes, mat a
   };
 
   // Estimating and setting vmats of sigmaCond
-  for (unsigned h=0; h<ncauses; h++){
-    for (unsigned i=0; i<ncauses; i++){
+  for (int h=0; h<ncauses; h++){
+    for (int i=0; i<ncauses; i++){
       rc1(1) = h;
       rc2(0) = i;
-      for (unsigned j=0; j<ncauses; j++){
+      for (int j=0; j<ncauses; j++){
 	rc2(j+1) = rcu(j);
       };
       vmat x = vmat(sigma, rc1, rc2);
@@ -312,7 +312,7 @@ double loglikout(unsigned row, mat sigma, vec u, int ncauses, imat causes, mat a
   vmat sigmaU = vmat(matU);
 
   // Generating DataPairs
-  DataPairs data = (int ncauses, imat causes, mat alpha, mat dalpha, mat beta, mat gamma);
+  DataPairs data = DataPairs(int ncauses, imat causes, mat alpha, mat dalpha, mat beta, mat gamma);
 
   // Estimating likelihood contribution
   double loglik = loglikfull(unsigned row, DataPairs data, gmat sigmaJoint, gmat sigmaCond, vmat sigmaU, vec u, bool full=1);
