@@ -266,23 +266,36 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
   return(res);
 }
 
-double loglikout(unsigned row, mat sigma, mat data, vec u, bool loglik=1){
+/////////////////////////////////////////////////////////////////////////////
+// FOR TESTING
+
+double loglikout(unsigned row, mat sigma, mat data, vec u){
+
+  // Generating gmats of sigma (Marg, Joint, MargCond, sigU)
+  gmat sigmaMarg = gmat();
+  gmat sigmaJoint = gmat();
+  gmat sigmaMargCond = gmat();
+  gmat sigmaU = gmat();
+
+  // Generating DataPairs
+  DataPairs data = ();
+
+  // Estimating likelihood contribution
+  double loglik = loglikfull(unsigned row, DataPairs data, gmat sigmaMarg, gmat sigmaJoint, gmat sigmaMargCond, vmat sigmaU, vec u, bool full=1);
+
+  // Return
+  return loglik;
+};
+
+rowvec Dloglikout(unsigned row, mat sigma, mat data, vec u){
 
   // Generating gmats of sigma (Marg, Joint, MargCond, sigU)
 
   // Generating DataPairs
 
-  // Estimating likelihood contribution
-  double lik = loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gmat &sigmaJoint, const gmat &sigmaMargCond, vmat sigmaU, vec u, bool full=1);
-
   // Estimating score contribution
-  rowvec score = Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gmat &sigmaJoint, const gmat &sigmaMargCond, vmat sigmaU, vec u, bool full=1);
+  rowvec score = Dloglikfull(unsigned row, DataPairs data, gmat sigmaMarg, gmat sigmaJoint, gmat sigmaMargCond, vmat sigmaU, vec u, bool full=1);
 
   // Return
-  if(loglik){
-    return log(lik);
-  }
-  else {
-    return (score);
-  }
+  return score;
 };
