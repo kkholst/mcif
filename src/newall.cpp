@@ -296,6 +296,8 @@ double loglikout(mat sigma, vec u, int ncauses, imat causes, mat alpha, mat dalp
     };
   };
 
+  Rcpp::Rcout << "here " <<std::endl;
+
   // Calculating and setting sigmaMarg
   for (int h=0; h<ncauses; h++){
     rc1(0) = h;
@@ -316,7 +318,6 @@ double loglikout(mat sigma, vec u, int ncauses, imat causes, mat alpha, mat dalp
     };
   };
 
-  Rcpp::Rcout << "here " <<std::endl;
 
   // vmat of the us
   mat matU = sigma.submat(rcu,rcu);
