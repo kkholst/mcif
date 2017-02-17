@@ -269,7 +269,7 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
 /////////////////////////////////////////////////////////////////////////////
 // FOR TESTING
 
-double loglikout(unsigned row, mat sigma, vec u, int ncauses, imat causes, mat alpha, mat dalpha, mat beta, mat gamma){
+double loglikout(mat sigma, vec u, int ncauses, imat causes, mat alpha, mat dalpha, mat beta, mat gamma){
 
   // Initialising gmats of sigma (Joint, Cond)
   gmat sigmaJoint = gmat(ncauses, ncauses);
@@ -295,17 +295,17 @@ double loglikout(unsigned row, mat sigma, vec u, int ncauses, imat causes, mat a
     };
   };
 
-  // Extracting marginal from sigmaJoint and setting sigmaMarg
+  // Calculating and setting sigmaMarg
   for (int h=0; h<ncauses; h++){
-    vmat Marg = vmat(1);
-
-    sigmaMarg.set(h,0,x);
+    rc1(0) = h;
+    vmat x = vmat(sigma, rc1, rcu);
+    sigmaMarg.set(h,1,x);
   };
 
   // Calculating and setting sigmaCond
   for (int h=0; h<ncauses; h++){
     for (int i=0; i<ncauses; i++){
-      rc1(1) = h;
+      rc1(0) = h;
       rc2(0) = i;
       for (int j=0; j<ncauses; j++){
 	rc2(j+1) = rcu(j);
@@ -322,8 +322,10 @@ double loglikout(unsigned row, mat sigma, vec u, int ncauses, imat causes, mat a
   // Generating DataPairs
   DataPairs data = DataPairs(ncauses, causes, alpha, dalpha, beta, gamma);
 
+  unsigned row = 1;
+
   // Estimating likelihood contribution
-  double loglik = loglikfull(unsigned row, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u, bool full=1);
+  double loglik = loglikfull(row, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u, full=1);
 
   // Return
   return loglik;
