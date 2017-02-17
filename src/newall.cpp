@@ -291,6 +291,10 @@ double loglikout(mat sigma, vec u, int ncauses, imat causes, mat alpha, mat dalp
     for (int i=0; i<ncauses; i++){
       rcJ(0)=h;
       rcJ(1)=ncauses+i;
+
+      Rcpp::Rcout << "here " << rcJ <<std::endl;
+      Rcpp::Rcout << "there" << rcu <<sdt::endl;
+
       vmat x = vmat(sigma, rcJ, rcu);
       sigmaJoint.set(h,i,x);
     };
