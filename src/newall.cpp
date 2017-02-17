@@ -269,6 +269,7 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
 /////////////////////////////////////////////////////////////////////////////
 // FOR TESTING
 
+// [[Rcpp::export]]
 double loglikout(mat sigma, vec u, int ncauses, imat causes, mat alpha, mat dalpha, mat beta, mat gamma){
 
   // Initialising gmats of sigma (Joint, Cond)
