@@ -316,9 +316,13 @@ double loglikout(mat sigma, vec u, int ncauses, imat causes, mat alpha, mat dalp
     };
   };
 
+  Rcpp::Rcout << "here " <<std::endl;
+
   // vmat of the us
   mat matU = sigma.submat(rcu,rcu);
   vmat sigmaU = vmat(matU);
+
+  Rcpp::Rcout << "there " <<std::endl;
 
   // Generating DataPairs
   DataPairs data = DataPairs(ncauses, causes, alpha, dalpha, beta, gamma);
@@ -327,6 +331,8 @@ double loglikout(mat sigma, vec u, int ncauses, imat causes, mat alpha, mat dalp
 
   // Estimating likelihood contribution
   double loglik = loglikfull(row, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u);
+
+  Rcpp::Rcout << "everywhere " <<std::endl;
 
   // Return
   return loglik;
