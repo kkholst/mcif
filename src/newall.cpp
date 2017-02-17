@@ -325,7 +325,7 @@ double loglikout(mat sigma, vec u, int ncauses, imat causes, mat alpha, mat dalp
   unsigned row = 1;
 
   // Estimating likelihood contribution
-  double loglik = loglikfull(row, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u, full=1);
+  double loglik = loglikfull(row, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u);
 
   // Return
   return loglik;
