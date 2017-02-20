@@ -46,14 +46,17 @@ double logdF2(unsigned row, const irowvec &causes, const DataPairs &data, const 
   vmat cond_sig = sigma(causes);
   vec cond_mean = cond_sig.proj*u;
 
+  Rcpp::Rcout << "here" << std::endl;
+  Rcpp::Rcout << "causes " << causes << std::endl;
+
   vec alp = data.alpha_get(row, causes);
   vec gam = data.gamma_get(row, causes);
   vec c_alpgam = (alp - gam) - cond_mean;
   double inner = as_scalar(c_alpgam.t()*cond_sig.inv*c_alpgam);
 
-  double logpdf = loginvtwopi + cond_sig.loginvsqdet + log(data.dalphaMarg_get(row, causes(0), 1)) + log(data.dalphaMarg_get(row, causes(1), 2)) - 0.5*inner;
+  double logpdf = loginvtwopi + cond_sig.loginvsqdet + log(data.dalphaMarg_get(row, causes(0), 0)) + log(data.dalphaMarg_get(row, causes(1), 1)) - 0.5*inner;
 
-  double logdF2 = log(data.piMarg_get(row, causes(0), 1)) + log(data.piMarg_get(row, causes(1), 2)) + logpdf;
+  double logdF2 = log(data.piMarg_get(row, causes(0), 0)) + log(data.piMarg_get(row, causes(1), 1)) + logpdf;
   return(logdF2);
 };
 

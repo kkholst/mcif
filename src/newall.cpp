@@ -24,7 +24,11 @@ double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gm
 
   data.pi_gen(row, u); // Estimation of pi based on u
 
+  // Rcpp::Rcout << "data.pi" << data.pi << std::endl;
+
   irowvec causes = data.causes_get(row); // Failure causes for pair in question
+
+  //Rcpp::Rcout << "causes" << causes << std::endl;
 
   double res = 0; // Initialising output (loglik contribution)
 
@@ -281,6 +285,7 @@ double loglikout(mat sigma, vec u, int ncauses, imat causes, mat alpha, mat dalp
   uvec rcJ(2); /* for joint */
   uvec rc1(1); /* for conditional */
   uvec rc2(ncauses+1); /* for conditional */
+
   uvec rcu(ncauses);
   for (int h=0; h<ncauses; h++){
     rcu(h) = ncauses*2 + h;
@@ -292,36 +297,36 @@ double loglikout(mat sigma, vec u, int ncauses, imat causes, mat alpha, mat dalp
       rcJ(0)=h;
       rcJ(1)=ncauses+i;
 
-      Rcpp::Rcout << "here " << rcJ <<std::endl;
-      Rcpp::Rcout << "there" << rcu <<std::endl;
+      //Rcpp::Rcout << "here " << rcJ <<std::endl;
+      //Rcpp::Rcout << "there" << rcu <<std::endl;
 
       vmat x = vmat(sigma, rcJ, rcu);
 
-      Rcpp::Rcout << "everywhere" << x.vcov <<std::endl;
+      //Rcpp::Rcout << "vcov" << x.vcov <<std::endl;
+      //Rcpp::Rcout << "inv" << x.inv <<std::endl;
+      //Rcpp::Rcout << "loginvsqrtdet" << x.loginvsqdet <<std::endl;
+      //Rcpp::Rcout << "proj" << x.proj <<std::endl;
 
       sigmaJoint.set(h,i,x);
     };
   };
 
-  Rcpp::Rcout << "finish sigmaJoint" <<std::endl;
-
-  //Rcpp::Rcout << "here " <<std::endl;
-
   // Calculating and setting sigmaMarg
   for (int h=0; h<ncauses; h++){
     rc1(0) = h;
 
-    Rcpp::Rcout << "here " << rc1 <<std::endl;
-    Rcpp::Rcout << "there" << rcu <<std::endl;
+    //Rcpp::Rcout << "here " << rc1 <<std::endl;
+    //Rcpp::Rcout << "there" << rcu <<std::endl;
 
     vmat x = vmat(sigma, rc1, rcu);
 
-    Rcpp::Rcout << "everywhere" << x.vcov <<std::endl;
+    //Rcpp::Rcout << "vcov" << x.vcov <<std::endl;
+    //Rcpp::Rcout << "inv" << x.inv <<std::endl;
+    //Rcpp::Rcout << "loginvsqrtdet" << x.loginvsqdet <<std::endl;
+    //Rcpp::Rcout << "proj" << x.proj <<std::endl;
 
     sigmaMarg.set(h,0,x);
   };
-
-  Rcpp::Rcout << "finish sigmaMarg" <<std::endl;
 
   // Calculating and setting sigmaCond
   for (int h=0; h<ncauses; h++){
@@ -332,40 +337,34 @@ double loglikout(mat sigma, vec u, int ncauses, imat causes, mat alpha, mat dalp
 	rc2(j+1) = rcu(j);
       };
 
-      Rcpp::Rcout << "here " << rc1 <<std::endl;
-      Rcpp::Rcout << "there" << rc2 <<std::endl;
+      //Rcpp::Rcout << "here " << rc1 <<std::endl;
+      //Rcpp::Rcout << "there" << rc2 <<std::endl;
 
       vmat x = vmat(sigma, rc1, rc2);
+
+      //Rcpp::Rcout << "vcov" << x.vcov <<std::endl;
+      //Rcpp::Rcout << "inv" << x.inv <<std::endl;
+      //Rcpp::Rcout << "loginvsqrtdet" << x.loginvsqdet <<std::endl;
+      //Rcpp::Rcout << "proj" << x.proj <<std::endl;
+
       sigmaCond.set(h,i,x);
     };
   };
-
-  //vmat x0 = sigmaCond(0,0);
-  //Rcpp::Rcout << "x0: " << x0.vcov << std::endl;
-
-  //  Rcpp::Rcout << "Joint " << sigmaJoint << std::endl;
-  //Rcpp::Rcout << "Marg " << simgaMarg << std::endl;
-  //Rcpp::Rcout << "Cond " << sigmaCond << std::endl;
-
 
   // vmat of the us
   mat matU = sigma.submat(rcu,rcu);
   vmat sigmaU = vmat(matU);
 
-  Rcpp::Rcout << "u finished " <<std::endl;
-
   // Generating DataPairs
   DataPairs data = DataPairs(ncauses, causes, alpha, dalpha, beta, gamma);
 
-  unsigned row = 1;
+  unsigned row = 0;
 
   // Estimating likelihood contribution
-  //double loglik = loglikfull(row, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u);
-
-  Rcpp::Rcout << "everywhere " <<std::endl;
+  double loglik = loglikfull(row, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u);
 
   // Return
-  double loglik = 0;
+  //double loglik = 0;
   return loglik;
 };
 
