@@ -283,7 +283,7 @@ double loglikout(mat sigma, vec u, int ncauses, imat causes, mat alpha, mat dalp
   uvec rc2(ncauses+1); /* for conditional */
   uvec rcu(ncauses);
   for (int h=0; h<ncauses; h++){
-    rcu(h) = ncauses + h;
+    rcu(h) = ncauses*2 + h;
   };
 
   // Calculating and setting sigmaJoint
@@ -296,38 +296,63 @@ double loglikout(mat sigma, vec u, int ncauses, imat causes, mat alpha, mat dalp
       Rcpp::Rcout << "there" << rcu <<std::endl;
 
       vmat x = vmat(sigma, rcJ, rcu);
+
+      Rcpp::Rcout << "everywhere" << x.vcov <<std::endl;
+
       sigmaJoint.set(h,i,x);
     };
   };
 
-  Rcpp::Rcout << "here " <<std::endl;
+  Rcpp::Rcout << "finish sigmaJoint" <<std::endl;
+
+  //Rcpp::Rcout << "here " <<std::endl;
 
   // Calculating and setting sigmaMarg
   for (int h=0; h<ncauses; h++){
     rc1(0) = h;
+
+    Rcpp::Rcout << "here " << rc1 <<std::endl;
+    Rcpp::Rcout << "there" << rcu <<std::endl;
+
     vmat x = vmat(sigma, rc1, rcu);
-    sigmaMarg.set(h,1,x);
+
+    Rcpp::Rcout << "everywhere" << x.vcov <<std::endl;
+
+    sigmaMarg.set(h,0,x);
   };
+
+  Rcpp::Rcout << "finish sigmaMarg" <<std::endl;
 
   // Calculating and setting sigmaCond
   for (int h=0; h<ncauses; h++){
     for (int i=0; i<ncauses; i++){
       rc1(0) = h;
-      rc2(0) = i;
+      rc2(0) = ncauses + i;
       for (int j=0; j<ncauses; j++){
 	rc2(j+1) = rcu(j);
       };
+
+      Rcpp::Rcout << "here " << rc1 <<std::endl;
+      Rcpp::Rcout << "there" << rc2 <<std::endl;
+
       vmat x = vmat(sigma, rc1, rc2);
       sigmaCond.set(h,i,x);
     };
   };
+
+  //vmat x0 = sigmaCond(0,0);
+  //Rcpp::Rcout << "x0: " << x0.vcov << std::endl;
+
+  //  Rcpp::Rcout << "Joint " << sigmaJoint << std::endl;
+  //Rcpp::Rcout << "Marg " << simgaMarg << std::endl;
+  //Rcpp::Rcout << "Cond " << sigmaCond << std::endl;
 
 
   // vmat of the us
   mat matU = sigma.submat(rcu,rcu);
   vmat sigmaU = vmat(matU);
 
-  Rcpp::Rcout << "there " <<std::endl;
+  Rcpp::Rcout << "u finished " <<std::endl;
 
   // Generating DataPairs
   DataPairs data = DataPairs(ncauses, causes, alpha, dalpha, beta, gamma);
@@ -335,11 +360,12 @@ double loglikout(mat sigma, vec u, int ncauses, imat causes, mat alpha, mat dalp
   unsigned row = 1;
 
   // Estimating likelihood contribution
-  double loglik = loglikfull(row, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u);
+  //double loglik = loglikfull(row, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u);
 
   Rcpp::Rcout << "everywhere " <<std::endl;
 
   // Return
+  double loglik = 0;
   return loglik;
 };
 
