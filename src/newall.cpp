@@ -22,9 +22,11 @@ const double twopi = 2*datum::pi;
 /* Full loglikelihood */
 double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gmat &sigmaJoint, const gmat &sigmaCond, vmat sigmaU, vec u, bool full=1){
 
+  Rcpp::Rcout << "here" << std::endl;
+
   data.pi_gen(row, u); // Estimation of pi based on u
 
-  // Rcpp::Rcout << "data.pi" << data.pi << std::endl;
+  Rcpp::Rcout << "data.pi" << data.pi << std::endl;
 
   irowvec causes = data.causes_get(row); // Failure causes for pair in question
 
@@ -124,12 +126,17 @@ double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gm
     }
   }
   /* Contribution from u */
+
+  Rcpp::Rcout << "res " << res << std::endl;
+
   if (full){
     vmat sig = sigmaU; // Variance-covariance matrix of u
-    double inner = as_scalar(u*sig.inv*u.t());
+    double inner = as_scalar(u.t()*sig.inv*u);
 
     // PDF of u
     double logpdfu = log(pow(twopi,-(data.ncauses/2))) + sig.loginvsqdet - 0.5*inner;
+
+    Rcpp::Rcout << "logpdfu " << logpdfu << std::endl;
 
     // Adding to the loglik
     res += logpdfu;

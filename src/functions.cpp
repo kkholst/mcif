@@ -46,20 +46,32 @@ double logdF2(unsigned row, const irowvec &causes, const DataPairs &data, const 
   vmat cond_sig = sigma(causes);
   vec cond_mean = cond_sig.proj*u;
 
-  Rcpp::Rcout << "here" << std::endl;
-  Rcpp::Rcout << "causes " << causes << std::endl;
+  //Rcpp::Rcout << "here" << std::endl;
+  //Rcpp::Rcout << "causes " << causes << std::endl;
 
-  vec alp = data.alpha_get(row, causes);
+  rowvec alp = data.alpha_get(row, causes);
+  rowvec gam = data.gamma_get(row, causes);
 
-  Rcpp::Rcout << "alp " << alp << std::endl;
+  //Rcpp::Rcout << "alp " << alp << std::endl;
+  //Rcpp::Rcout << "gam " << gam << std::endl;
 
-  vec gam = data.gamma_get(row, causes);
-  vec c_alpgam = (alp - gam) - cond_mean;
+  colvec c_alpgam = (alp.t() - gam.t()) - cond_mean;
+
+  Rcpp::Rcout << "c_alpgam " << c_alpgam << std::endl;
+  Rcpp::Rcout << "cond_sig.inv " << cond_sig.inv << std::endl;
+
   double inner = as_scalar(c_alpgam.t()*cond_sig.inv*c_alpgam);
+
+  Rcpp::Rcout << "inner " << inner << std::endl;
 
   double logpdf = loginvtwopi + cond_sig.loginvsqdet + log(data.dalphaMarg_get(row, causes(0), 0)) + log(data.dalphaMarg_get(row, causes(1), 1)) - 0.5*inner;
 
+  Rcpp::Rcout << "logpdf " << logpdf << std::endl;
+
   double logdF2 = log(data.piMarg_get(row, causes(0), 0)) + log(data.piMarg_get(row, causes(1), 1)) + logpdf;
+
+  Rcpp::Rcout << "logdF2 " << logdF2 << std::endl;
+
   return(logdF2);
 };
 
