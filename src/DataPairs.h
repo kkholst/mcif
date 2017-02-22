@@ -22,8 +22,8 @@ public:
 
   // Constructors
   // Constructor checker at der er lige mange rækker i alle matricer...
-  DataPairs(int ncauses, imat causes, mat alpha, mat dalpha, mat beta, mat gamma);
-  DataPairs(const int &ncauses);
+  DataPairs(unsigned ncauses, imat causes, mat alpha, mat dalpha, mat beta, mat gamma);
+  DataPairs(unsigned ncauses);
 
   // Member functions
   irowvec causes_get(int i) const ;

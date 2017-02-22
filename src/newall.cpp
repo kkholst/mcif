@@ -20,13 +20,13 @@ const double twopi = 2*datum::pi;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /* Full loglikelihood */
-double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gmat &sigmaJoint, const gmat &sigmaCond, vmat sigmaU, vec u, bool full=1){
+double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gmat &sigmaJoint, const gmat &sigmaCond, vmat sigmaU, vec u, double normconst, bool full=1){
 
-  Rcpp::Rcout << "here" << std::endl;
+  //Rcpp::Rcout << "here" << std::endl;
 
   data.pi_gen(row, u); // Estimation of pi based on u
 
-  Rcpp::Rcout << "data.pi" << data.pi << std::endl;
+  //Rcpp::Rcout << "data.pi" << data.pi << std::endl;
 
   irowvec causes = data.causes_get(row); // Failure causes for pair in question
 
@@ -43,7 +43,7 @@ double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gm
 
     if ((causes(0) < 0) & (causes(1) < 0)){
       // Full follow-up for both individuals
-      for (unsigned i=1; i<=2; i++){ // Over individuals
+      for (unsigned i=0; i<2; i++){ // Over individuals
 	double lik = 1;
 	for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
 	  double prob = F1(row, j, i, data);
@@ -54,10 +54,10 @@ double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gm
     }
     else if (((causes(0) < 0) & (causes(1) == 0)) | ((causes(0) == 0) & (causes(1) < 0))){
       // Full follow-up for only one individual
-      for (unsigned i=1; i<=2; i++){ // Over individuals
+      for (unsigned i=0; i<2; i++){ // Over individuals
 	double lik = 1;
 	for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
-	  if (causes(i-1) < 0){
+	  if (causes(i) < 0){
 	    double prob = F1(row, j, i, data);
 	    lik -= prob;
 	  }
@@ -126,18 +126,12 @@ double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gm
     }
   }
   /* Contribution from u */
-
-  Rcpp::Rcout << "res " << res << std::endl;
-
   if (full){
     vmat sig = sigmaU; // Variance-covariance matrix of u
     double inner = as_scalar(u.t()*sig.inv*u);
 
     // PDF of u
-    double logpdfu = log(pow(twopi,-(data.ncauses/2))) + sig.loginvsqdet - 0.5*inner;
-
-    //Rcpp::Rcout << "inner " << inner << std::endl;
-    //Rcpp::Rcout << "logpdfu " << logpdfu << std::endl;
+    double logpdfu = normconst + sig.loginvsqdet - 0.5*inner;
 
     // Adding to the loglik
     res += logpdfu;
@@ -161,6 +155,9 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
   rowvec res = zeros<rowvec>(data.ncauses); // Initialising output (score contribution)
 
   if ((causes(0) > 0) & (causes(1) > 0)){
+
+    Rcpp::Rcout << "here" << std::endl;
+
     /* Both individuals experience failure */
     res = dlogdF2du(row, causes, data, sigmaJoint, u);
   }
@@ -169,7 +166,7 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
 
     if ((causes(0) < 0) & (causes(1) < 0)){
       // Full follow-up for both individuals
-      for (unsigned i=1; i<=2; i++){ // Over individuals
+      for (unsigned i=0; i<2; i++){ // Over individuals
 	double lik = 1;
 	rowvec likdu = zeros<rowvec>(data.ncauses);
 	for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
@@ -282,26 +279,26 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
 // FOR TESTING
 
 // [[Rcpp::export]]
-double loglikout(mat sigma, vec u, int ncauses, imat causes, mat alpha, mat dalpha, mat beta, mat gamma){
+double loglikout(mat sigma, vec u, unsigned ncauses, imat causes, mat alpha, mat dalpha, mat beta, mat gamma){
 
   // Initialising gmats of sigma (Joint, Cond)
-  gmat sigmaJoint = gmat(ncauses, ncauses);
-  gmat sigmaCond = gmat(ncauses, ncauses);
-  gmat sigmaMarg = gmat(ncauses, 1);
+  gmat sigmaJoint = gmat((double)ncauses, (double)ncauses);
+  gmat sigmaCond = gmat((double)ncauses, (double)ncauses);
+  gmat sigmaMarg = gmat((double)ncauses, 1);
 
   // Vectors for extracting rows and columns from sigma
   uvec rcJ(2); /* for joint */
   uvec rc1(1); /* for conditional */
-  uvec rc2(ncauses+1); /* for conditional */
+  uvec rc2((double)ncauses+1); /* for conditional */
 
   uvec rcu(ncauses);
-  for (int h=0; h<ncauses; h++){
-    rcu(h) = ncauses*2 + h;
+  for (unsigned h=0; h<ncauses; h++){
+    rcu(h) = (double)ncauses*2 + h;
   };
 
   // Calculating and setting sigmaJoint
-  for (int h=0; h<ncauses; h++){
-    for (int i=0; i<ncauses; i++){
+  for (unsigned h=0; h<ncauses; h++){
+    for (unsigned i=0; i<ncauses; i++){
       rcJ(0)=h;
       rcJ(1)=ncauses+i;
 
@@ -320,7 +317,7 @@ double loglikout(mat sigma, vec u, int ncauses, imat causes, mat alpha, mat dalp
   };
 
   // Calculating and setting sigmaMarg
-  for (int h=0; h<ncauses; h++){
+  for (unsigned h=0; h<ncauses; h++){
     rc1(0) = h;
 
     //Rcpp::Rcout << "here " << rc1 <<std::endl;
@@ -337,11 +334,11 @@ double loglikout(mat sigma, vec u, int ncauses, imat causes, mat alpha, mat dalp
   };
 
   // Calculating and setting sigmaCond
-  for (int h=0; h<ncauses; h++){
-    for (int i=0; i<ncauses; i++){
+  for (unsigned h=0; h<ncauses; h++){
+    for (unsigned i=0; i<ncauses; i++){
       rc1(0) = h;
       rc2(0) = ncauses + i;
-      for (int j=0; j<ncauses; j++){
+      for (unsigned j=0; j<ncauses; j++){
 	rc2(j+1) = rcu(j);
       };
 
@@ -368,23 +365,78 @@ double loglikout(mat sigma, vec u, int ncauses, imat causes, mat alpha, mat dalp
 
   unsigned row = 0;
 
+  // Normalisation constant
+  double normconst = -((double)data.ncauses/2)*log(twopi);
+
   // Estimating likelihood contribution
-  double loglik = loglikfull(row, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u);
+  double loglik = loglikfull(row, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u, normconst);
 
   // Return
   //double loglik = 0;
   return loglik;
 };
 
-//rowvec Dloglikout(unsigned row, mat sigma, mat data, vec u){
+// [[Rcpp::export]]
+rowvec Dloglikout(mat sigma, vec u, unsigned ncauses, imat causes, mat alpha, mat dalpha, mat beta, mat gamma){
 
-  // Generating gmats of sigma (Marg, Joint, MargCond, sigU)
+  // Initialising gmats of sigma (Joint, Cond)
+  gmat sigmaJoint = gmat((double)ncauses, (double)ncauses);
+  gmat sigmaCond = gmat((double)ncauses, (double)ncauses);
+  gmat sigmaMarg = gmat((double)ncauses, 1);
+
+  // Vectors for extracting rows and columns from sigma
+  uvec rcJ(2); /* for joint */
+  uvec rc1(1); /* for conditional */
+  uvec rc2((double)ncauses+1); /* for conditional */
+
+  uvec rcu(ncauses);
+  for (unsigned h=0; h<ncauses; h++){
+    rcu(h) = (double)ncauses*2 + h;
+  };
+
+  // Calculating and setting sigmaJoint
+  for (unsigned h=0; h<ncauses; h++){
+    for (unsigned i=0; i<ncauses; i++){
+      rcJ(0)=h;
+      rcJ(1)=ncauses+i;
+      vmat x = vmat(sigma, rcJ, rcu);
+      sigmaJoint.set(h,i,x);
+    };
+  };
+
+  // Calculating and setting sigmaMarg
+  for (unsigned h=0; h<ncauses; h++){
+    rc1(0) = h;
+    vmat x = vmat(sigma, rc1, rcu);
+    sigmaMarg.set(h,0,x);
+  };
+
+  // Calculating and setting sigmaCond
+  for (unsigned h=0; h<ncauses; h++){
+    for (unsigned i=0; i<ncauses; i++){
+      rc1(0) = h;
+      rc2(0) = ncauses + i;
+      for (unsigned j=0; j<ncauses; j++){
+	rc2(j+1) = rcu(j);
+      };
+      vmat x = vmat(sigma, rc1, rc2);
+      sigmaCond.set(h,i,x);
+    };
+  };
+
+  // vmat of the us
+  mat matU = sigma.submat(rcu,rcu);
+  vmat sigmaU = vmat(matU);
 
   // Generating DataPairs
+  DataPairs data = DataPairs(ncauses, causes, alpha, dalpha, beta, gamma);
 
-  // Estimating score contribution
-//  rowvec score = Dloglikfull(unsigned row, DataPairs data, gmat sigmaJoint, gmat sigmaMargCond, vmat sigmaU, vec u, bool full=1);
+  unsigned row = 0;
+
+  // Estimating Dlikelihood contribution
+  rowvec score = Dloglikfull(row, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u);
 
   // Return
-//  return score;
-//};
+  return score;
+};
+

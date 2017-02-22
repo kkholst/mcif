@@ -54,23 +54,30 @@ double logdF2(unsigned row, const irowvec &causes, const DataPairs &data, const 
 
   //Rcpp::Rcout << "alp " << alp << std::endl;
   //Rcpp::Rcout << "gam " << gam << std::endl;
+  //Rcpp::Rcout << "cond_mean " << cond_mean << std::endl;
+  //Rcpp::Rcout << "cond_sig.proj " << cond_sig.proj << std::endl;
+  //Rcpp::Rcout << "cond_sig.vcov " << cond_sig.vcov << std::endl;
+  //Rcpp::Rcout << "u " << u << std::endl;
 
   colvec c_alpgam = (alp.t() - gam.t()) - cond_mean;
 
-  Rcpp::Rcout << "c_alpgam " << c_alpgam << std::endl;
-  Rcpp::Rcout << "cond_sig.inv " << cond_sig.inv << std::endl;
+  //Rcpp::Rcout << "c_alpgam " << c_alpgam << std::endl;
+  //Rcpp::Rcout << "cond_sig.inv " << cond_sig.inv << std::endl;
 
   double inner = as_scalar(c_alpgam.t()*cond_sig.inv*c_alpgam);
 
-  Rcpp::Rcout << "inner " << inner << std::endl;
+  //Rcpp::Rcout << "inner " << inner << std::endl;
 
   double logpdf = loginvtwopi + cond_sig.loginvsqdet + log(data.dalphaMarg_get(row, causes(0), 0)) + log(data.dalphaMarg_get(row, causes(1), 1)) - 0.5*inner;
 
-  Rcpp::Rcout << "logpdf " << logpdf << std::endl;
+  //Rcpp::Rcout << "logpdf " << logpdf << std::endl;
 
   double logdF2 = log(data.piMarg_get(row, causes(0), 0)) + log(data.piMarg_get(row, causes(1), 1)) + logpdf;
 
-  Rcpp::Rcout << "logdF2 " << logdF2 << std::endl;
+  //Rcpp::Rcout << "logdF2 " << logdF2 << std::endl;
+  //Rcpp::Rcout << "logpdf " << logpdf << std::endl;
+  //Rcpp::Rcout << "logpi1 " << log(data.piMarg_get(row, causes(0), 0)) << std::endl;
+  //Rcpp::Rcout << "logpi2 " << log(data.piMarg_get(row, causes(1), 1)) << std::endl;
 
   return(logdF2);
 };
@@ -81,13 +88,11 @@ rowvec dlogdF2du(unsigned row, const irowvec &causes, const DataPairs &data, con
   vmat cond_sig = sigma(causes);
   vec cond_mean = cond_sig.proj*u;
 
-  vec alp = data.alpha_get(row, causes);
-  vec gam = data.gamma_get(row, causes);
-  vec c_alpgam = (alp - gam) - cond_mean;
-
+  rowvec alp = data.alpha_get(row, causes);
+  rowvec gam = data.gamma_get(row, causes);
+  colvec c_alpgam = (alp.t() - gam.t()) - cond_mean;
   rowvec dinnerdu = c_alpgam.t()*cond_sig.inv*cond_sig.proj;
-
-  rowvec dlogdF2du = data.dlogpiduMarg_get(row, causes(0), 1) + data.dlogpiduMarg_get(row, causes(1), 2) + dinnerdu;
+  rowvec dlogdF2du = data.dlogpiduMarg_get(row, causes(0), 0) + data.dlogpiduMarg_get(row, causes(1), 1) + dinnerdu;
   return(dlogdF2du);
 };
 

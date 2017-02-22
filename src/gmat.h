@@ -25,14 +25,14 @@ public:
   }
   vmat operator()(irowvec idx) const {
     assert(idx.n_elem==2);
-    unsigned row = idx[0];
-    unsigned col = idx[1];
+    unsigned row = idx[0] - 1;
+    unsigned col = idx[1] - 1;
     unsigned pos = row+col*_nrow;
     return(vecvmat[pos]);
     // (this->)(idx[0],idx[1]);
   }
   vmat operator()(unsigned i) const {
-    unsigned pos = i-1;
+    unsigned pos = i - 1;
     return(vecvmat[pos]);
   }
   void set(unsigned row, unsigned col, const vmat &x) {

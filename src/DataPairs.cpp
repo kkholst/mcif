@@ -3,9 +3,9 @@
 #include "DataPairs.h"
 
 // Constructors for class "data"
-DataPairs::DataPairs(int ncauses, imat causes, mat alpha, mat dalpha, mat beta, mat gamma) {
+DataPairs::DataPairs(unsigned ncauses, imat causes, mat alpha, mat dalpha, mat beta, mat gamma) {
   this->ncauses = ncauses;
-  ncol = ncauses*2;
+  ncol = (double)ncauses*2;
   nrow = 1;
 
   this->causes = causes;
@@ -14,17 +14,17 @@ DataPairs::DataPairs(int ncauses, imat causes, mat alpha, mat dalpha, mat beta, 
   this->beta = beta;
   this->gamma = gamma;
   pi = arma::mat(nrow,ncol);
-  dpidu = arma::mat(nrow*ncauses,ncol);
-  dlogpidu = arma::mat(nrow*ncauses,ncol);
+  dpidu = arma::mat(nrow*(double)ncauses,ncol);
+  dlogpidu = arma::mat(nrow*(double)ncauses,ncol);
 };
 
-DataPairs::DataPairs(const int &ncauses) {
+DataPairs::DataPairs(unsigned ncauses) {
   this->ncauses = ncauses;
-  ncol = ncauses*2;
+  ncol = (double)ncauses*2;
   nrow = 1;
 
   mat x0 = arma::mat(nrow,ncol);
-  mat x1 = arma::mat(nrow*ncauses,ncol);
+  mat x1 = arma::mat(nrow*(double)ncauses,ncol);
   x0.zeros();
   x1.zeros();
 
@@ -263,11 +263,11 @@ void DataPairs::dpidu_gen(int i, vec u){
 	};
 	if (j==0){
 	  unsigned pos = k - 1;
-	  this->dpidu(d,pos) = dpidu;
+	  this->dpidu(d-1,pos) = dpidu;
 	}
 	else {
 	  unsigned pos = ncauses + k - 1;
-	  this->dpidu(d,pos) = dpidu;
+	  this->dpidu(d-1,pos) = dpidu;
 	};
       };
     };
@@ -294,11 +294,11 @@ void DataPairs::dlogpidu_gen(int i, vec u){
 	};
 	if (j==0){
 	  unsigned pos = k - 1;
-	  this->dlogpidu(d,pos) = dlogpidu;
+	  this->dlogpidu(d-1,pos) = dlogpidu;
 	}
 	else {
 	  unsigned pos = ncauses + k - 1;
-	  this->dlogpidu(d,pos) = dlogpidu;
+	  this->dlogpidu(d-1,pos) = dlogpidu;
 	};
       };
     };

@@ -16,7 +16,7 @@ using namespace Rcpp;
 using namespace arma;
 using namespace std;
 
-const double twopi = 2*datum::pi;
+//const double twopi = 2*datum::pi;
 
 // [[Rcpp::export]]
 double test(int ncauses, imat causes, mat alpha, mat dalpha, mat beta, mat gamma){
