@@ -50,6 +50,9 @@ double logdF2(unsigned row, const irowvec &causes, const DataPairs &data, const 
   Rcpp::Rcout << "causes " << causes << std::endl;
 
   vec alp = data.alpha_get(row, causes);
+
+  Rcpp::Rcout << "alp " << alp << std::endl;
+
   vec gam = data.gamma_get(row, causes);
   vec c_alpgam = (alp - gam) - cond_mean;
   double inner = as_scalar(c_alpgam.t()*cond_sig.inv*c_alpgam);

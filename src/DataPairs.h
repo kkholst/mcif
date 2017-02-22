@@ -29,19 +29,19 @@ public:
   irowvec causes_get(int i) const ;
   int causesMarg_get(int i, int indiv) const;
 
-  rowvec alpha_get(int i, ivec bothcauses) const;
+  rowvec alpha_get(int i, irowvec bothcauses) const;
   double alphaMarg_get(int i, int cause, int indiv) const;
 
-  rowvec dalpha_get(int i, ivec bothcauses) const;
+  rowvec dalpha_get(int i, irowvec bothcauses) const;
   double dalphaMarg_get(int i, int cause, int indiv) const;
 
-  rowvec beta_get(int i, ivec bothcauses) const;
+  rowvec beta_get(int i, irowvec bothcauses) const;
   double betaMarg_get(int i, int cause, int indiv) const;
 
-  rowvec gamma_get(int i, ivec bothcauses) const;
+  rowvec gamma_get(int i, irowvec bothcauses) const;
   double gammaMarg_get(int i, int cause, int indiv) const;
 
-  rowvec pi_get(int i, ivec bothcauses) const;
+  rowvec pi_get(int i, irowvec bothcauses) const;
   double piMarg_get(int i, int cause, int indiv) const;
 
   double dpiduMarg_get(int i, int cause, int indiv, int dcause) const;

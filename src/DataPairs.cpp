@@ -50,7 +50,7 @@ int DataPairs::causesMarg_get(int i, int indiv) const {
 };
 
 // Member functions for class DataPairs object alpha
-rowvec DataPairs::alpha_get(int i, ivec bothcauses) const {
+rowvec DataPairs::alpha_get(int i, irowvec bothcauses) const {
   uvec row(1); row(0) = i;
 
   Rcpp::Rcout << "bothcauses " << bothcauses << std::endl;
@@ -58,10 +58,13 @@ rowvec DataPairs::alpha_get(int i, ivec bothcauses) const {
   int causefirst = bothcauses(0);
   int causesecond = bothcauses(1);
   uvec pos(2);
-  pos(0) = causefirst;
-  pos(1) = ncauses + causesecond;
+  pos(0) = causefirst - 1;
+  pos(1) = ncauses + causesecond - 1;
 
   Rcpp::Rcout << "pos " << pos << std::endl;
+  Rcpp::Rcout << "row " << row << std::endl;
+  Rcpp::Rcout << "alpha " << alpha << std::endl;
+  Rcpp::Rcout << "alphout " << alpha.submat(row,pos) << std::endl;
 
   return(alpha.submat(row,pos));
 };
@@ -78,7 +81,7 @@ double DataPairs::alphaMarg_get(int i, int cause, int indiv) const {
 };
 
 // Member functions for class DataPairs object dalpha
-rowvec DataPairs::dalpha_get(int i, ivec bothcauses) const {
+rowvec DataPairs::dalpha_get(int i, irowvec bothcauses) const {
   uvec row(1); row(0) = i;
   int causefirst = bothcauses(0);
   int causesecond = bothcauses(1);
@@ -100,7 +103,7 @@ double DataPairs::dalphaMarg_get(int i, int cause, int indiv) const {
 };
 
 // Member functions for class DataPairs object beta
-rowvec DataPairs::beta_get(int i, ivec bothcauses) const {
+rowvec DataPairs::beta_get(int i, irowvec bothcauses) const {
   uvec row(1); row(0) = i;
   int causefirst = bothcauses(0);
   int causesecond = bothcauses(1);
@@ -122,7 +125,7 @@ double DataPairs::betaMarg_get(int i, int cause, int indiv) const {
 };
 
 // Member functions for class DataPairs object gamma
-rowvec DataPairs::gamma_get(int i, ivec bothcauses) const {
+rowvec DataPairs::gamma_get(int i, irowvec bothcauses) const {
   uvec row(1); row(0) = i;
   int causefirst = bothcauses(0);
   int causesecond = bothcauses(1);
@@ -144,7 +147,7 @@ double DataPairs::gammaMarg_get(int i, int cause, int indiv) const {
 };
 
 // Member functions for class DataPairs object pi
-rowvec DataPairs::pi_get(int i, ivec bothcauses) const {
+rowvec DataPairs::pi_get(int i, irowvec bothcauses) const {
   // Restriction: cause > 0
   uvec row(1); row(0) = i;
   int causefirst = bothcauses(0);
