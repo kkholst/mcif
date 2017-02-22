@@ -132,10 +132,9 @@ double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gm
   if (full){
     vmat sig = sigmaU; // Variance-covariance matrix of u
     double inner = as_scalar(u.t()*sig.inv*u);
-    int ncauses = data.ncauses;
 
     // PDF of u
-    double logpdfu = log(pow(twopi,-(ncauses/2))) + sig.loginvsqdet - 0.5*inner;
+    double logpdfu = log(pow(twopi,-(data.ncauses/2))) + sig.loginvsqdet - 0.5*inner;
 
     //Rcpp::Rcout << "inner " << inner << std::endl;
     //Rcpp::Rcout << "logpdfu " << logpdfu << std::endl;
