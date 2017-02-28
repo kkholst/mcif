@@ -73,7 +73,7 @@ double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gm
       // Full follow-up for neither individual
       double lik = 1;
       // Marginal probabilities
-      for (unsigned i=1; i<=2; i++){ // Over individuals
+      for (unsigned i=0; i<2; i++){ // Over individuals
 	for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
 	  double prob = F1(row, j, i, data, sigmaMarg, u);
 	  lik -= prob; // Subtracting
@@ -93,23 +93,23 @@ double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gm
   }
   else {
     /* One individual experiences failure the other does not */
-    for (unsigned i=1; i<=2; i++){ // Over individuals
-      unsigned cause = causes(i-1);
+    for (unsigned i=0; i<2; i++){ // Over individuals
+      int cause = causes(i);
       if (cause > 0){
 	// Marginal probability of failure
 	res += logdF1(row, cause, i, data, sigmaMarg, u);
       }
       else {
 	// Marginal probability of no failure
-	unsigned cond_cause;
-	if (i==1){
+	int cond_cause = 0;
+	if (i==0){
 	  cond_cause = causes(1);
 	}
 	else {
 	  cond_cause = causes(0);
 	}
+	double lik = 1;
 	for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
-	  double lik = 1;
 	  if (cause < 0){
 	    // Unconditional
 	    double prob = F1(row, j, i, data);
@@ -120,8 +120,8 @@ double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gm
 	    double prob = F1(row, j, i, cond_cause, data, sigmaCond, u);
 	    lik -= prob;
 	  }
-	  res += log(lik);
 	}
+	res += log(lik);
       }
     }
   }
@@ -179,18 +179,21 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
       }
     }
     else if (((causes(0) < 0) & (causes(1) == 0)) | ((causes(0) == 0) & (causes(1) < 0))){
+
       // Full follow-up for only one individual
-      for (unsigned i=1; i<=2; i++){ // Over individuals
+      for (unsigned i=0; i<2; i++){ // Over individuals
 	double lik = 1;
 	rowvec likdu = zeros<rowvec>(data.ncauses);
-	for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
-	  if (causes(i-1) < 0){
+	if (causes(i) < 0){
+	  for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
 	    double prob = F1(row, j, i, data);
 	    rowvec probdu = dF1du(row, j, i, data);
 	    lik -= prob;
 	    likdu -= probdu;
 	  }
-	  else {
+	}
+	else {
+	  for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
 	    double prob = F1(row, j, i, data, sigmaMarg, u);
 	    rowvec probdu = dF1du(row, j, i, data, sigmaMarg, u);
 	    lik -= prob;
@@ -205,7 +208,7 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
       double lik = 1;
       rowvec likdu = zeros<rowvec>(data.ncauses);
       // Marginal probabilities
-      for (unsigned i=1; i<=2; i++){ // Over individuals
+      for (unsigned i=0; i<2; i++){ // Over individuals
 	for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
 	  double prob = F1(row, j, i, data, sigmaMarg, u);
 	  rowvec probdu = dF1du(row, j, i, data, sigmaMarg, u);
@@ -229,44 +232,47 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
   }
   else {
     /* One individual experiences failure the other does not */
-    for (unsigned i=1; i<=2; i++){ // Over individuals
-      unsigned cause = causes(i-1);
+    for (unsigned i=0; i<2; i++){ // Over individuals
+      int cause = causes(i);
       if (cause > 0){
 	// Marginal probability of failure
 	res += dlogdF1du(row, cause, i, data, sigmaMarg, u);
       }
       else {
 	// Marginal probability of no failure
-	unsigned cond_cause;
-	if (i==1){
+	int cond_cause = 0;
+	if (i==0){
 	  cond_cause = causes(1);
 	}
 	else {
 	  cond_cause = causes(0);
 	}
+	double lik = 1;
+	rowvec likdu = zeros<rowvec>(data.ncauses);
 	for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
-	  double lik = 1;
-	  rowvec likdu = zeros<rowvec>(data.ncauses);
-	  if (cause < 0){ // Uncondtional
+	  if (cause < 0){ // Unconditional
 	    double prob = F1(row, j, i, data);
 	    rowvec probdu = dF1du(row, j, i, data);
 	    lik -= prob;
 	    likdu -= probdu;
 	  }
 	  else { // Conditional
+
+	    Rcpp::Rcout << "here " <<std::endl;
+
 	    double prob = F1(row, j, i, cond_cause, data, sigmaCond, u);
 	    rowvec probdu = dF1du(row, j, i, cond_cause, data, sigmaCond, u);
 	    lik -= prob;
 	    likdu -= probdu;
 	  }
-	  res += (1/lik)*likdu;
 	}
+	res += (1/lik)*likdu;
       }
     }
   }
+
   /* Contribution from u */
   if (full){
-
     vmat sig = sigmaU; // Variance-covariance matrix etc. of u
 
     // Adding to the score

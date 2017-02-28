@@ -19,7 +19,6 @@ double logdF1(unsigned row, const unsigned &cause, const unsigned &indiv, const 
   double inner = pow((alpgam-cond_mean),2)*as_scalar(cond_sig.inv);
 
   double logpdf = loginvsqtwopi + cond_sig.loginvsqdet + log(data.dalphaMarg_get(row, cause, indiv)) - 0.5*inner;
-
   double logdF1 = log(data.piMarg_get(row, cause, indiv)) + logpdf;
   return(logdF1);
 };
@@ -127,11 +126,12 @@ rowvec dF1du(unsigned row, unsigned cause, unsigned indiv, const DataPairs &data
   double inner = pow((c_alpgam),2)*as_scalar(cond_sig.inv);
 
   double cdf = pn(alpgam, cond_mean, as_scalar(cond_sig.vcov));
-  double pdf = invsqtwopi*sqrt(as_scalar(cond_sig.vcov))*exp(-0.5*inner);
+  double pdf = invsqtwopi*1/sqrt(as_scalar(cond_sig.vcov))*exp(-0.5*inner);
 
   rowvec dcdfdu = pdf*(-cond_sig.proj);
 
   rowvec dF1du = data.dpiduMarg_get(row, cause, indiv)*cdf + data.piMarg_get(row, cause, indiv)*dcdfdu;
+
   return(dF1du);
 };
 
@@ -140,11 +140,11 @@ double F1(unsigned row, unsigned cause, unsigned indiv, unsigned cond_cause, con
 
   // Other individual
   unsigned cond_indiv;
-  if (indiv==1){
-    cond_indiv=2;
+  if (indiv==0){
+    cond_indiv=1;
   }
   else {
-    cond_indiv=1;
+    cond_indiv=0;
   }
 
   // Alpgam of other individual
@@ -156,6 +156,10 @@ double F1(unsigned row, unsigned cause, unsigned indiv, unsigned cond_cause, con
 
   // Joining u vector and alpgam from other individual
   vec alpgamu = join_cols(vcond_alpgam, u);
+
+  Rcpp::Rcout << "here?" <<std::endl;
+  Rcpp::Rcout << "cause: " << cause << std::endl;
+  Rcpp::Rcout << "cond_cause: " << cond_cause << std::endl;
 
   // Attaining variance covariance matrix etc. (conditional on u and other individual)
   vmat cond_sig = sigma(cause,cond_cause);

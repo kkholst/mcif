@@ -17,9 +17,11 @@ private:
   vector<vmat> vecvmat;
 public:
   gmat(unsigned nrow, unsigned ncol);
-  vmat operator()(unsigned row, unsigned col) const {
-    assert((row>0) & (row<_nrow));
-    assert((col>0) & (col<_ncol));
+  vmat operator()(unsigned cause1, unsigned cause2) const {
+    unsigned row = cause1 - 1;
+    unsigned col = cause2 - 1;
+    //assert((row>0) & (row<_nrow));
+    //assert((col>0) & (col<_ncol));
     unsigned pos = row+col*_nrow;
     return(vecvmat[pos]);
   }
