@@ -44,39 +44,15 @@ double logdF2(unsigned row, const irowvec &causes, const DataPairs &data, const 
   // Attaining variance covariance matrix etc. (conditional on u)
   vmat cond_sig = sigma(causes);
   vec cond_mean = cond_sig.proj*u;
-
-  //Rcpp::Rcout << "here" << std::endl;
-  //Rcpp::Rcout << "causes " << causes << std::endl;
-
   rowvec alp = data.alpha_get(row, causes);
   rowvec gam = data.gamma_get(row, causes);
-
-  //Rcpp::Rcout << "alp " << alp << std::endl;
-  //Rcpp::Rcout << "gam " << gam << std::endl;
-  //Rcpp::Rcout << "cond_mean " << cond_mean << std::endl;
-  //Rcpp::Rcout << "cond_sig.proj " << cond_sig.proj << std::endl;
-  //Rcpp::Rcout << "cond_sig.vcov " << cond_sig.vcov << std::endl;
-  //Rcpp::Rcout << "u " << u << std::endl;
-
   colvec c_alpgam = (alp.t() - gam.t()) - cond_mean;
-
-  //Rcpp::Rcout << "c_alpgam " << c_alpgam << std::endl;
-  //Rcpp::Rcout << "cond_sig.inv " << cond_sig.inv << std::endl;
 
   double inner = as_scalar(c_alpgam.t()*cond_sig.inv*c_alpgam);
 
-  //Rcpp::Rcout << "inner " << inner << std::endl;
-
   double logpdf = loginvtwopi + cond_sig.loginvsqdet + log(data.dalphaMarg_get(row, causes(0), 0)) + log(data.dalphaMarg_get(row, causes(1), 1)) - 0.5*inner;
 
-  //Rcpp::Rcout << "logpdf " << logpdf << std::endl;
-
   double logdF2 = log(data.piMarg_get(row, causes(0), 0)) + log(data.piMarg_get(row, causes(1), 1)) + logpdf;
-
-  //Rcpp::Rcout << "logdF2 " << logdF2 << std::endl;
-  //Rcpp::Rcout << "logpdf " << logpdf << std::endl;
-  //Rcpp::Rcout << "logpi1 " << log(data.piMarg_get(row, causes(0), 0)) << std::endl;
-  //Rcpp::Rcout << "logpi2 " << log(data.piMarg_get(row, causes(1), 1)) << std::endl;
 
   return(logdF2);
 };
@@ -157,10 +133,6 @@ double F1(unsigned row, unsigned cause, unsigned indiv, unsigned cond_cause, con
   // Joining u vector and alpgam from other individual
   vec alpgamu = join_cols(vcond_alpgam, u);
 
-  Rcpp::Rcout << "here?" <<std::endl;
-  Rcpp::Rcout << "cause: " << cause << std::endl;
-  Rcpp::Rcout << "cond_cause: " << cond_cause << std::endl;
-
   // Attaining variance covariance matrix etc. (conditional on u and other individual)
   vmat cond_sig = sigma(cause,cond_cause);
   double cond_mean = as_scalar(cond_sig.proj*alpgamu);
@@ -177,11 +149,11 @@ rowvec dF1du(unsigned row, unsigned cause, unsigned indiv, unsigned cond_cause, 
 
   // Other individual
   unsigned cond_indiv;
-  if (indiv==1){
-    cond_indiv=2;
+  if (indiv==0){
+    cond_indiv=1;
   }
   else {
-    cond_indiv=1;
+    cond_indiv=0;
   }
 
   // Alpgam of other individual
@@ -206,11 +178,17 @@ rowvec dF1du(unsigned row, unsigned cause, unsigned indiv, unsigned cond_cause, 
   double inner = pow((c_alpgam),2)*as_scalar(cond_sig.inv);
 
   double cdf = pn(alpgam, cond_mean, as_scalar(cond_sig.vcov));
-  double pdf = invsqtwopi*sqrt(as_scalar(cond_sig.vcov))*exp(-0.5*inner);
+  double pdf = invsqtwopi*1/sqrt(as_scalar(cond_sig.vcov))*exp(-0.5*inner);
 
-  rowvec dcdfdu = pdf*(-cond_sig.proj);
+  uvec upos = zeros<uvec>(u.n_rows);
+  for (unsigned h=0; h<u.n_rows; h++){
+    upos(h) = h + 1;
+  };
 
+  mat proj = cond_sig.proj;
+  rowvec dcdfdu = pdf*(-proj.cols(upos));
   rowvec dF1du = data.dpiduMarg_get(row, cause, indiv)*cdf + data.piMarg_get(row, cause, indiv)*dcdfdu;
+
   return(dF1du);
 };
 
@@ -232,11 +210,11 @@ double F2(unsigned row, irowvec causes, const DataPairs &data, const gmat &sigma
   vmat cond_sig = sigma(causes);
   vec cond_mean = cond_sig.proj*u;
 
-  vec alp = data.alpha_get(row, causes);
-  vec gam = data.gamma_get(row, causes);
-  vec alpgam = alp - gam;
+  rowvec alp = data.alpha_get(row, causes);
+  rowvec gam = data.gamma_get(row, causes);
+  colvec alpgam = alp.t() - gam.t();
 
-  double F2 = data.piMarg_get(row, causes(0), 1)*data.piMarg_get(row, causes(1), 2)*pn(alpgam, cond_mean,cond_sig.vcov);
+  double F2 = data.piMarg_get(row, causes(0), 0)*data.piMarg_get(row, causes(1), 1)*pn(alpgam, cond_mean,cond_sig.vcov);
   return(F2);
 };
 
@@ -246,9 +224,9 @@ rowvec dF2du(unsigned row, irowvec causes, const DataPairs &data, const gmat &si
   vmat cond_sig = sigma(causes);
   vec cond_mean = cond_sig.proj*u;
 
-  vec alp = data.alpha_get(row, causes);
-  vec gam = data.gamma_get(row, causes);
-  vec alpgam = alp - gam;
+  rowvec alp = data.alpha_get(row, causes);
+  rowvec gam = data.gamma_get(row, causes);
+  colvec alpgam = alp.t() - gam.t();
 
   double cdf = pn(alpgam, cond_mean, cond_sig.vcov);
 
@@ -257,20 +235,24 @@ rowvec dF2du(unsigned row, irowvec causes, const DataPairs &data, const gmat &si
   mat iLambda = diagmat(1/ll);
   mat R = iLambda*cond_sig.vcov*iLambda;
   mat LR = Lambda*R;
-
   double r = R(0,1);
-  rowvec ytilde = iLambda*(alpgam - cond_mean);
+  Rcpp::Rcout << "R: " << R <<std::endl;
+  Rcpp::Rcout << "r: " << r <<std::endl;
+  Rcpp::Rcout << "Lambda: " << Lambda <<std::endl;
+  Rcpp::Rcout << "iLambda: " << iLambda <<std::endl;
+  Rcpp::Rcout << "ll: " << ll <<std::endl;
 
+  vec ytilde = iLambda*(alpgam - cond_mean);
   vecmat D = Dbvn(ytilde(0),ytilde(1),r);
   mat M = -LR*D.V;
 
-  rowvec dcdfdu = cond_sig.proj*cond_sig.inv*M;
+  vec dcdfdu = cond_sig.proj*cond_sig.inv*M;
 
-  rowvec dF2du_1 = data.dpiduMarg_get(row, causes(0), 1)*data.piMarg_get(row, causes(1), 2)*cdf ;
-  rowvec dF2du_2 = data.dpiduMarg_get(row, causes(1), 2)*data.piMarg_get(row, causes(0), 1)*cdf;
-  rowvec dF2du_3 = data.piMarg_get(row, causes(0), 1)*data.piMarg_get(row, causes(1), 2)*dcdfdu;
+  rowvec dF2du_1 = data.dpiduMarg_get(row, causes(0), 0)*data.piMarg_get(row, causes(1), 1)*cdf ;
+  rowvec dF2du_2 = data.dpiduMarg_get(row, causes(1), 1)*data.piMarg_get(row, causes(0), 0)*cdf;
+  vec dF2du_3 = data.piMarg_get(row, causes(0), 0)*data.piMarg_get(row, causes(1), 1)*dcdfdu;
 
-  rowvec dF2du = dF2du_1 + dF2du_2 + dF2du_3;
+  rowvec dF2du = dF2du_1 + dF2du_2 + dF2du_3.t();
   return(dF2du);
 };
 

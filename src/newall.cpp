@@ -73,15 +73,15 @@ double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gm
       // Full follow-up for neither individual
       double lik = 1;
       // Marginal probabilities
-      for (unsigned i=0; i<2; i++){ // Over individuals
-	for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
-	  double prob = F1(row, j, i, data, sigmaMarg, u);
-	  lik -= prob; // Subtracting
-	}
-      }
+      //for (unsigned i=0; i<2; i++){ // Over individuals
+      //for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
+      //  double prob = F1(row, j, i, data, sigmaMarg, u);
+      //  lik -= prob; // Subtracting
+      //}
+      //}
       // Bivariate probabilities
       for (unsigned k=1; k<=data.ncauses; k++){ // Over failure causes
-	for (unsigned l=1; l<=data.ncauses; l++){
+      	for (unsigned l=1; l<=data.ncauses; l++){
 	  irowvec vcauses(2);
 	  vcauses(0) = k; vcauses(1) = l;
 	  double prob = F2(row, vcauses, data, sigmaJoint, u);
@@ -155,9 +155,6 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
   rowvec res = zeros<rowvec>(data.ncauses); // Initialising output (score contribution)
 
   if ((causes(0) > 0) & (causes(1) > 0)){
-
-    Rcpp::Rcout << "here" << std::endl;
-
     /* Both individuals experience failure */
     res = dlogdF2du(row, causes, data, sigmaJoint, u);
   }
@@ -208,18 +205,19 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
       double lik = 1;
       rowvec likdu = zeros<rowvec>(data.ncauses);
       // Marginal probabilities
-      for (unsigned i=0; i<2; i++){ // Over individuals
-	for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
-	  double prob = F1(row, j, i, data, sigmaMarg, u);
-	  rowvec probdu = dF1du(row, j, i, data, sigmaMarg, u);
-	  lik -= prob; // Subtracting
-	  likdu -= probdu;
-	}
-      }
+      //for (unsigned i=0; i<2; i++){ // Over individuals
+      //for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
+      //double prob = F1(row, j, i, data, sigmaMarg, u);
+      //  rowvec probdu = dF1du(row, j, i, data, sigmaMarg, u);
+	  //lik -= prob; // Subtracting
+	  //likdu -= probdu;
+      //}
+      //}
+      Rcpp::Rcout << "there" <<std::endl;
       // Bivariate probabilities
       for (unsigned k=1; k<=data.ncauses; k++){ // Over failure causes
-	for (unsigned l=1; l<=data.ncauses; l++){
-	  irowvec vcauses(2);
+      	for (unsigned l=1; l<=data.ncauses; l++){
+      	  irowvec vcauses(2);
 	  vcauses(0) = k; vcauses(1) = l;
 	  double prob = F2(row, vcauses, data, sigmaJoint, u);
 	  rowvec probdu = dF2du(row, vcauses, data, sigmaJoint, u);
@@ -257,9 +255,6 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
 	    likdu -= probdu;
 	  }
 	  else { // Conditional
-
-	    Rcpp::Rcout << "here " <<std::endl;
-
 	    double prob = F1(row, j, i, cond_cause, data, sigmaCond, u);
 	    rowvec probdu = dF1du(row, j, i, cond_cause, data, sigmaCond, u);
 	    lik -= prob;
