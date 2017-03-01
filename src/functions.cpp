@@ -236,17 +236,12 @@ rowvec dF2du(unsigned row, irowvec causes, const DataPairs &data, const gmat &si
   mat R = iLambda*cond_sig.vcov*iLambda;
   mat LR = Lambda*R;
   double r = R(0,1);
-  Rcpp::Rcout << "R: " << R <<std::endl;
-  Rcpp::Rcout << "r: " << r <<std::endl;
-  Rcpp::Rcout << "Lambda: " << Lambda <<std::endl;
-  Rcpp::Rcout << "iLambda: " << iLambda <<std::endl;
-  Rcpp::Rcout << "ll: " << ll <<std::endl;
 
   vec ytilde = iLambda*(alpgam - cond_mean);
   vecmat D = Dbvn(ytilde(0),ytilde(1),r);
   mat M = -LR*D.V;
 
-  vec dcdfdu = cond_sig.proj*cond_sig.inv*M;
+  vec dcdfdu = trans(cond_sig.proj)*cond_sig.inv*M;
 
   rowvec dF2du_1 = data.dpiduMarg_get(row, causes(0), 0)*data.piMarg_get(row, causes(1), 1)*cdf ;
   rowvec dF2du_2 = data.dpiduMarg_get(row, causes(1), 1)*data.piMarg_get(row, causes(0), 0)*cdf;

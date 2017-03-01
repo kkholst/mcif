@@ -73,12 +73,12 @@ double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gm
       // Full follow-up for neither individual
       double lik = 1;
       // Marginal probabilities
-      //for (unsigned i=0; i<2; i++){ // Over individuals
-      //for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
-      //  double prob = F1(row, j, i, data, sigmaMarg, u);
-      //  lik -= prob; // Subtracting
-      //}
-      //}
+      for (unsigned i=0; i<2; i++){ // Over individuals
+	for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
+	  double prob = F1(row, j, i, data, sigmaMarg, u);
+	  lik -= prob; // Subtracting
+	}
+      }
       // Bivariate probabilities
       for (unsigned k=1; k<=data.ncauses; k++){ // Over failure causes
       	for (unsigned l=1; l<=data.ncauses; l++){
@@ -205,15 +205,14 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
       double lik = 1;
       rowvec likdu = zeros<rowvec>(data.ncauses);
       // Marginal probabilities
-      //for (unsigned i=0; i<2; i++){ // Over individuals
-      //for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
-      //double prob = F1(row, j, i, data, sigmaMarg, u);
-      //  rowvec probdu = dF1du(row, j, i, data, sigmaMarg, u);
-	  //lik -= prob; // Subtracting
-	  //likdu -= probdu;
-      //}
-      //}
-      Rcpp::Rcout << "there" <<std::endl;
+      for (unsigned i=0; i<2; i++){ // Over individuals
+	for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
+	  double prob = F1(row, j, i, data, sigmaMarg, u);
+	  rowvec probdu = dF1du(row, j, i, data, sigmaMarg, u);
+	  lik -= prob; // Subtracting
+	  likdu -= probdu;
+	}
+      }
       // Bivariate probabilities
       for (unsigned k=1; k<=data.ncauses; k++){ // Over failure causes
       	for (unsigned l=1; l<=data.ncauses; l++){
@@ -302,17 +301,7 @@ double loglikout(mat sigma, vec u, unsigned ncauses, imat causes, mat alpha, mat
     for (unsigned i=0; i<ncauses; i++){
       rcJ(0)=h;
       rcJ(1)=ncauses+i;
-
-      //Rcpp::Rcout << "here " << rcJ <<std::endl;
-      //Rcpp::Rcout << "there" << rcu <<std::endl;
-
       vmat x = vmat(sigma, rcJ, rcu);
-
-      //Rcpp::Rcout << "vcov" << x.vcov <<std::endl;
-      //Rcpp::Rcout << "inv" << x.inv <<std::endl;
-      //Rcpp::Rcout << "loginvsqrtdet" << x.loginvsqdet <<std::endl;
-      //Rcpp::Rcout << "proj" << x.proj <<std::endl;
-
       sigmaJoint.set(h,i,x);
     };
   };
@@ -320,17 +309,7 @@ double loglikout(mat sigma, vec u, unsigned ncauses, imat causes, mat alpha, mat
   // Calculating and setting sigmaMarg
   for (unsigned h=0; h<ncauses; h++){
     rc1(0) = h;
-
-    //Rcpp::Rcout << "here " << rc1 <<std::endl;
-    //Rcpp::Rcout << "there" << rcu <<std::endl;
-
     vmat x = vmat(sigma, rc1, rcu);
-
-    //Rcpp::Rcout << "vcov" << x.vcov <<std::endl;
-    //Rcpp::Rcout << "inv" << x.inv <<std::endl;
-    //Rcpp::Rcout << "loginvsqrtdet" << x.loginvsqdet <<std::endl;
-    //Rcpp::Rcout << "proj" << x.proj <<std::endl;
-
     sigmaMarg.set(h,0,x);
   };
 
@@ -342,17 +321,7 @@ double loglikout(mat sigma, vec u, unsigned ncauses, imat causes, mat alpha, mat
       for (unsigned j=0; j<ncauses; j++){
 	rc2(j+1) = rcu(j);
       };
-
-      //Rcpp::Rcout << "here " << rc1 <<std::endl;
-      //Rcpp::Rcout << "there" << rc2 <<std::endl;
-
       vmat x = vmat(sigma, rc1, rc2);
-
-      //Rcpp::Rcout << "vcov" << x.vcov <<std::endl;
-      //Rcpp::Rcout << "inv" << x.inv <<std::endl;
-      //Rcpp::Rcout << "loginvsqrtdet" << x.loginvsqdet <<std::endl;
-      //Rcpp::Rcout << "proj" << x.proj <<std::endl;
-
       sigmaCond.set(h,i,x);
     };
   };
