@@ -17,6 +17,7 @@ using namespace arma;
 using namespace std;
 
 const double twopi = 2*datum::pi;
+const double h = 1e-8;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /* Full loglikelihood */
@@ -275,6 +276,28 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
   return(res);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/* Hessian matrix of full loglikelihood */
+mat D2loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gmat &sigmaJoint, const gmat &sigmaCond, vmat sigmaU, vec u, bool full=1){
+
+  /* Initialising Hessian matrix */
+  mat res = zeros<mat>(data.ncauses,data.ncauses);
+  mat u_p(1,data.ncauses);
+  mat u_m(1,data.ncauses);
+
+  for (unsigned i=0; i<data.ncauses; i++){
+    mat u_p = u;
+    mat u_m = u;
+    u_p(i,0) += h;
+    u_m(i,0) -= h;
+
+    /* Central difference */
+    res.row(i) = (Dloglikfull(row, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u_p, full)-Dloglikfull(row, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u_m, full))/(2*h);
+  }
+  /* Return */
+  return(res);
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // FOR TESTING
 
@@ -410,3 +433,213 @@ rowvec Dloglikout(mat sigma, vec u, unsigned ncauses, imat causes, mat alpha, ma
   return score;
 };
 
+// [[Rcpp::export]]
+mat D2loglikout(mat sigma, vec u, unsigned ncauses, imat causes, mat alpha, mat dalpha, mat beta, mat gamma){
+
+  // Initialising gmats of sigma (Joint, Cond)
+  gmat sigmaJoint = gmat((double)ncauses, (double)ncauses);
+  gmat sigmaCond = gmat((double)ncauses, (double)ncauses);
+  gmat sigmaMarg = gmat((double)ncauses, 1);
+
+  // Vectors for extracting rows and columns from sigma
+  uvec rcJ(2); /* for joint */
+  uvec rc1(1); /* for conditional */
+  uvec rc2((double)ncauses+1); /* for conditional */
+
+  uvec rcu(ncauses);
+  for (unsigned h=0; h<ncauses; h++){
+    rcu(h) = (double)ncauses*2 + h;
+  };
+
+  // Calculating and setting sigmaJoint
+  for (unsigned h=0; h<ncauses; h++){
+    for (unsigned i=0; i<ncauses; i++){
+      rcJ(0)=h;
+      rcJ(1)=ncauses+i;
+      vmat x = vmat(sigma, rcJ, rcu);
+      sigmaJoint.set(h,i,x);
+    };
+  };
+
+  // Calculating and setting sigmaMarg
+  for (unsigned h=0; h<ncauses; h++){
+    rc1(0) = h;
+    vmat x = vmat(sigma, rc1, rcu);
+    sigmaMarg.set(h,0,x);
+  };
+
+  // Calculating and setting sigmaCond
+  for (unsigned h=0; h<ncauses; h++){
+    for (unsigned i=0; i<ncauses; i++){
+      rc1(0) = h;
+      rc2(0) = ncauses + i;
+      for (unsigned j=0; j<ncauses; j++){
+	rc2(j+1) = rcu(j);
+      };
+      vmat x = vmat(sigma, rc1, rc2);
+      sigmaCond.set(h,i,x);
+    };
+  };
+
+  // vmat of the us
+  mat matU = sigma.submat(rcu,rcu);
+  vmat sigmaU = vmat(matU);
+
+  // Generating DataPairs
+  DataPairs data = DataPairs(ncauses, causes, alpha, dalpha, beta, gamma);
+
+  unsigned row = 0;
+
+  // Estimating Hessian
+  mat hes = D2loglikfull(row, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u);
+
+  // Return
+  return hes;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/* Marginal likelihood via AGQ */
+// [[Rcpp::export]]
+arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha, arma::mat dalpha, arma::mat beta, arma::mat gamma, arma::mat eb0, int nq=1, double stepsize=0.7, unsigned iter=20, bool debug=false) {
+
+  QuadRule gh(nq);
+  double K = sqrt((double)ncauses);
+  arma::vec z = gh.Abscissa();
+  arma::vec w = gh.Weight();
+  int n = causes.n_rows;
+  arma::vec warn(n); warn.fill(1);
+  arma::vec res(n); res.fill(0);
+
+  // Initialising gmats of sigma (Joint, Cond)
+  gmat sigmaJoint = gmat((double)ncauses, (double)ncauses);
+  gmat sigmaCond = gmat((double)ncauses, (double)ncauses);
+  gmat sigmaMarg = gmat((double)ncauses, 1);
+
+  // Vectors for extracting rows and columns from sigma
+  uvec rcJ(2); /* for joint */
+  uvec rc1(1); /* for conditional */
+  uvec rc2((double)ncauses+1); /* for conditional */
+
+  uvec rcu(ncauses);
+  for (unsigned h=0; h<ncauses; h++){
+    rcu(h) = (double)ncauses*2 + h;
+  };
+
+  // Calculating and setting sigmaJoint
+  for (unsigned h=0; h<ncauses; h++){
+    for (unsigned i=0; i<ncauses; i++){
+      rcJ(0)=h;
+      rcJ(1)=ncauses+i;
+      vmat x = vmat(sigma, rcJ, rcu);
+      sigmaJoint.set(h,i,x);
+    };
+  };
+
+  // Calculating and setting sigmaMarg
+  for (unsigned h=0; h<ncauses; h++){
+    rc1(0) = h;
+    vmat x = vmat(sigma, rc1, rcu);
+    sigmaMarg.set(h,0,x);
+  };
+
+  // Calculating and setting sigmaCond
+  for (unsigned h=0; h<ncauses; h++){
+    for (unsigned i=0; i<ncauses; i++){
+      rc1(0) = h;
+      rc2(0) = ncauses + i;
+      for (unsigned j=0; j<ncauses; j++){
+	rc2(j+1) = rcu(j);
+      };
+      vmat x = vmat(sigma, rc1, rc2);
+      sigmaCond.set(h,i,x);
+    };
+  };
+
+  // vmat of the us
+  mat matU = sigma.submat(rcu,rcu);
+  vmat sigmaU = vmat(matU);
+
+  // Generating DataPairs
+  DataPairs data = DataPairs(ncauses, causes, alpha, dalpha, beta, gamma);
+
+  for (int i=0; i<n; i++) {
+    arma::mat causes0 = causes.row(i);
+    arma::mat beta0 = beta.row(i);
+    arma::mat alph0 = alpha.row(i);
+    arma::mat dalpha0 = dalpha.row(i);
+    arma::mat gamma0 = gamma.row(i);
+    arma::mat u0(1,ncauses); u0 = eb0.row(i);
+
+    double conv = 1;
+    arma::mat H((double)ncauses, (double)ncauses);
+    arma::mat U(1, (double)ncauses);
+
+    /* Newton Raphson */
+    unsigned j;
+    for (j=0; j<iter; j++) {
+      U = Dloglikfull(row, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u);
+      H = D2loglikfull(row, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u);
+      conv = (U(0)*U(0)+U(1)*U(1))/2;
+      if (conv<_inner_NR_abseps) {
+	warn(i) = 0;
+	break;
+      }
+      u0 = u0-stepsize*U*H.i();
+    }
+    if (debug) {
+      U = Dloglikfull;
+      vec L = loglikfull;
+      Rcpp::Rcout << "iter: " << j <<std::endl;
+      Rcpp::Rcout << "conv: " << conv <<std::endl;
+      Rcpp::Rcout << "L: " << L <<std::endl;
+      Rcpp::Rcout << "U: " << U <<std::endl;
+      Rcpp::Rcout << "i: " << i <<std::endl;
+    }
+
+    /* Laplace approximation */
+    if (nq==0) {
+      vec logf = loglikfull;
+      double lapl = log(twopi)-0.5*log(det(H))+logf(0);
+      res(i) = lapl;
+    } else {
+
+      /* Adaptive Gaussian quadrature */
+      bool useSVD = true;
+      arma::mat G = -H;
+      double logdetG = 0;
+      arma::mat Bi;
+      if (useSVD){
+	arma::mat W; vec s; arma::mat V;
+	svd(W,s,V,G);
+	vec is=s;
+	for (unsigned m=0; m<s.n_elem; m++){
+	  if (s[m]<1e-9){
+	    s[m] = 1e-9;
+	    is[m] = 0;
+	  } else {
+	    is[m] = 1/sqrt(s[m]);
+	  }
+	}
+	Bi = trans(W*diagmat(is)*V);
+	logdetG = sum(log(s));
+      } else {
+	arma::mat B = chol(G);
+	Bi = B.i();
+	logdetG = log(det(G));
+      }
+      double Sum = 0;
+      for (unsigned k=0; k<z.n_elem; k++) {
+      	for (unsigned l=0; l<z.n_elem; l++) {
+      	  arma::mat z0(2,1);
+      	  z0(0) = z[k]; z0(1) = z[l];
+      	  arma::mat a0 = u0.t()+K*Bi*z0;
+	  double w0 = w[k]*w[l]*exp(z0[0]*z0[0]+z0[1]*z0[1]);
+	  double ll0 = loglikfull;
+	  Sum += exp(ll0)*w0;
+      	}
+      }
+      res(i) = 2*log(K)-0.5*logdetG+log(Sum);
+    }
+  }
+  return(res);
+}
