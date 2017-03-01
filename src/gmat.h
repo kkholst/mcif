@@ -1,12 +1,10 @@
 #ifndef GMAT_H
 #define GMAT_H
 
-#include <RcppArmadillo.h>
 #include <vector>
 #include <cassert>
 #include "vmat.h"
 
-using namespace Rcpp;
 using namespace arma;
 using namespace std;
 

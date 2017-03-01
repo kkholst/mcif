@@ -1,6 +1,3 @@
-// [[Rcpp::depends(RcppArmadillo)]]
-
-#include "vmat.h"
 #include "gmat.h"
 
 gmat::gmat(unsigned nrow, unsigned ncol) {

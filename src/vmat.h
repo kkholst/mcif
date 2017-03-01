@@ -4,7 +4,6 @@
 #include <RcppArmadillo.h>
 #include <vector>
 
-using namespace Rcpp;
 using namespace arma;
 using namespace std;
 
