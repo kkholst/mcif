@@ -1,5 +1,3 @@
-// [[Rcpp::depends(RcppArmadillo)]]
-
 #include "vmat.h"
 
 // Member functions definitions including constructor

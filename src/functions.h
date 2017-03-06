@@ -1,7 +1,6 @@
 #ifndef _FUNCTIONS_H_
 #define _FUNCTIONS_H_
 
-#include <RcppArmadillo.h>
 #include "vmat.h"
 #include "gmat.h"
 #include "DataPairs.h"
