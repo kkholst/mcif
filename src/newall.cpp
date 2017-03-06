@@ -17,7 +17,9 @@ using namespace arma;
 using namespace std;
 
 const double twopi = 2*datum::pi;
+const double logtwopi = log(2*datum::pi);
 const double h = 1e-8;
+const double _inner_NR_abseps=0.0001;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /* Full loglikelihood */
@@ -132,7 +134,7 @@ double loglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const gm
     double inner = as_scalar(u.t()*sig.inv*u);
 
     // PDF of u
-    double logpdfu = normconst + sig.loginvsqdet - 0.5*inner;
+    double logpdfu = -normconst + sig.loginvsqdet - 0.5*inner;
 
     // Adding to the loglik
     res += logpdfu;
@@ -359,7 +361,7 @@ double loglikout(mat sigma, vec u, unsigned ncauses, imat causes, mat alpha, mat
   unsigned row = 0;
 
   // Normalisation constant
-  double normconst = -((double)data.ncauses/2)*log(twopi);
+  double normconst = ((double)data.ncauses/2)*log(twopi);
 
   // Estimating likelihood contribution
   double loglik = loglikfull(row, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u, normconst);
@@ -503,7 +505,7 @@ mat D2loglikout(mat sigma, vec u, unsigned ncauses, imat causes, mat alpha, mat 
 arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha, arma::mat dalpha, arma::mat beta, arma::mat gamma, arma::mat eb0, int nq=1, double stepsize=0.7, unsigned iter=20, bool debug=false) {
 
   QuadRule gh(nq);
-  double K = sqrt((double)ncauses);
+  double K = sqrt(2);
   arma::vec z = gh.Abscissa();
   arma::vec w = gh.Weight();
   int n = causes.n_rows;
@@ -562,13 +564,12 @@ arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha
   // Generating DataPairs
   DataPairs data = DataPairs(ncauses, causes, alpha, dalpha, beta, gamma);
 
+  // Normalisation constant
+  double normconst = ((double)data.ncauses/2)*logtwopi;
+  double agqconst = (double)data.ncauses*log(K);
+
   for (int i=0; i<n; i++) {
-    arma::mat causes0 = causes.row(i);
-    arma::mat beta0 = beta.row(i);
-    arma::mat alph0 = alpha.row(i);
-    arma::mat dalpha0 = dalpha.row(i);
-    arma::mat gamma0 = gamma.row(i);
-    arma::mat u0(1,ncauses); u0 = eb0.row(i);
+    arma::mat u0(1,(double)ncauses); u0 = eb0.row(i);
 
     double conv = 1;
     arma::mat H((double)ncauses, (double)ncauses);
@@ -577,8 +578,8 @@ arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha
     /* Newton Raphson */
     unsigned j;
     for (j=0; j<iter; j++) {
-      U = Dloglikfull(row, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u);
-      H = D2loglikfull(row, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u);
+      U = Dloglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u0);
+      H = D2loglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u0);
       conv = (U(0)*U(0)+U(1)*U(1))/2;
       if (conv<_inner_NR_abseps) {
 	warn(i) = 0;
@@ -587,8 +588,8 @@ arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha
       u0 = u0-stepsize*U*H.i();
     }
     if (debug) {
-      U = Dloglikfull;
-      vec L = loglikfull;
+      U = Dloglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u0);
+      double L = loglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u0, normconst);
       Rcpp::Rcout << "iter: " << j <<std::endl;
       Rcpp::Rcout << "conv: " << conv <<std::endl;
       Rcpp::Rcout << "L: " << L <<std::endl;
@@ -598,8 +599,8 @@ arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha
 
     /* Laplace approximation */
     if (nq==0) {
-      vec logf = loglikfull;
-      double lapl = log(twopi)-0.5*log(det(H))+logf(0);
+      double logf = loglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u0, normconst);
+      double lapl = normconst-0.5*log(det(H))+logf;
       res(i) = lapl;
     } else {
 
@@ -634,11 +635,11 @@ arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha
       	  z0(0) = z[k]; z0(1) = z[l];
       	  arma::mat a0 = u0.t()+K*Bi*z0;
 	  double w0 = w[k]*w[l]*exp(z0[0]*z0[0]+z0[1]*z0[1]);
-	  double ll0 = loglikfull;
+	  double ll0 = loglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, a0, normconst);
 	  Sum += exp(ll0)*w0;
       	}
       }
-      res(i) = 2*log(K)-0.5*logdetG+log(Sum);
+      res(i) = agqconst-0.5*logdetG+log(Sum);
     }
   }
   return(res);
