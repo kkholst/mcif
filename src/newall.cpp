@@ -580,7 +580,7 @@ arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha
     for (j=0; j<iter; j++) {
       U = Dloglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u0);
       H = D2loglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u0);
-      conv = (U(0)*U(0)+U(1)*U(1))/2;
+      conv = norm(U,2)/(double)ncauses;
       if (conv<_inner_NR_abseps) {
 	warn(i) = 0;
 	break;
@@ -628,16 +628,21 @@ arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha
 	Bi = B.i();
 	logdetG = log(det(G));
       }
+      int Q = pow(z.n_elem, (double)ncauses);
       double Sum = 0;
-      for (unsigned k=0; k<z.n_elem; k++) {
-      	for (unsigned l=0; l<z.n_elem; l++) {
-      	  arma::mat z0(2,1);
-      	  z0(0) = z[k]; z0(1) = z[l];
-      	  arma::mat a0 = u0.t()+K*Bi*z0;
-	  double w0 = w[k]*w[l]*exp(z0[0]*z0[0]+z0[1]*z0[1]);
-	  double ll0 = loglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, a0, normconst);
-	  Sum += exp(ll0)*w0;
-      	}
+      for (int k=0; k<Q; k++) {
+	arma::mat z0mat((double)ncauses, Q);
+	arma::mat w0mat((double)ncauses, Q);
+	//	for (unsigned i=0; i<ncauses; i++){
+	//  z0mat(i,);
+	//  w0mat(i,);
+	//}
+	arma::vec z0 = z0mat.col(k);
+	arma::vec w0 = w0mat.col(k);
+	arma::mat a0 = u0.t()+K*Bi*z0;
+	double w0prod = prod(w0)*exp(norm(z0,2));
+	double ll0 = loglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, a0, normconst);
+	Sum += exp(ll0)*w0prod;
       }
       res(i) = agqconst-0.5*logdetG+log(Sum);
     }
