@@ -154,7 +154,6 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
   data.dlogpidu_gen(row, u);
 
   irowvec causes = data.causes_get(row); // Failure causes for pair in question
-
   rowvec res = zeros<rowvec>(data.ncauses); // Initialising output (score contribution)
 
   if ((causes(0) > 0) & (causes(1) > 0)){
@@ -569,11 +568,10 @@ arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha
   double agqconst = (double)data.ncauses*log(K);
 
   for (int i=0; i<n; i++) {
-    arma::mat u0(1,(double)ncauses); u0 = eb0.row(i);
-
+    arma::vec u0((double)ncauses); u0 = eb0.col(i);
     double conv = 1;
     arma::mat H((double)ncauses, (double)ncauses);
-    arma::mat U(1, (double)ncauses);
+    arma::rowvec U((double)ncauses);
 
     /* Newton Raphson */
     unsigned j;
@@ -581,12 +579,19 @@ arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha
       U = Dloglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u0);
       H = D2loglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u0);
       conv = norm(U,2)/(double)ncauses;
+      Rcpp::Rcout << "conv" << conv <<std::endl;
       if (conv<_inner_NR_abseps) {
 	warn(i) = 0;
 	break;
       }
-      u0 = u0-stepsize*U*H.i();
+      Rcpp::Rcout << "u0" << u0 <<std::endl;
+      Rcpp::Rcout << "U" << U <<std::endl;
+      Rcpp::Rcout << "H" << H <<std::endl;
+      u0 = u0-stepsize*H.i()*U.t();
     }
+
+    Rcpp::Rcout << "u0" << u0 <<std::endl;
+
     if (debug) {
       U = Dloglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u0);
       double L = loglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u0, normconst);
@@ -603,7 +608,6 @@ arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha
       double lapl = normconst-0.5*log(det(H))+logf;
       res(i) = lapl;
     } else {
-
       /* Adaptive Gaussian quadrature */
       bool useSVD = true;
       arma::mat G = -H;
@@ -628,18 +632,41 @@ arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha
 	Bi = B.i();
 	logdetG = log(det(G));
       }
+
       int Q = pow(z.n_elem, (double)ncauses);
+
+      //Rcpp::Rcout << "Q: " << Q <<std::endl;
+
       double Sum = 0;
       for (int k=0; k<Q; k++) {
-	arma::mat z0mat((double)ncauses, Q);
-	arma::mat w0mat((double)ncauses, Q);
-	//	for (unsigned i=0; i<ncauses; i++){
-	//  z0mat(i,);
-	//  w0mat(i,);
-	//}
-	arma::vec z0 = z0mat.col(k);
-	arma::vec w0 = w0mat.col(k);
-	arma::mat a0 = u0.t()+K*Bi*z0;
+
+	Rcpp::Rcout << "k: " << k <<std::endl;
+
+	uvec pos = zeros<uvec>((double)ncauses);
+	int x = k;
+	for (int j=(double)ncauses; j>0; j--){
+
+	  //Rcpp::Rcout << "j: " << j <<std::endl;
+
+	  int q = pow(z.n_elem, j-1);
+	  pos[j] = x/q;
+	  x = x-pos[j]*q;
+	}
+
+	//Rcpp::Rcout << "pos: " << pos <<std::endl;
+
+        arma::vec z0 = z(pos);
+	arma::vec w0 = w(pos);
+
+	//Rcpp::Rcout << "z: " << z <<std::endl;
+	//Rcpp::Rcout << "z0: " << z0 <<std::endl;
+	//Rcpp::Rcout << "w: " << w <<std::endl;
+	//Rcpp::Rcout << "w0: " << w0 <<std::endl;
+	//Rcpp::Rcout << "u0: " << u0 <<std::endl;
+	//Rcpp::Rcout << "K: " << K <<std::endl;
+	//Rcpp::Rcout << "Bi: " << Bi <<std::endl;
+
+	arma::mat a0 = u0+K*Bi*z0;
 	double w0prod = prod(w0)*exp(norm(z0,2));
 	double ll0 = loglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, a0, normconst);
 	Sum += exp(ll0)*w0prod;

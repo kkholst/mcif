@@ -2193,7 +2193,7 @@ mat D2loglikfull0(mat y, mat b, mat u, ss condsigma, mat alph, mat dalph, mat ta
 Marginal likelihood via AGQ
 */
 // [[Rcpp::export]]
-arma::vec loglik(arma::mat y, arma::mat b, arma::mat sigma, arma::mat alph, arma::mat dalph, arma::mat tau, arma::mat eb0, int nq=1, double stepsize=0.7, unsigned iter=20, bool debug=false) {
+arma::vec loglikold(arma::mat y, arma::mat b, arma::mat sigma, arma::mat alph, arma::mat dalph, arma::mat tau, arma::mat eb0, int nq=1, double stepsize=0.7, unsigned iter=20, bool debug=false) {
   QuadRule gh(nq);
   double K = sqrt(2);
   arma::vec z = gh.Abscissa();
@@ -2343,18 +2343,32 @@ arma::vec loglik(arma::mat y, arma::mat b, arma::mat sigma, arma::mat alph, arma
     double conv = 1;
     arma::mat H(2,2);
     arma::mat U(1,2);
+
+    arma::mat TEST(2,1); // TEST 27-03-2017
+
     /* Newton Raphson */
     unsigned j;
     for (j=0; j<iter; j++) {
       U = Dloglikfull0(y0,b0,u0,condsigma,alph0,dalph0,tau0);
       H = D2loglikfull0(y0,b0,u0,condsigma,alph0,dalph0,tau0);
-      conv = (U(0)*U(0)+U(1)*U(1))/2;
+      conv = norm(U,2)/2;
+      //conv = (U(0)*U(0)+U(1)*U(1))/2;
+      Rcpp::Rcout << "conv: " << conv <<std::endl;
       if (conv<_inner_NR_abseps) {
 	warn(i) = 0;
 	break;
       }
-      u0 = u0-stepsize*U*H.i();
+      Rcpp::Rcout << "u0" << u0 <<std::endl;
+      Rcpp::Rcout << "U" << U <<std::endl;
+      Rcpp::Rcout << "H" << H <<std::endl;
+      //      u0 = u0-stepsize*U*H.i();
+      TEST = H.i()*U.t();
+      //u0 = u0-stepsize*U*H.i();
+      u0 = u0-stepsize*TEST.t();
     }
+
+    Rcpp::Rcout << "u0" << u0 <<std::endl;
+
     if (debug) {
       U = Dloglikfull0(y0,b0,u0,condsigma,alph0,dalph0,tau0);
       vec L = loglikfull0(y0,b0,u0,condsigma,alph0,dalph0,tau0);
