@@ -47,8 +47,8 @@ Dtest <- function(u){
 }
 
 # Testing
-sourceCpp("P:/PhD/Scripts/mcif/src/newall.cpp")
-sourceCpp("P:/PhD/Scripts/mcif/src/loglik.cpp")
+sourceCpp("../../src/newall.cpp")
+sourceCpp("../../src/loglik.cpp")
 
 loglikout(sigma, u, ncauses, causes, alpha, dalpha, beta, gamma)
 logliktest(y, beta2, um, sigma2, alpha2-gamma2, dalpha2, tau)
