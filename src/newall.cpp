@@ -499,9 +499,46 @@ mat D2loglikout(mat sigma, vec u, unsigned ncauses, imat causes, mat alpha, mat 
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-/* Marginal likelihood via AGQ */
+/* Marginal likelihood via LA or AGQ */
 // [[Rcpp::export]]
 arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha, arma::mat dalpha, arma::mat beta, arma::mat gamma, arma::mat eb0, int nq=1, double stepsize=0.7, unsigned iter=20, bool debug=false) {
+
+  /* sigma: ncauses*ncauses matrix. variance-covariance matrix,
+            diagonal order: cause_1, ..., cause_ncauses, cause_1, ...,
+            cause_ncauses, u_1, ..., u_ncauses
+
+     ncauses: number of causes, eg. 2 or 3
+
+     causes: n*2 matrix where n is number of observations
+
+     alpha: n*(ncauses^2) matrix, inside the Probit link, column
+            order: family member 1: a_1, ..., a_ncauses, family member
+            2: a_1, ..., a_ncauses
+
+     dalpha: n*(ncauses^2) matrix, derivative of alpha wrt. t, column
+             order: family member 1: da_1, ..., da_ncauses, family
+             member 2: da_1, ..., da_ncauses
+
+     beta: n*(ncauses^2) matrix with XB, part of cluster-specific risk
+           levels, column order: family member 1: b_1, ..., b_ncauses,
+           family member 2: b_1, ..., b_ncauses
+
+     gamma: n*(ncauses^2) matrix with XG, inside the Probit link,
+            column order: family member 1: g_1, ..., g_ncauses, family
+            member 2: g_1, ..., g_ncauses
+
+     eb0: n*ncauses matrix, starting point for Newton-Raphson
+          algorithm, shared by family member 1 and 2
+
+     nq: number of quadrature points, 0 corresponds to LA
+
+     stepsize: used in Newton-Raphson to find optimal u (random
+               effects affecting pi1 and pi2)
+
+     iter: number of iterations allowed in Newton-Raphson
+
+     debug: if true output from Newton-Raphson is printed
+  */
 
   QuadRule gh(nq);
   double K = sqrt(2);
