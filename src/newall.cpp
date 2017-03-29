@@ -578,20 +578,13 @@ arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha
     for (j=0; j<iter; j++) {
       U = Dloglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u0);
       H = D2loglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u0);
-      conv = norm(U,2)/(double)ncauses;
-      Rcpp::Rcout << "conv" << conv <<std::endl;
+      conv = dot(U,U)/(double)ncauses;
       if (conv<_inner_NR_abseps) {
 	warn(i) = 0;
 	break;
       }
-      Rcpp::Rcout << "u0" << u0 <<std::endl;
-      Rcpp::Rcout << "U" << U <<std::endl;
-      Rcpp::Rcout << "H" << H <<std::endl;
       u0 = u0-stepsize*H.i()*U.t();
     }
-
-    Rcpp::Rcout << "u0" << u0 <<std::endl;
-
     if (debug) {
       U = Dloglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u0);
       double L = loglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u0, normconst);
@@ -635,39 +628,19 @@ arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha
 
       int Q = pow(z.n_elem, (double)ncauses);
 
-      //Rcpp::Rcout << "Q: " << Q <<std::endl;
-
       double Sum = 0;
       for (int k=0; k<Q; k++) {
-
-	Rcpp::Rcout << "k: " << k <<std::endl;
-
 	uvec pos = zeros<uvec>((double)ncauses);
 	int x = k;
 	for (int j=(double)ncauses; j>0; j--){
-
-	  //Rcpp::Rcout << "j: " << j <<std::endl;
-
-	  int q = pow(z.n_elem, j-1);
-	  pos[j] = x/q;
-	  x = x-pos[j]*q;
+	int q = pow(z.n_elem, j-1);
+	pos[j-1] = x/q;
+	x = x-pos[j-1]*q;
 	}
-
-	//Rcpp::Rcout << "pos: " << pos <<std::endl;
-
         arma::vec z0 = z(pos);
 	arma::vec w0 = w(pos);
-
-	//Rcpp::Rcout << "z: " << z <<std::endl;
-	//Rcpp::Rcout << "z0: " << z0 <<std::endl;
-	//Rcpp::Rcout << "w: " << w <<std::endl;
-	//Rcpp::Rcout << "w0: " << w0 <<std::endl;
-	//Rcpp::Rcout << "u0: " << u0 <<std::endl;
-	//Rcpp::Rcout << "K: " << K <<std::endl;
-	//Rcpp::Rcout << "Bi: " << Bi <<std::endl;
-
 	arma::mat a0 = u0+K*Bi*z0;
-	double w0prod = prod(w0)*exp(norm(z0,2));
+	double w0prod = prod(w0)*exp(dot(z0,z0));
 	double ll0 = loglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, a0, normconst);
 	Sum += exp(ll0)*w0prod;
       }

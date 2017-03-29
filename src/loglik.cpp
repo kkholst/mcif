@@ -2344,30 +2344,18 @@ arma::vec loglikold(arma::mat y, arma::mat b, arma::mat sigma, arma::mat alph, a
     arma::mat H(2,2);
     arma::mat U(1,2);
 
-    arma::mat TEST(2,1); // TEST 27-03-2017
-
     /* Newton Raphson */
     unsigned j;
     for (j=0; j<iter; j++) {
       U = Dloglikfull0(y0,b0,u0,condsigma,alph0,dalph0,tau0);
       H = D2loglikfull0(y0,b0,u0,condsigma,alph0,dalph0,tau0);
-      conv = norm(U,2)/2;
-      //conv = (U(0)*U(0)+U(1)*U(1))/2;
-      Rcpp::Rcout << "conv: " << conv <<std::endl;
+      conv = (U(0)*U(0)+U(1)*U(1))/2;
       if (conv<_inner_NR_abseps) {
 	warn(i) = 0;
 	break;
       }
-      Rcpp::Rcout << "u0" << u0 <<std::endl;
-      Rcpp::Rcout << "U" << U <<std::endl;
-      Rcpp::Rcout << "H" << H <<std::endl;
-      //      u0 = u0-stepsize*U*H.i();
-      TEST = H.i()*U.t();
-      //u0 = u0-stepsize*U*H.i();
-      u0 = u0-stepsize*TEST.t();
+      u0 = u0-stepsize*U*H.i();
     }
-
-    Rcpp::Rcout << "u0" << u0 <<std::endl;
 
     if (debug) {
       U = Dloglikfull0(y0,b0,u0,condsigma,alph0,dalph0,tau0);
