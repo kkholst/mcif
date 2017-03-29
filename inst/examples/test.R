@@ -48,9 +48,7 @@ beta <- cbind(datprep$x.1%*%b1, datprep$x.1%*%b2, datprep$x.2%*%b1, datprep$x.2%
 loglik(sigma, ncauses, causes, alpha, dalpha, beta, gamma, eb0, nq=1)
 
 #----------------------------------------------------------------------------------
-# Miscellaneous checks - operate on rows, if now row is specified it takes first row in data
-
-row <- 1
+# Miscellaneous checks - operate on rows, takes first row in data
 u <- c(0.1,0.3)
 
 # Full loglik
