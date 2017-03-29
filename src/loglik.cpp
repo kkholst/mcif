@@ -503,7 +503,7 @@ mat D2loglikout(mat sigma, vec u, unsigned ncauses, imat causes, mat alpha, mat 
 // [[Rcpp::export]]
 arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha, arma::mat dalpha, arma::mat beta, arma::mat gamma, arma::mat eb0, int nq=1, double stepsize=0.7, unsigned iter=20, bool debug=false) {
 
-  /* sigma: ncauses*ncauses matrix. variance-covariance matrix,
+  /* sigma: (ncauses*3)*(ncauses*3) matrix. variance-covariance matrix,
             diagonal order: cause_1, ..., cause_ncauses, cause_1, ...,
             cause_ncauses, u_1, ..., u_ncauses
 
@@ -638,6 +638,9 @@ arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha
       Rcpp::Rcout << "i: " << i <<std::endl;
     }
 
+    Rcpp::Rcout << "there" <<std::endl;
+    Rcpp::Rcout << "u0: " << u0 <<std::endl;
+
     if (nq==0) {
       Rcpp::Rcout << "ERROR nq must be larger than 0" <<std::endl;
     } else {
@@ -682,7 +685,9 @@ arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha
 	double ll0 = loglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, a0, normconst);
 	Sum += exp(ll0)*w0prod;
       }
+      Rcpp::Rcout << "everywhere" <<std::endl;
       res(i) = agqconst-0.5*logdetG+log(Sum);
+      Rcpp::Rcout << "i: " << i <<std::endl;
     }
   }
   return(res);
