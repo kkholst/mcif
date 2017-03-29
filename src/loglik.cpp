@@ -178,7 +178,6 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
       }
     }
     else if (((causes(0) < 0) & (causes(1) == 0)) | ((causes(0) == 0) & (causes(1) < 0))){
-
       // Full follow-up for only one individual
       for (unsigned i=0; i<2; i++){ // Over individuals
 	double lik = 1;
@@ -190,7 +189,7 @@ rowvec Dloglikfull(unsigned row, DataPairs &data, const gmat &sigmaMarg, const g
 	    lik -= prob;
 	    likdu -= probdu;
 	  }
-	}
+      	}
 	else {
 	  for (unsigned j=1; j<=data.ncauses; j++){ // Over failure causes
 	    double prob = F1(row, j, i, data, sigmaMarg, u);
@@ -638,9 +637,6 @@ arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha
       Rcpp::Rcout << "i: " << i <<std::endl;
     }
 
-    Rcpp::Rcout << "there" <<std::endl;
-    Rcpp::Rcout << "u0: " << u0 <<std::endl;
-
     if (nq==0) {
       Rcpp::Rcout << "ERROR nq must be larger than 0" <<std::endl;
     } else {
@@ -685,9 +681,7 @@ arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha
 	double ll0 = loglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, a0, normconst);
 	Sum += exp(ll0)*w0prod;
       }
-      Rcpp::Rcout << "everywhere" <<std::endl;
       res(i) = agqconst-0.5*logdetG+log(Sum);
-      Rcpp::Rcout << "i: " << i <<std::endl;
     }
   }
   return(res);

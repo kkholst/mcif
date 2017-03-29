@@ -158,7 +158,7 @@ double DataPairs::piMarg_get(int i, int cause, int indiv) const {
     else {
       pos = ncauses + cause - 1;
     }
-    return(pi(i,pos));
+    return(pi(0,pos));
 };
 
 // Member functions for class DataPairs object dpidu
@@ -233,11 +233,11 @@ void DataPairs::pi_gen(int i, vec u){
 
       if (j==0){
 	unsigned pos = k - 1;
-	this->pi(i,pos) = pi;
+	this->pi(0,pos) = pi;
       }
       else {
 	unsigned pos = ncauses + k - 1;
-	this->pi(i,pos) = pi;
+	this->pi(0,pos) = pi;
       };
     };
   };

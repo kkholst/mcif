@@ -6,8 +6,7 @@ source("helpfunctions_test.R")
 source("dataprep.R")
 
 # Sourcing loglik
-sourceCpp("P:/PhD/Scripts/mcif/src/loglik.cpp")
-#sourceCpp("../../loglik.cpp")
+sourceCpp("../../src/loglik.cpp")
 
 # Loading data
 load("data.Rdata")
@@ -20,9 +19,9 @@ vcv <- Posdef(n=4, ev=1:4) # For events
 sigma <- SigmaGen(vcv, ncauses, old=FALSE) # Adding u and getting right format for loglik: (ncauses*3)*(ncauses*3)
 
 # Prepping data
-datprep <- data.prep(data, time, status="event", cova=NULL)
+datprep <- data.prep(data, time="time", status="event", cova=NULL)
 causes <- datprep$causes
-eb0 <- t(datprep$eb0) # Must for some reason be transposed...
+eb0 <- t(datprep$eb0) # Must for some reason (aka my coding [LC]) be transposed...
 
 # Prepping alpha
 a1 <- 3
@@ -45,7 +44,9 @@ beta <- cbind(datprep$x.1%*%b1, datprep$x.1%*%b2, datprep$x.2%*%b1, datprep$x.2%
 #-----------------------------------------------------------------------
 # Estimation of loglikelihood
 #-----------------------------------------------------------------------
-loglik(sigma, ncauses, causes, alpha, dalpha, beta, gamma, eb0, nq=1)
+sourceCpp("../../src/loglik.cpp")
+loglikcont <- loglik(sigma, ncauses, causes, alpha, dalpha, beta, gamma, eb0, nq=3)
+sum(loglikcont)
 
 #----------------------------------------------------------------------------------
 # Miscellaneous checks - operate on rows, takes first row in data
