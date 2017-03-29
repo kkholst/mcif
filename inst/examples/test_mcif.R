@@ -47,7 +47,7 @@ Dtest <- function(u){
 }
 
 # Testing
-sourceCpp("../../src/newall.cpp")
+sourceCpp("../../src/old.cpp")
 sourceCpp("../../src/loglik.cpp")
 
 loglikout(sigma, u, ncauses, causes, alpha, dalpha, beta, gamma)
