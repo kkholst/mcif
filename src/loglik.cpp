@@ -530,7 +530,7 @@ arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha
      eb0: n*ncauses matrix, starting point for Newton-Raphson
           algorithm, shared by family member 1 and 2
 
-     nq: number of quadrature points, 0 corresponds to LA
+     nq: number of quadrature points, must be > 0, 1 corresponds to LA
 
      stepsize: used in Newton-Raphson to find optimal u (random
                effects affecting pi1 and pi2)
@@ -604,11 +604,17 @@ arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha
   double normconst = ((double)data.ncauses/2)*logtwopi;
   double agqconst = (double)data.ncauses*log(K);
 
+  int Q = pow(z.n_elem, (double)ncauses);
+
+  // For Newton-Raphson
+  arma::mat H((double)ncauses, (double)ncauses);
+  arma::rowvec U((double)ncauses);
+  arma::vec u0((double)ncauses);
+
   for (int i=0; i<n; i++) {
-    arma::vec u0((double)ncauses); u0 = eb0.col(i);
+    /* Initialising */
+    u0 = eb0.col(i);
     double conv = 1;
-    arma::mat H((double)ncauses, (double)ncauses);
-    arma::rowvec U((double)ncauses);
 
     /* Newton Raphson */
     unsigned j;
@@ -632,11 +638,8 @@ arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha
       Rcpp::Rcout << "i: " << i <<std::endl;
     }
 
-    /* Laplace approximation */
     if (nq==0) {
-      double logf = loglikfull(i, data, sigmaMarg, sigmaJoint, sigmaCond, sigmaU, u0, normconst);
-      double lapl = normconst-0.5*log(det(H))+logf;
-      res(i) = lapl;
+      Rcpp::Rcout << "ERROR nq must be larger than 0" <<std::endl;
     } else {
       /* Adaptive Gaussian quadrature */
       bool useSVD = true;
@@ -662,8 +665,6 @@ arma::vec loglik(arma::mat sigma, unsigned ncauses, imat causes, arma::mat alpha
 	Bi = B.i();
 	logdetG = log(det(G));
       }
-
-      int Q = pow(z.n_elem, (double)ncauses);
 
       double Sum = 0;
       for (int k=0; k<Q; k++) {
