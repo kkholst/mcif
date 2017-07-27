@@ -14,12 +14,12 @@ dg <- function(x,delta){
 #-----------------------------------------------------------------------
 # Data preparing function
 #-----------------------------------------------------------------------
-data.prep <- function(data, time, status, ID, w, cova=NULL){
+data.prep <- function(data, time, status, cova=NULL){
 
 #-----------------------------------------------------------------------
-# Causes of failure
+# The Ys
 #-----------------------------------------------------------------------
-causes <- cbind(data[, paste(status, 1, sep="")], data[, paste(status, 2, sep="")])
+y <- cbind(data[, paste(status, 1, sep="")], data[, paste(status, 2, sep="")])
 
 #-----------------------------------------------------------------------
 # Xs
@@ -38,43 +38,37 @@ x.1 <- as.matrix(cbind(rep(1,n),data[,x1]))
 x.2 <- as.matrix(cbind(rep(1,n),data[,x2]))
 
 #-----------------------------------------------------------------------
-# Transformation g(t)
+# Basis spline functions and derivatives
 #-----------------------------------------------------------------------
 # Time points
 t1 <- data[, paste(time, 1, sep="")]
 t2 <- data[, paste(time, 2, sep="")]
 
 # Max. time
-delta <- max(t1,t2)
+delta <- max(t1,t2)+1e-3
 
-# Transformed timepoints
+# Transforming t1 and t2
 gt1 <- g(t1,delta)
 gt2 <- g(t2,delta)
+
+# Knots
+#knots <- c(-50, -1, -0.5, 0, 0.5, 1, 50)
+knots <- c(-50, -1, 0, 1, 50)
+
+# Spline functions
+spl <- bsplineS(c(gt1, gt2), breaks=knots, norder=3, nderiv=0) # 2nd degree
+
+# Detivative of spline functions wrt. t
+dspl <- bsplineS(c(gt1, gt2), breaks=knots, norder=3, nderiv=1) # 2nd degree, 1st derivative
 
 #-----------------------------------------------------------------------
 # Derivative of g(t)
 #-----------------------------------------------------------------------
-dgt1 <- dg(t1,delta)
-dgt2 <- dg(t2,delta)
-
-#-----------------------------------------------------------------------
-# ID
-#-----------------------------------------------------------------------
-ID <- data[, ID]
-
-#-----------------------------------------------------------------------
-# Weights
-#-----------------------------------------------------------------------
-w <- data[, w]
-
-#-----------------------------------------------------------------------
-# EB0
-#-----------------------------------------------------------------------
-eb0 <- matrix(0, nrow=nrow(causes), ncol=2)
+dgt <- dg(c(t1,t2),delta)
 
 #-----------------------------------------------------------------------
 # Return
 #-----------------------------------------------------------------------
-res <- list("causes"=causes, "x.1"=x.1, "x.2"=x.2, "gt1"=gt1, "dgt1"=dgt1, "gt2"=gt2, "dgt2"=dgt2, "delta"=delta, "weights"=w, "ID"=ID, "eb0"=eb0)
+res <- list("y"=y, "x.1"=x.1, "x.2"=x.2, "spl"=spl, "dspl"=dspl, "delta"=delta, "dgt"=dgt)
 return(res)
 }
