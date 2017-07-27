@@ -46,7 +46,7 @@ sigma <- SigmaGen(vcv, 2)
 ##-----------------------------------------------------------------------
 ## Causes
 causes <- datprep$causes
-ncauses <- 2
+ncauses <- 2 # depends on data
 
 ## Weights
 w <- datprep$weights
@@ -78,7 +78,7 @@ if (grad==FALSE){
     return(k)
 }
 if(grad==TRUE){
-    dg <- as.data.frame(cbind(as.numeric(ll),as.numeric(ID)))
+    dg <- as.data.frame(cbind(as.numeric(ll),as.numeric(datprep$ID)))
     pc1 <- melt(tapply(dg$V1, dg$V2, sum))[,2]
     return(pc1)
 }
