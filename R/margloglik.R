@@ -1,5 +1,5 @@
 ##-----------------------------------------------------------------------
-## Nested loglikelihood
+## Nested loglikelihood (submodel)
 ##-----------------------------------------------------------------------
 cif.subloglik <- function(datprep, par){
 
