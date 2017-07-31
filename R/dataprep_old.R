@@ -14,7 +14,7 @@ dg <- function(x,delta){
 #-----------------------------------------------------------------------
 # Data preparing function
 #-----------------------------------------------------------------------
-data.prep <- function(data, time, status, cova=NULL){
+data.prep.old <- function(data, time, status, cova=NULL){
 
 #-----------------------------------------------------------------------
 # The Ys
