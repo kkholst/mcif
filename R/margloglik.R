@@ -1,7 +1,7 @@
-#-----------------------------------------------------------------------
-# Marginal loglikelihood
-#-----------------------------------------------------------------------
-cif.margloglik <- function(datprep, par){
+##-----------------------------------------------------------------------
+## Marginal loglikelihood
+##-----------------------------------------------------------------------
+cif.subloglik <- function(datprep, par){
 
 ##-----------------------------------------------------------------------
 ## Parameters
@@ -51,12 +51,12 @@ causes_1 <- c(causes[,1],causes[,2])
 alpgam_1 <- rbind(alpgam[,1:2],alpgam[,3:4])
 dalp_1 <- rbind(dalpha[,1:2],dalpha[,3:4])
 dat <- cbind(causes_1, alpgam_1, dalp_1)
-ll <- apply(dat, 1, loglikmarg, pi1, pi2)
+ll <- apply(dat, 1, logliksub, pi1, pi2)
 nll <- sum(-ll)
 return(nll)
 }
 
-loglikmarg <- function(x,pi1,pi2){
+logliksub <- function(x,pi1,pi2){
     if (x[1]==1){
         l <- log(pi1*x[4]*dnorm(x[2]))
     }
@@ -70,8 +70,4 @@ loglikmarg <- function(x,pi1,pi2){
         l <- log(1-pi1-pi2)
     }
     return(l)
-}
-
-mloglik <- function(p){
-    cif.margloglik(datprep,p)
 }
