@@ -1,4 +1,4 @@
-cif.loglik <- function(par, y, x.1, x.2, spl, dspl, dgt, eb0, ID, nq, stepsize, grad=FALSE,  ...){
+cif.loglik.old <- function(par, y, x.1, x.2, spl, dspl, dgt, eb0, ID, nq, stepsize, grad=FALSE,  ...){
 #-----------------------------------------------------------------------
 # Parameters
 #-----------------------------------------------------------------------
